@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>支払通知書 兼 仕入明細書</title>
+  <style>
+    @page { size: A4; margin: 15mm 20mm; }
+
+    body {
+      font-family: "Noto Sans JP", "Yu Gothic", "Hiragino Kaku Gothic ProN", sans-serif;
+      font-size: 10pt;
+      color: #333;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #fff;
+    }
+
+    .page-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 40px 50px;
+      box-sizing: border-box;
+      background-color: #fff;
+      min-height: 1100px;
+      position: relative;
+    }
+
+    @media print {
+      body { margin: 0; }
+      .page-container {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        padding: 40px;
+        min-height: auto;
+        page-break-after: always;
+      }
+      .page-container:last-child { page-break-after: auto; }
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 3px solid #333;
+      padding-bottom: 10px;
+      margin-bottom: 25px;
+      align-items: flex-end;
+    }
+    
+    .doc-title { font-size: 18pt; font-weight: bold; }
+    .doc-subtitle { font-size: 10pt; color: #666; margin-left: 10px; }
+    .meta-info { text-align: right; font-size: 9pt; line-height: 1.4; }
+
+    .address-area { display: flex; justify-content: space-between; margin-bottom: 30px; }
+    .recipient-block { width: 55%; }
+    .recipient-name {
+      font-size: 15pt; font-weight: bold;
+      border-bottom: 2px solid #333; display: inline-block;
+      min-width: 100%; padding-bottom: 2px; margin-bottom: 5px;
+    }
+    .sender-block { width: 40%; text-align: right; font-size: 9pt; }
+    .sender-name { font-size: 11pt; font-weight: bold; margin-bottom: 2px; }
+
+    .amount-box {
+      border: 2px solid #333;
+      padding: 20px 30px;
+      margin: 20px 0;
+      background-color: #fff;
+    }
+    
+    .calc-row {
+      display: flex; justify-content: space-between;
+      padding: 5px 0; border-bottom: 1px dotted #ccc; font-size: 11pt;
+    }
+    
+    .final-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 15px; padding-top: 10px; border-top: 2px solid #333;
+      font-size: 14pt; font-weight: bold;
+    }
+    
+    .legal-text {
+      margin-top: 20px; padding: 15px;
+      background-color: #f8f9fa; border: 1px solid #ddd;
+      font-size: 8.5pt; text-align: justify;
+    }
+
+    table.detail-table {
+      width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 9pt;
+    }
+    table.detail-table th {
+      background-color: #eee; border: 1px solid #999;
+      padding: 6px; text-align: center; font-weight: bold;
+    }
+    table.detail-table td {
+      border: 1px solid #999; padding: 8px; vertical-align: top;
+    }
+    
+    .right { text-align: right; }
+    .center { text-align: center; }
+    .sub-info { font-size: 8pt; color: #666; margin-top: 2px; }
+    
+    .royalty-header { background-color: #e6f2ff !important; }
+    
+    .wht-note {
+      font-size: 8pt;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #fef2f2;
+      border: 1px solid #fecaca;
+    }
+    
+    .footer-note {
+      margin-top: 30px;
+      padding-top: 15px;
+      border-top: 1px solid #ccc;
+      font-size: 8pt;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  
+
+  <!-- ==================== 1ページ目: 表紙（お支払いのご案内） ==================== -->
+  <div class="page-container">
+    <div class="header-row">
+      <div>
+        <span class="doc-title">お支払いのご案内</span>
+        <span class="doc-subtitle">兼 仕入明細書</span>
+      </div>
+      <div class="meta-info">
+        No: {{notice_id}}<br>
+        発行日: {{notice_date}}
+      </div>
+    </div>
+
+    <div class="address-area">
+      <div class="recipient-block">
+        <div class="recipient-name">{{vendor_name}} <span style="font-size:12pt; font-weight:normal;">{{vendorSuffix}}</span></div>
+        <div style="font-size:9pt;">登録番号: {{vendor_invoice_num}}</div>
+      </div>
+      <div class="sender-block">
+        <div class="sender-name">{{SENDER_NAME}}</div>
+        〒{{SENDER_ZIP}}<br>
+        {{SENDER_ADDRESS}}<br>
+        {{#if SENDER_DEPT}}担当: {{SENDER_DEPT}}{{/if}}
+      </div>
+    </div>
+
+    <p style="font-size:10pt;">
+      平素は格別のご高配を賜り、厚く御礼申し上げます。<br>
+      下記の通り、お支払金額が確定いたしましたのでご案内申し上げます。
+    </p>
+
+    
+
+    <div class="amount-box">
+      <div class="calc-row">
+        <span>支払対象額（税込合計）</span>
+        <span>¥ {{formatCurrency totalWithTax}}</span>
+      </div>
+      {{#if expenseAmount}}
+      <div class="calc-row" style="color:#666;">
+        <span>立替経費</span>
+        <span>¥ {{formatCurrency expenseAmount}}</span>
+      </div>
+      {{/if}}
+      {{#if withholdingTax}}
+      <div class="calc-row" style="color:#c00;">
+        <span>源泉徴収税額（控除）</span>
+        <span>▲ ¥ {{formatCurrency withholdingTax}}</span>
+      </div>
+      {{/if}}
+      <div class="final-row">
+        <span>差引お振込額</span>
+        <span>¥ {{formatCurrency paymentAmount}}</span>
+      </div>
+    </div>
+
+    {{#if showWithholdingNote}}
+    <div class="wht-note">
+      ※ 個人事業主様へのお支払いのため、源泉徴収税額を控除しております。<br>
+      ※ 源泉徴収税率: {{withholdingRateLabel}}
+    </div>
+    {{/if}}
+
+    <table style="width:100%; margin-top:20px; font-size:10pt;">
+      <tr>
+        <td width="100" style="background:#eee; padding:5px 10px; border:1px solid #999;">支払予定日</td>
+        <td style="padding:5px 10px; border:1px solid #999; font-weight:bold;">{{payment_due_date}}</td>
+      </tr>
+      <tr>
+        <td style="background:#eee; padding:5px 10px; border:1px solid #999;">振込先</td>
+        <td style="padding:5px 10px; border:1px solid #999;">{{bank_info}}</td>
+      </tr>
+    </table>
+
+    <div class="legal-text">
+      本書および次頁以降に記載された取引内容は、消費税法第57条の4に基づく仕入明細方式により、当社が作成する適格請求書（インボイス）を構成するものです。<br><br>
+      <strong>
+        受託者が本書の発行日から 5営業日以内に書面または電子メールにより異議を述べない場合、
+        受託者は本明細内容を確認・承認し、当該内容に基づく請求があったものとして取り扱うことに合意したものとみなします。
+      </strong>
+    </div>
+  </div>
+
+  <!-- ==================== 2ページ目: 検収書（inspectionsがある場合） ==================== -->
+  {{#if inspections}}
+  <div class="page-container">
+    <div class="header-row">
+      <div>
+        <span class="doc-title">検収書</span>
+        <span class="doc-subtitle">（作業・成果物）</span>
+      </div>
+      <div class="meta-info">No: {{notice_id}}-WK</div>
+    </div>
+
+    <div class="recipient-name" style="font-size:12pt; margin-bottom:20px;">{{vendor_name}} {{vendorSuffix}}</div>
+    
+    <p>以下の案件について、納品・業務完了を確認し検収いたしました。</p>
+
+    <table class="detail-table">
+      <thead>
+        <tr>
+          <th width="15%">検収日</th>
+          <th width="35%">品名 / 詳細</th>
+          <th width="10%">数量</th>
+          <th width="15%">単価</th>
+          <th width="15%">金額(税抜)</th>
+          <th width="10%">課税</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          <td class="center">{{date}}</td>
+          <td>
+            <strong>{{name}}</strong>
+            <div class="sub-info">{{order_no}}</div>
+          </td>
+          <td class="right">{{qty}}</td>
+          <td class="right">¥{{formatCurrency unit_price}}</td>
+          <td class="right">¥{{formatCurrency amount}}</td>
+          <td class="center" style="font-size:8pt;">10%</td>
+        </tr>
+        {{/if}}
+        
+        <tr style="background:#f9f9f9; font-weight:bold;">
+          <td colspan="4" class="right">検収金額 合計（税抜）</td>
+          <td class="right">¥ {{formatCurrency SUBTOTAL_INSPECTION}}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer-note">
+      ※ 本書は、表紙の「お支払いのご案内」と一体となって適格請求書（仕入明細書）を構成します。
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- ==================== 3ページ目: 利用許諾料報告書（royaltiesがある場合） ==================== -->
+  {{#if royalties}}
+  <div class="page-container">
+    <div class="header-row">
+      <div>
+        <span class="doc-title">利用許諾料報告書</span>
+        <span class="doc-subtitle">（ロイヤリティ・分配金）</span>
+      </div>
+      <div class="meta-info">No: {{notice_id}}-RY</div>
+    </div>
+
+    <div class="recipient-name" style="font-size:12pt; margin-bottom:20px;">{{vendor_name}} {{vendorSuffix}}</div>
+
+    <p>以下の対象著作物について、利用許諾契約に基づき報告いたします。</p>
+
+    <table class="detail-table">
+      <thead>
+        <tr class="royalty-header">
+          <th width="30%">対象作品 / 項目</th>
+          <th width="20%">計算期間/基準</th>
+          <th width="10%">数量</th>
+          <th width="10%">料率</th>
+          <th width="10%">単価/MG</th>
+          <th width="20%">支払額(税抜)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          <td>
+            <strong>{{work_name}}</strong>
+            <div class="sub-info">{{detail}}</div>
+          </td>
+          <td class="center" style="font-size:8.5pt;">
+            {{period_text}}<br>
+            <span class="sub-info">({{trigger_type}})</span>
+          </td>
+          <td class="right">{{qty}}</td>
+          <td class="center">{{rate}}</td>
+          <td class="right">{{unit_price}}</td>
+          <td class="right">¥{{formatCurrency amount}}</td>
+        </tr>
+        {{/if}}
+
+        <tr style="background:#f9f9f9; font-weight:bold;">
+          <td colspan="5" class="right">利用許諾料 合計（税抜）</td>
+          <td class="right">¥ {{formatCurrency SUBTOTAL_ROYALTY}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer-note">
+      ※ 本書は、表紙の「お支払いのご案内」と一体となって適格請求書（仕入明細書）を構成します。
+    </div>
+  </div>
+  {{/if}}
+
+  <!-- ==================== 4ページ目: レベニューシェア報告書（revenue_sharesがある場合） ==================== -->
+  {{#if revenue_shares}}
+  <div class="page-container">
+    <div class="header-row">
+      <div>
+        <span class="doc-title">レベニューシェア報告書</span>
+        <span class="doc-subtitle">（売上分配金）</span>
+      </div>
+      <div class="meta-info">No: {{notice_id}}-RS</div>
+    </div>
+
+    <div class="recipient-name" style="font-size:12pt; margin-bottom:20px;">{{vendor_name}} {{vendorSuffix}}</div>
+
+    <p>以下の対象事業について、レベニューシェア契約に基づき報告いたします。</p>
+
+    <table class="detail-table">
+      <thead>
+        <tr style="background-color: #e8f5e9 !important;">
+          <th width="25%">対象作品 / サービス</th>
+          <th width="18%">計算期間</th>
+          <th width="17%">売上高</th>
+          <th width="10%">分配率</th>
+          <th width="15%">控除額</th>
+          <th width="15%">分配額(税抜)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each items}}
+        <tr>
+          <td>
+            <strong>{{work_name}}</strong>
+            <div class="sub-info">{{detail}}</div>
+          </td>
+          <td class="center" style="font-size:8.5pt;">
+            {{period_start}}<br>～ {{period_end}}
+          </td>
+          <td class="right">¥</td>
+          <td class="center">{{share_rate}}</td>
+          <td class="right" style="color:#666;">
+            {{#if deduction}}
+            ▲¥{{formatCurrency deduction}}
+            <div class="sub-info">{{deduction_note}}</div>
+            {{else}}－{{/if}}
+          </td>
+          <td class="right">¥{{formatCurrency amount}}</td>
+        </tr>
+        {{/if}}
+
+        <tr style="background:#f9f9f9; font-weight:bold;">
+          <td colspan="5" class="right">レベニューシェア 合計（税抜）</td>
+          <td class="right">¥ {{formatCurrency SUBTOTAL_REVSHARE}}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {{#if revshare_note}}
+    <div style="margin-top:15px; padding:10px; background:#f0fdf4; border:1px solid #86efac; font-size:9pt;">
+      <strong>備考:</strong> {{revshare_note}}
+    </div>
+    {{/if}}
+
+    <div class="footer-note">
+      ※ 本書は、表紙の「お支払いのご案内」と一体となって適格請求書（仕入明細書）を構成します。<br>
+      ※ 売上高は{{revshare_basis}}で算出しています。
+    </div>
+  </div>
+  {{/if}}
+
+</body>
+</html>

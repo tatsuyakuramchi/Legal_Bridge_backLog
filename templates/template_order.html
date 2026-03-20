@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>発注書</title>
+  <style>
+    @page { size: A4; margin: 14mm 16mm; }
+    body {
+      font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+      color: #111;
+      font-size: 10pt;
+      line-height: 1.5;
+      margin: 0;
+    }
+    * { box-sizing: border-box; }
+    .page { width: 100%; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #111;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 22pt;
+      letter-spacing: 0.08em;
+    }
+    .muted { color: #555; font-size: 9pt; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .box {
+      border: 1px solid #d0d0d0;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .label {
+      font-size: 9pt;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    .vendor-name {
+      font-size: 14pt;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #cfcfcf;
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f2f2;
+      width: 28%;
+      text-align: left;
+    }
+    .items th, .items td { font-size: 9pt; }
+    .items th { width: auto; }
+    .total {
+      font-size: 16pt;
+      font-weight: 700;
+    }
+    .note {
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="header">
+      <div>
+        <h1>発注書</h1>
+        <div class="muted">案件名: {{PROJECT_TITLE}}</div>
+      </div>
+      <div class="muted">
+        発注番号: <strong>{{ORDER_NO}}</strong><br>
+        発注日: {{ORDER_DATE_YEAR}}年{{ORDER_DATE_MONTH}}月{{ORDER_DATE_DAY}}日
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="box">
+        <div class="label">発注先</div>
+        <div class="vendor-name">{{VENDOR_NAME}}{{#if VENDOR_SUFFIX}} {{VENDOR_SUFFIX}}{{/if}}</div>
+        <div>{{VENDOR_ADDRESS}}</div>
+        {{#if VENDOR_EMAIL}}<div class="muted">E-mail: {{VENDOR_EMAIL}}</div>{{/if}}
+        {{#if VENDOR_CONTACT_NAME}}
+        <div class="muted">
+          {{#if VENDOR_CONTACT_DEPARTMENT}}{{VENDOR_CONTACT_DEPARTMENT}} {{/if}}{{VENDOR_CONTACT_NAME}} 様
+        </div>
+        {{/if}}
+      </div>
+      <div class="box">
+        <div class="label">発注者</div>
+        <div><strong>{{PARTY_A_NAME}}</strong></div>
+        <div>{{PARTY_A_ADDRESS}}</div>
+        <div>{{PARTY_A_REP}}</div>
+        {{#if STAFF_NAME}}
+        <div class="muted" style="margin-top:8px;">
+          担当: {{STAFF_NAME}}<br>
+          {{#if STAFF_PHONE}}TEL: {{STAFF_PHONE}}<br>{{/if}}
+          {{#if STAFF_EMAIL}}E-mail: {{STAFF_EMAIL}}{{/if}}
+        </div>
+        {{/if}}
+      </div>
+    </div>
+
+    <table>
+      <tr>
+        <th>発注金額合計（税抜）</th>
+        <td>
+          <div class="total">¥ {{formatCurrency grandTotalExTax}}</div>
+          {{#if totalFee}}<div class="muted">固定費: ¥{{formatCurrency totalFee}}</div>{{/if}}
+          {{#if totalExp}}<div class="muted">実費: ¥{{formatCurrency totalExp}}</div>{{/if}}
+        </td>
+      </tr>
+      <tr>
+        <th>納期</th>
+        <td>{{DELIVERY_DATE}}</td>
+      </tr>
+      <tr>
+        <th>支払条件</th>
+        <td>
+          {{#if PAYMENT_TERMS}}
+          {{PAYMENT_TERMS}}
+          {{else}}
+          別途協議のうえ確定
+          {{/if}}
+          {{#if items}}
+          <div class="muted" style="margin-top:8px;">
+            {{#each items}}
+            {{#if payment_date}}<div>No.{{add @index 1}}: {{payment_date}}</div>{{/if}}
+            {{/each}}
+          </div>
+          {{/if}}
+        </td>
+      </tr>
+      <tr>
+        <th>備考</th>
+        <td class="note">{{REMARKS}}</td>
+      </tr>
+    </table>
+
+    <table class="items">
+      <thead>
+        <tr>
+          <th>No.</th>
+          <th>内容</th>
+          <th>仕様</th>
+          <th>単価</th>
+          <th>数量</th>
+          <th>納期</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#if items}}
+          {{#each items}}
+          <tr>
+            <td>{{add @index 1}}</td>
+            <td>{{#if item_name}}{{item_name}}{{else}}{{name}}{{/if}}</td>
+            <td>{{#if detailText}}{{detailText}}{{else}}{{spec}}{{/if}}</td>
+            <td>{{#if unit_price}}{{formatCurrency unit_price}}{{else}}{{formatCurrency unitPrice}}{{/if}}</td>
+            <td>{{#if qty}}{{qty}}{{else}}{{thisTimeQuantity}}{{/if}}</td>
+            <td>{{#if deliveryDateStr}}{{deliveryDateStr}}{{else}}{{payment_date}}{{/if}}</td>
+          </tr>
+          {{/each}}
+        {{else}}
+          <tr>
+            <td>1</td>
+            <td>{{ITEM_NAME}}</td>
+            <td>{{SPECIAL_TERMS}}</td>
+            <td>-</td>
+            <td>-</td>
+            <td>{{DELIVERY_DATE}}</td>
+          </tr>
+        {{/if}}
+      </tbody>
+    </table>
+
+    {{#if BANK_NAME}}
+    <table>
+      <tr>
+        <th>振込先</th>
+        <td>
+          {{BANK_NAME}} {{BRANCH_NAME}}<br>
+          {{ACCOUNT_TYPE}} {{ACCOUNT_NUMBER}}<br>
+          {{ACCOUNT_HOLDER_KANA}}
+        </td>
+      </tr>
+    </table>
+    {{/if}}
+  </div>
+</body>
+</html>

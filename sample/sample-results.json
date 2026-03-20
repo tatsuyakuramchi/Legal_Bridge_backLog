@@ -1,0 +1,90 @@
+{
+  "generatedAt": "2026-03-20T17:33:29.036Z",
+  "count": 14,
+  "results": [
+    {
+      "templateKey": "template_service_basic",
+      "templateName": "業務委託基本契約書",
+      "pdf": "SAMPLE-TEMPLATE_SERVICE_BASIC-template_service_basic-1774028008086.pdf",
+      "html": "SAMPLE-TEMPLATE_SERVICE_BASIC-template_service_basic-1774028008086.html"
+    },
+    {
+      "templateKey": "template_order",
+      "templateName": "発注書",
+      "pdf": "SAMPLE-TEMPLATE_ORDER-template_order-1774028008289.pdf",
+      "html": "SAMPLE-TEMPLATE_ORDER-template_order-1774028008289.html"
+    },
+    {
+      "templateKey": "template_payment_notice",
+      "templateName": "支払通知書",
+      "pdf": "SAMPLE-TEMPLATE_PAYMENT_NOTICE-template_payment_notice-1774028008501.pdf",
+      "html": "SAMPLE-TEMPLATE_PAYMENT_NOTICE-template_payment_notice-1774028008501.html"
+    },
+    {
+      "templateKey": "template_royalty_report",
+      "templateName": "利用許諾報告書",
+      "pdf": "SAMPLE-TEMPLATE_ROYALTY_REPORT-template_royalty_report-1774028008561.pdf",
+      "html": "SAMPLE-TEMPLATE_ROYALTY_REPORT-template_royalty_report-1774028008561.html"
+    },
+    {
+      "templateKey": "template_revenue_share_report",
+      "templateName": "レベニューシェア報告書",
+      "pdf": "SAMPLE-TEMPLATE_REVENUE_SHARE_REPORT-template_revenue_share_report-1774028008586.pdf",
+      "html": "SAMPLE-TEMPLATE_REVENUE_SHARE_REPORT-template_revenue_share_report-1774028008586.html"
+    },
+    {
+      "templateKey": "template_inspection_report",
+      "templateName": "検収報告書",
+      "pdf": "SAMPLE-TEMPLATE_INSPECTION_REPORT-template_inspection_report-1774028008615.pdf",
+      "html": "SAMPLE-TEMPLATE_INSPECTION_REPORT-template_inspection_report-1774028008615.html"
+    },
+    {
+      "templateKey": "template_ledger_v5__1_",
+      "templateName": "個別利用許諾条件 v5",
+      "pdf": "SAMPLE-TEMPLATE_LEDGER_V5__1_-template_ledger_v5__1_-1774028008645.pdf",
+      "html": "SAMPLE-TEMPLATE_LEDGER_V5__1_-template_ledger_v5__1_-1774028008645.html"
+    },
+    {
+      "templateKey": "template_license_basic",
+      "templateName": "ライセンス利用許諾基本契約書",
+      "pdf": "SAMPLE-TEMPLATE_LICENSE_BASIC-template_license_basic-1774028008701.pdf",
+      "html": "SAMPLE-TEMPLATE_LICENSE_BASIC-template_license_basic-1774028008701.html"
+    },
+    {
+      "templateKey": "template_nda",
+      "templateName": "秘密保持契約書",
+      "pdf": "SAMPLE-TEMPLATE_NDA-template_nda-1774028008746.pdf",
+      "html": "SAMPLE-TEMPLATE_NDA-template_nda-1774028008746.html"
+    },
+    {
+      "templateKey": "template_order_planning",
+      "templateName": "企画発注書",
+      "pdf": "SAMPLE-TEMPLATE_ORDER_PLANNING-template_order_planning-1774028008804.pdf",
+      "html": "SAMPLE-TEMPLATE_ORDER_PLANNING-template_order_planning-1774028008804.html"
+    },
+    {
+      "templateKey": "template_sales_buyer",
+      "templateName": "売買基本契約書（当社買手）",
+      "pdf": "SAMPLE-TEMPLATE_SALES_BUYER-template_sales_buyer-1774028008872.pdf",
+      "html": "SAMPLE-TEMPLATE_SALES_BUYER-template_sales_buyer-1774028008872.html"
+    },
+    {
+      "templateKey": "template_sales_seller_credit",
+      "templateName": "売買基本契約書（当社売手・掛け売り）",
+      "pdf": "SAMPLE-TEMPLATE_SALES_SELLER_CREDIT-template_sales_seller_credit-1774028008917.pdf",
+      "html": "SAMPLE-TEMPLATE_SALES_SELLER_CREDIT-template_sales_seller_credit-1774028008917.html"
+    },
+    {
+      "templateKey": "template_sales_seller_standard",
+      "templateName": "売買基本契約書（当社売手・前払/代引）",
+      "pdf": "SAMPLE-TEMPLATE_SALES_SELLER_STANDARD-template_sales_seller_standard-1774028008952.pdf",
+      "html": "SAMPLE-TEMPLATE_SALES_SELLER_STANDARD-template_sales_seller_standard-1774028008952.html"
+    },
+    {
+      "templateKey": "terms_spot_2026",
+      "templateName": "スポット条件書 2026",
+      "pdf": "SAMPLE-TERMS_SPOT_2026-terms_spot_2026-1774028009006.pdf",
+      "html": "SAMPLE-TERMS_SPOT_2026-terms_spot_2026-1774028009006.html"
+    }
+  ]
+}

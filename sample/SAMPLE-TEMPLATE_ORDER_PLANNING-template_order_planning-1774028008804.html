@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>企画発注書</title>
+  <style>
+    @page { size: A4; margin: 14mm 16mm; }
+    body {
+      font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
+      color: #111;
+      font-size: 10pt;
+      line-height: 1.5;
+      margin: 0;
+    }
+    * { box-sizing: border-box; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #111;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    h1 { margin: 0; font-size: 22pt; letter-spacing: 0.08em; }
+    .muted { color: #555; font-size: 9pt; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .box {
+      border: 1px solid #d0d0d0;
+      padding: 12px;
+      background: #fafafa;
+    }
+    .vendor-name {
+      font-size: 14pt;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .label { font-size: 9pt; color: #555; margin-bottom: 4px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #cfcfcf;
+      padding: 8px 10px;
+      vertical-align: top;
+    }
+    th {
+      background: #f2f2f2;
+      width: 28%;
+      text-align: left;
+    }
+    .items th, .items td { font-size: 9pt; }
+    .total { font-size: 16pt; font-weight: 700; }
+    .note { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>企画発注書</h1>
+      <div class="muted">案件名: サンプル案件</div>
+    </div>
+    <div class="muted">
+      発注番号: <strong>ORD-2026-0001</strong><br>
+      発注日: 2026年03月21日
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="box">
+      <div class="label">発注先</div>
+      <div class="vendor-name">合同会社サンプルベンダー 御中</div>
+      <div>大阪府大阪市サンプル4-5-6</div>
+      <div class="muted">E-mail: vendor@example.com</div>
+      <div class="muted">
+        営業部 山田花子 様
+      </div>
+    </div>
+    <div class="box">
+      <div class="label">発注者</div>
+      <div><strong>株式会社アークライト</strong></div>
+      <div>東京都千代田区サンプル1-2-3</div>
+      <div>代表取締役 サンプル太郎</div>
+      <div class="muted" style="margin-top:8px;">
+        担当: 法務担当<br>
+        TEL: 03-0000-0000<br>
+        E-mail: legal@example.com
+      </div>
+    </div>
+  </div>
+
+  <table>
+    <tr>
+      <th>発注金額合計（税抜）</th>
+      <td>
+        <div class="total">¥ 480,000</div>
+        <div class="muted">固定費: ¥400,000</div>
+        <div class="muted">実費: ¥80,000</div>
+      </td>
+    </tr>
+    <tr>
+      <th>初稿納期</th>
+      <td>2026年4月05日</td>
+    </tr>
+    <tr>
+      <th>最終納期</th>
+      <td>2026年4月15日</td>
+    </tr>
+    <tr>
+      <th>支払条件</th>
+      <td>
+        月末締め翌月末払い
+        <div class="muted" style="margin-top:8px;">
+          <div>No.1: 2026年4月30日</div>
+          <div>No.2: 2026年4月30日</div>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <th>備考</th>
+      <td class="note">template_order_planning のサンプルテストです。</td>
+    </tr>
+  </table>
+
+  <table class="items">
+    <thead>
+      <tr>
+        <th>No.</th>
+        <th>内容</th>
+        <th>仕様</th>
+        <th>単価</th>
+        <th>数量</th>
+        <th>納期</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>1</td>
+          <td>企画制作</td>
+          <td>構成案作成・会議2回</td>
+          <td>300,000</td>
+          <td>1</td>
+          <td>2026年4月10日</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>進行管理</td>
+          <td>撮影進行・素材管理</td>
+          <td>180,000</td>
+          <td>1</td>
+          <td>2026年4月15日</td>
+        </tr>
+    </tbody>
+  </table>
+</body>
+</html>

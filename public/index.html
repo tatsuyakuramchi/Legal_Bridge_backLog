@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Legal Bridge Local App</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-kicker">Local Module</div>
+          <h1>Legal Bridge</h1>
+          <p>Backlog と Slack をつないで文書作成を回すローカルアプリ</p>
+        </div>
+        <div class="actions">
+          <button id="run-poller">ポーリング実行</button>
+          <button id="test-backlog" class="secondary">Backlog接続テスト</button>
+          <button id="test-slack" class="secondary">Slack接続テスト</button>
+          <button id="add-sample" class="secondary">サンプル課題追加</button>
+        </div>
+        <div class="config">
+          <h2>設定</h2>
+          <form id="config-form">
+            <label>Backlog Space<input name="backlogSpace" /></label>
+            <label>Project ID<input name="backlogProjectId" /></label>
+            <label>Slack Channel<input name="legalSlackChannel" /></label>
+            <label>Approver Slack ID<input name="approverSlackId" /></label>
+            <label>Drive Folder ID<input name="driveRootFolderId" /></label>
+            <label>Polling Interval<input name="pollingIntervalSec" type="number" min="5" /></label>
+            <button type="submit">保存</button>
+          </form>
+        </div>
+      </aside>
+      <main class="content">
+        <section class="hero">
+          <div>
+            <div class="eyebrow">Admin UI</div>
+            <h2 id="app-title">Legal Bridge Local App</h2>
+            <p>Backlog の課題同期、文書生成、Slack 通知の状態をローカル PC から確認します。</p>
+          </div>
+          <div class="health-grid" id="health-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div id="flash" class="flash flash-ok">準備完了</div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>課題一覧</h3>
+            <span id="issue-count"></span>
+          </div>
+          <div id="issues" class="card-grid"></div>
+        </section>
+
+        <section class="panel dual">
+          <div>
+            <div class="panel-head">
+              <h3>生成済み文書</h3>
+            </div>
+            <div id="documents" class="stack"></div>
+          </div>
+          <div>
+            <div class="panel-head">
+              <h3>イベントログ</h3>
+            </div>
+            <div id="events" class="stack"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
