@@ -15,7 +15,7 @@ SLACK_APP_TOKEN=xapp-...
 LEGAL_SLACK_CHANNEL=C0123456789
 ```
 
-必要に応じて `APPROVER_SLACK_ID` も入れてください。
+必要に応じて `APPROVER_SLACK_ID` も設定してください。
 
 ## 2. Backlog 設定
 
@@ -88,7 +88,7 @@ npm.cmd run build
 npm.cmd run dev
 ```
 
-または本番相当で起動する場合:
+本番相当で起動する場合:
 
 ```powershell
 npm.cmd run build
