@@ -1,0 +1,199 @@
+{
+  "id": "royalty_report",
+  "documentName": "利用許諾報告書",
+  "issueTypes": [
+    "納品リクエスト"
+  ],
+  "contractNoPrefix": "C",
+  "templateFile": "template_royalty_report.html",
+  "topLevelVars": [
+    {
+      "name": "ISSUE_DATE",
+      "label": "発行日",
+      "required": true,
+      "source": "backlog.issue_date"
+    },
+    {
+      "name": "NOTICE_ID",
+      "label": "通知書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "ORDER_NO",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "TOTAL_NONTAX",
+      "label": "非課税合計",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "VENDOR_INVOICE_NUM",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name"
+    }
+  ],
+  "itemVars": [
+    {
+      "name": "amount",
+      "label": "amount",
+      "required": true,
+      "source": "backlog.amount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "date",
+      "label": "date",
+      "required": true,
+      "source": "backlog.date",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "detail",
+      "label": "detail",
+      "required": true,
+      "source": "backlog.detail",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "name",
+      "label": "name",
+      "required": true,
+      "source": "backlog.name",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "order_no",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "qty",
+      "label": "qty",
+      "required": true,
+      "source": "backlog.qty",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "rate",
+      "label": "rate",
+      "required": true,
+      "source": "backlog.rate",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ],
+  "variables": [
+    {
+      "name": "ISSUE_DATE",
+      "label": "発行日",
+      "required": true,
+      "source": "backlog.issue_date"
+    },
+    {
+      "name": "NOTICE_ID",
+      "label": "通知書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "ORDER_NO",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "TOTAL_NONTAX",
+      "label": "非課税合計",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "VENDOR_INVOICE_NUM",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "amount",
+      "label": "amount",
+      "required": true,
+      "source": "backlog.amount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "date",
+      "label": "date",
+      "required": true,
+      "source": "backlog.date",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "detail",
+      "label": "detail",
+      "required": true,
+      "source": "backlog.detail",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "name",
+      "label": "name",
+      "required": true,
+      "source": "backlog.name",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "order_no",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "qty",
+      "label": "qty",
+      "required": true,
+      "source": "backlog.qty",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "rate",
+      "label": "rate",
+      "required": true,
+      "source": "backlog.rate",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ]
+}

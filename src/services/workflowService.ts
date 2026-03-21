@@ -1,4 +1,5 @@
 import { JsonStore } from "../store.js";
+import { ManagedTemplateDefinition, TemplateValidationResult } from "../templateManagerTypes.js";
 import {
   AppConfig,
   DashboardSnapshot,
@@ -9,8 +10,10 @@ import {
 } from "../types.js";
 import { templateCatalog } from "../templateCatalog.js";
 import { BacklogService } from "./backlogService.js";
+import { BacklogSetupService, BacklogSetupReport } from "./backlogSetupService.js";
 import { DocumentService } from "./documentService.js";
 import { SlackService } from "./slackService.js";
+import { TemplateManagerService } from "./templateManagerService.js";
 
 const statusFlow: IssueStatus[] = ["Draft", "ReviewRequested", "Approved", "Fixed", "Completed"];
 
@@ -19,14 +22,18 @@ export class WorkflowService {
     private readonly store: JsonStore,
     private readonly documentService: DocumentService,
     private readonly backlogService: BacklogService,
-    private readonly slackService: SlackService
+    private readonly slackService: SlackService,
+    private readonly templateManagerService: TemplateManagerService,
+    private readonly backlogSetupService: BacklogSetupService
   ) {}
 
   async snapshot(): Promise<DashboardSnapshot> {
     const state = await this.store.load();
+    const definitions = await this.templateManagerService.listDefinitions();
     return {
       ...state,
       templates: templateCatalog,
+      templateDefinitionsCount: definitions.length,
       health: {
         app: "ok",
         backlog: this.backlogService.isConfigured(state.config) ? "ok" : "warn",
@@ -35,6 +42,55 @@ export class WorkflowService {
         rds: "warn"
       }
     };
+  }
+
+  async listTemplateDefinitions(): Promise<ManagedTemplateDefinition[]> {
+    return this.templateManagerService.listDefinitions();
+  }
+
+  async validateTemplateDefinitions(): Promise<TemplateValidationResult[]> {
+    const results = await this.templateManagerService.validateAll();
+    const passed = results.filter((result) => result.passed).length;
+    await this.pushEvent("poller-run", `テンプレート定義を検証しました。成功 ${passed}/${results.length} 件。`);
+    return results;
+  }
+
+  async createTemplateDefinition(input: {
+    id: string;
+    templateFile: string;
+    documentName: string;
+    issueTypes: string[];
+    contractNoPrefix: "C" | "PO" | "LIC";
+    mergeWith?: string[];
+    notes?: string;
+  }): Promise<ManagedTemplateDefinition> {
+    const definition = await this.templateManagerService.createDefinition(input);
+    await this.pushEvent("issue-created", `テンプレート定義 ${definition.id} を追加しました。`);
+    return definition;
+  }
+
+  async getBacklogSetupReports(): Promise<BacklogSetupReport[]> {
+    const definitions = await this.templateManagerService.listDefinitions();
+    return definitions.map((definition) => this.backlogSetupService.createReport(definition));
+  }
+
+  async getBacklogInitialChecklist(): Promise<string> {
+    const definitions = await this.templateManagerService.listDefinitions();
+    return this.backlogSetupService.createInitialChecklist(definitions);
+  }
+
+  async getBacklogSetupReport(templateId: string): Promise<BacklogSetupReport> {
+    const definitions = await this.templateManagerService.listDefinitions();
+    const definition = definitions.find((item) => item.id === templateId);
+    if (!definition) {
+      throw new Error("Template definition not found");
+    }
+    return this.backlogSetupService.createReport(definition);
+  }
+
+  async getBacklogSetupReportMarkdown(templateId: string): Promise<string> {
+    const report = await this.getBacklogSetupReport(templateId);
+    return this.backlogSetupService.renderReport(report);
   }
 
   async updateConfig(input: Partial<AppConfig>): Promise<AppConfig> {

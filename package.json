@@ -8,7 +8,13 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
     "check": "tsc --noEmit -p tsconfig.json",
-    "sample:docs": "tsx scripts/generate-sample-docs.ts"
+    "sample:docs": "tsx scripts/generate-sample-docs.ts",
+    "templates:list": "node dist/scripts/template-manager.js list",
+    "templates:validate": "node dist/scripts/template-manager.js validate",
+    "templates:add": "node dist/scripts/template-manager.js add",
+    "templates:backlog-init": "node dist/scripts/template-manager.js backlog-init",
+    "templates:backlog-setup": "node dist/scripts/template-manager.js backlog-setup",
+    "templates:manage": "node dist/scripts/template-manager.js"
   },
   "dependencies": {
     "@slack/socket-mode": "^2.0.6",

@@ -1,0 +1,145 @@
+{
+  "id": "nda",
+  "documentName": "秘密保持契約書（NDA）",
+  "issueTypes": [
+    "NDA"
+  ],
+  "contractNoPrefix": "C",
+  "templateFile": "template_nda.html",
+  "topLevelVars": [
+    {
+      "name": "CONFIDENTIALITY_PERIOD",
+      "label": "秘密保持期間",
+      "required": true,
+      "source": "backlog.confidentiality_period"
+    },
+    {
+      "name": "CONTRACT_DATE_FORMATTED",
+      "label": "契約日（整形済み）",
+      "required": true,
+      "source": "backlog.contract_date_formatted"
+    },
+    {
+      "name": "CONTRACT_PERIOD",
+      "label": "契約有効期間",
+      "required": true,
+      "source": "backlog.contract_period"
+    },
+    {
+      "name": "JURISDICTION",
+      "label": "管轄裁判所",
+      "required": true,
+      "source": "backlog.jurisdiction"
+    },
+    {
+      "name": "NDA_PURPOSE",
+      "label": "秘密保持の目的",
+      "required": true,
+      "source": "backlog.nda_purpose"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_B_ADDRESS",
+      "label": "乙（相手方）住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "PARTY_B_NAME",
+      "label": "乙（相手方）名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "PARTY_B_REP",
+      "label": "乙（相手方）代表者",
+      "required": true,
+      "source": "partner.representative"
+    }
+  ],
+  "variables": [
+    {
+      "name": "CONFIDENTIALITY_PERIOD",
+      "label": "秘密保持期間",
+      "required": true,
+      "source": "backlog.confidentiality_period"
+    },
+    {
+      "name": "CONTRACT_DATE_FORMATTED",
+      "label": "契約日（整形済み）",
+      "required": true,
+      "source": "backlog.contract_date_formatted"
+    },
+    {
+      "name": "CONTRACT_PERIOD",
+      "label": "契約有効期間",
+      "required": true,
+      "source": "backlog.contract_period"
+    },
+    {
+      "name": "JURISDICTION",
+      "label": "管轄裁判所",
+      "required": true,
+      "source": "backlog.jurisdiction"
+    },
+    {
+      "name": "NDA_PURPOSE",
+      "label": "秘密保持の目的",
+      "required": true,
+      "source": "backlog.nda_purpose"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_B_ADDRESS",
+      "label": "乙（相手方）住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "PARTY_B_NAME",
+      "label": "乙（相手方）名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "PARTY_B_REP",
+      "label": "乙（相手方）代表者",
+      "required": true,
+      "source": "partner.representative"
+    }
+  ]
+}

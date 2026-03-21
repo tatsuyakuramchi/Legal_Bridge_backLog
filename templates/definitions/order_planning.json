@@ -1,0 +1,582 @@
+{
+  "id": "order_planning",
+  "documentName": "発注書（企画専用）",
+  "issueTypes": [
+    "発注書"
+  ],
+  "contractNoPrefix": "PO",
+  "templateFile": "template_order_planning.html",
+  "topLevelVars": [],
+  "deliveryVars": [
+    {
+      "name": "ACCEPT_METHOD",
+      "label": "ACCEPT_METHOD",
+      "required": true,
+      "source": "backlog.accept_method",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCEPT_REPLY_DUE_DATE",
+      "label": "ACCEPT_REPLY_DUE_DATE",
+      "required": false,
+      "source": "backlog.accept_reply_due_date",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCOUNT_HOLDER_KANA",
+      "label": "口座名義（カナ）",
+      "required": true,
+      "source": "partner.bank_account_holder",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCOUNT_NUMBER",
+      "label": "口座番号",
+      "required": true,
+      "source": "partner.bank_account_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "口座種別",
+      "required": true,
+      "source": "partner.bank_account_type",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "BANK_INFO",
+      "label": "BANK_INFO",
+      "required": true,
+      "source": "backlog.bank_info",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": true,
+      "source": "partner.bank_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "BRANCH_NAME",
+      "label": "支店名",
+      "required": true,
+      "source": "partner.bank_branch",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "FINAL_DEADLINE",
+      "label": "FINAL_DEADLINE",
+      "required": true,
+      "source": "backlog.final_deadline",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "FIRST_DRAFT_DEADLINE",
+      "label": "FIRST_DRAFT_DEADLINE",
+      "required": true,
+      "source": "backlog.first_draft_deadline",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "INVOICE_REGISTRATION_NUMBER",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ITEM_NAME",
+      "label": "ITEM_NAME",
+      "required": true,
+      "source": "backlog.item_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "MASTER_CONTRACT_REF",
+      "label": "MASTER_CONTRACT_REF",
+      "required": true,
+      "source": "backlog.master_contract_ref",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_DATE_DAY",
+      "label": "ORDER_DATE_DAY",
+      "required": true,
+      "source": "backlog.order_date_day",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_DATE_MONTH",
+      "label": "ORDER_DATE_MONTH",
+      "required": true,
+      "source": "backlog.order_date_month",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_DATE_YEAR",
+      "label": "ORDER_DATE_YEAR",
+      "required": true,
+      "source": "backlog.order_date_year",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_NO",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PAYMENT_TERMS",
+      "label": "PAYMENT_TERMS",
+      "required": true,
+      "source": "backlog.payment_terms",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PROJECT_TITLE",
+      "label": "プロジェクト名",
+      "required": true,
+      "source": "backlog.project_title",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "REMARKS",
+      "label": "備考",
+      "required": false,
+      "source": "backlog.remarks",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "SPECIAL_TERMS",
+      "label": "特約事項",
+      "required": false,
+      "source": "backlog.special_terms",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_DEPARTMENT",
+      "label": "担当部署",
+      "required": true,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_EMAIL",
+      "label": "担当者メール",
+      "required": true,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_NAME",
+      "label": "担当者名",
+      "required": true,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_PHONE",
+      "label": "担当者電話番号",
+      "required": false,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "TRANSFER_FEE_PAYER",
+      "label": "TRANSFER_FEE_PAYER",
+      "required": true,
+      "source": "backlog.transfer_fee_payer",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_ACCEPT_DATE",
+      "label": "VENDOR_ACCEPT_DATE",
+      "required": true,
+      "source": "backlog.vendor_accept_date",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_ACCEPT_NAME",
+      "label": "VENDOR_ACCEPT_NAME",
+      "required": true,
+      "source": "backlog.vendor_accept_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_ADDRESS",
+      "label": "相手方住所",
+      "required": true,
+      "source": "partner.address",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_CONTACT_DEPARTMENT",
+      "label": "相手方担当部署",
+      "required": false,
+      "source": "backlog.vendor_contact_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_CONTACT_NAME",
+      "label": "相手方担当者名",
+      "required": true,
+      "source": "partner.contact_person",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_EMAIL",
+      "label": "相手方メール",
+      "required": true,
+      "source": "partner.contact_email",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_SUFFIX",
+      "label": "相手方敬称",
+      "required": false,
+      "source": "backlog.vendor_suffix",
+      "arrayPrefix": "d"
+    }
+  ],
+  "itemVars": [
+    {
+      "name": "amount",
+      "label": "amount",
+      "required": true,
+      "source": "backlog.amount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "category",
+      "label": "category",
+      "required": true,
+      "source": "backlog.category",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "pay_method",
+      "label": "pay_method",
+      "required": true,
+      "source": "backlog.pay_method",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ],
+  "variables": [
+    {
+      "name": "ACCEPT_METHOD",
+      "label": "ACCEPT_METHOD",
+      "required": true,
+      "source": "backlog.accept_method",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCEPT_REPLY_DUE_DATE",
+      "label": "ACCEPT_REPLY_DUE_DATE",
+      "required": false,
+      "source": "backlog.accept_reply_due_date",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCOUNT_HOLDER_KANA",
+      "label": "口座名義（カナ）",
+      "required": true,
+      "source": "partner.bank_account_holder",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCOUNT_NUMBER",
+      "label": "口座番号",
+      "required": true,
+      "source": "partner.bank_account_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "口座種別",
+      "required": true,
+      "source": "partner.bank_account_type",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "BANK_INFO",
+      "label": "BANK_INFO",
+      "required": true,
+      "source": "backlog.bank_info",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": true,
+      "source": "partner.bank_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "BRANCH_NAME",
+      "label": "支店名",
+      "required": true,
+      "source": "partner.bank_branch",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "FINAL_DEADLINE",
+      "label": "FINAL_DEADLINE",
+      "required": true,
+      "source": "backlog.final_deadline",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "FIRST_DRAFT_DEADLINE",
+      "label": "FIRST_DRAFT_DEADLINE",
+      "required": true,
+      "source": "backlog.first_draft_deadline",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "INVOICE_REGISTRATION_NUMBER",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ITEM_NAME",
+      "label": "ITEM_NAME",
+      "required": true,
+      "source": "backlog.item_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "MASTER_CONTRACT_REF",
+      "label": "MASTER_CONTRACT_REF",
+      "required": true,
+      "source": "backlog.master_contract_ref",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_DATE_DAY",
+      "label": "ORDER_DATE_DAY",
+      "required": true,
+      "source": "backlog.order_date_day",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_DATE_MONTH",
+      "label": "ORDER_DATE_MONTH",
+      "required": true,
+      "source": "backlog.order_date_month",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_DATE_YEAR",
+      "label": "ORDER_DATE_YEAR",
+      "required": true,
+      "source": "backlog.order_date_year",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "ORDER_NO",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PAYMENT_TERMS",
+      "label": "PAYMENT_TERMS",
+      "required": true,
+      "source": "backlog.payment_terms",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "PROJECT_TITLE",
+      "label": "プロジェクト名",
+      "required": true,
+      "source": "backlog.project_title",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "REMARKS",
+      "label": "備考",
+      "required": false,
+      "source": "backlog.remarks",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "SPECIAL_TERMS",
+      "label": "特約事項",
+      "required": false,
+      "source": "backlog.special_terms",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_DEPARTMENT",
+      "label": "担当部署",
+      "required": true,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_EMAIL",
+      "label": "担当者メール",
+      "required": true,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_NAME",
+      "label": "担当者名",
+      "required": true,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "STAFF_PHONE",
+      "label": "担当者電話番号",
+      "required": false,
+      "source": "user.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "TRANSFER_FEE_PAYER",
+      "label": "TRANSFER_FEE_PAYER",
+      "required": true,
+      "source": "backlog.transfer_fee_payer",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_ACCEPT_DATE",
+      "label": "VENDOR_ACCEPT_DATE",
+      "required": true,
+      "source": "backlog.vendor_accept_date",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_ACCEPT_NAME",
+      "label": "VENDOR_ACCEPT_NAME",
+      "required": true,
+      "source": "backlog.vendor_accept_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_ADDRESS",
+      "label": "相手方住所",
+      "required": true,
+      "source": "partner.address",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_CONTACT_DEPARTMENT",
+      "label": "相手方担当部署",
+      "required": false,
+      "source": "backlog.vendor_contact_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_CONTACT_NAME",
+      "label": "相手方担当者名",
+      "required": true,
+      "source": "partner.contact_person",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_EMAIL",
+      "label": "相手方メール",
+      "required": true,
+      "source": "partner.contact_email",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "VENDOR_SUFFIX",
+      "label": "相手方敬称",
+      "required": false,
+      "source": "backlog.vendor_suffix",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "amount",
+      "label": "amount",
+      "required": true,
+      "source": "backlog.amount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "category",
+      "label": "category",
+      "required": true,
+      "source": "backlog.category",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "pay_method",
+      "label": "pay_method",
+      "required": true,
+      "source": "backlog.pay_method",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ]
+}

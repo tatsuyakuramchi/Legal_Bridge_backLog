@@ -1,0 +1,263 @@
+{
+  "id": "revenue_share_report",
+  "documentName": "業務委託報酬計算書（レベニューシェア）",
+  "issueTypes": [
+    "納品リクエスト"
+  ],
+  "contractNoPrefix": "C",
+  "templateFile": "template_revenue_share_report.html",
+  "topLevelVars": [
+    {
+      "name": "CONTRACTOR_INVOICE_NUM",
+      "label": "受託者インボイス番号",
+      "required": true,
+      "source": "partner.invoice_registration_number"
+    },
+    {
+      "name": "CONTRACTOR_NAME",
+      "label": "受託者名",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "ISSUE_DATE",
+      "label": "発行日",
+      "required": true,
+      "source": "backlog.issue_date"
+    },
+    {
+      "name": "MINIMUM_GUARANTEE",
+      "label": "最低保証額",
+      "required": false,
+      "source": "backlog.minimum_guarantee"
+    },
+    {
+      "name": "NOTICE_ID",
+      "label": "通知書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "ORDER_NO",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "PAYMENT_DATE",
+      "label": "支払日",
+      "required": true,
+      "source": "backlog.payment_date"
+    },
+    {
+      "name": "PAYMENT_METHOD",
+      "label": "支払方法",
+      "required": true,
+      "source": "backlog.payment_method"
+    },
+    {
+      "name": "SPECIAL_NOTE",
+      "label": "特記事項",
+      "required": false,
+      "source": "backlog.special_note"
+    },
+    {
+      "name": "TOTAL_NONTAX",
+      "label": "非課税合計",
+      "required": true,
+      "source": "calc"
+    }
+  ],
+  "itemVars": [
+    {
+      "name": "amount",
+      "label": "amount",
+      "required": true,
+      "source": "backlog.amount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "baseAmount",
+      "label": "baseAmount",
+      "required": true,
+      "source": "backlog.baseamount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "calculation",
+      "label": "calculation",
+      "required": true,
+      "source": "backlog.calculation",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "detail",
+      "label": "detail",
+      "required": true,
+      "source": "backlog.detail",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "name",
+      "label": "name",
+      "required": true,
+      "source": "backlog.name",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "note",
+      "label": "note",
+      "required": true,
+      "source": "backlog.note",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "period",
+      "label": "period",
+      "required": true,
+      "source": "backlog.period",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "rate",
+      "label": "rate",
+      "required": true,
+      "source": "backlog.rate",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ],
+  "variables": [
+    {
+      "name": "CONTRACTOR_INVOICE_NUM",
+      "label": "受託者インボイス番号",
+      "required": true,
+      "source": "partner.invoice_registration_number"
+    },
+    {
+      "name": "CONTRACTOR_NAME",
+      "label": "受託者名",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "ISSUE_DATE",
+      "label": "発行日",
+      "required": true,
+      "source": "backlog.issue_date"
+    },
+    {
+      "name": "MINIMUM_GUARANTEE",
+      "label": "最低保証額",
+      "required": false,
+      "source": "backlog.minimum_guarantee"
+    },
+    {
+      "name": "NOTICE_ID",
+      "label": "通知書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "ORDER_NO",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "PAYMENT_DATE",
+      "label": "支払日",
+      "required": true,
+      "source": "backlog.payment_date"
+    },
+    {
+      "name": "PAYMENT_METHOD",
+      "label": "支払方法",
+      "required": true,
+      "source": "backlog.payment_method"
+    },
+    {
+      "name": "SPECIAL_NOTE",
+      "label": "特記事項",
+      "required": false,
+      "source": "backlog.special_note"
+    },
+    {
+      "name": "TOTAL_NONTAX",
+      "label": "非課税合計",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "amount",
+      "label": "amount",
+      "required": true,
+      "source": "backlog.amount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "baseAmount",
+      "label": "baseAmount",
+      "required": true,
+      "source": "backlog.baseamount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "calculation",
+      "label": "calculation",
+      "required": true,
+      "source": "backlog.calculation",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "detail",
+      "label": "detail",
+      "required": true,
+      "source": "backlog.detail",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "name",
+      "label": "name",
+      "required": true,
+      "source": "backlog.name",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "note",
+      "label": "note",
+      "required": true,
+      "source": "backlog.note",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "period",
+      "label": "period",
+      "required": true,
+      "source": "backlog.period",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "rate",
+      "label": "rate",
+      "required": true,
+      "source": "backlog.rate",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ]
+}

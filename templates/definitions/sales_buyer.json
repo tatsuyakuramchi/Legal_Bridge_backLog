@@ -1,0 +1,217 @@
+{
+  "id": "sales_buyer",
+  "documentName": "売買基本契約書（当社買手）",
+  "issueTypes": [
+    "売買契約（買手）"
+  ],
+  "contractNoPrefix": "C",
+  "templateFile": "template_sales_buyer.html",
+  "topLevelVars": [
+    {
+      "name": "CONFIDENTIALITY_YEARS",
+      "label": "秘密保持期間（年）",
+      "required": true,
+      "source": "backlog.confidentiality_years"
+    },
+    {
+      "name": "CONTRACT_DATE",
+      "label": "契約日",
+      "required": true,
+      "source": "backlog.contract_date"
+    },
+    {
+      "name": "CONTRACT_NO",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "CURE_PERIOD_DAYS",
+      "label": "追完期間（日）",
+      "required": true,
+      "source": "backlog.cure_period_days"
+    },
+    {
+      "name": "DELIVERY_LOCATION",
+      "label": "納品場所",
+      "required": false,
+      "source": "backlog.delivery_location"
+    },
+    {
+      "name": "INSPECTION_PERIOD_DAYS",
+      "label": "検品期間（日）",
+      "required": true,
+      "source": "backlog.inspection_period_days"
+    },
+    {
+      "name": "JURISDICTION",
+      "label": "管轄裁判所",
+      "required": true,
+      "source": "backlog.jurisdiction"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REPRESENTATIVE",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_B_ADDRESS",
+      "label": "乙（相手方）住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "PARTY_B_NAME",
+      "label": "乙（相手方）名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "PARTY_B_REPRESENTATIVE",
+      "label": "乙（相手方）代表者",
+      "required": true,
+      "source": "partner.representative"
+    },
+    {
+      "name": "PAYMENT_CONDITION_SUMMARY",
+      "label": "支払条件",
+      "required": false,
+      "source": "backlog.payment_condition_summary"
+    },
+    {
+      "name": "PRODUCT_SCOPE",
+      "label": "対象商品",
+      "required": false,
+      "source": "backlog.product_scope"
+    },
+    {
+      "name": "SPECIAL_TERMS",
+      "label": "特約事項",
+      "required": false,
+      "source": "backlog.special_terms"
+    },
+    {
+      "name": "WARRANTY_PERIOD",
+      "label": "保証期間",
+      "required": false,
+      "source": "backlog.warranty_period"
+    }
+  ],
+  "variables": [
+    {
+      "name": "CONFIDENTIALITY_YEARS",
+      "label": "秘密保持期間（年）",
+      "required": true,
+      "source": "backlog.confidentiality_years"
+    },
+    {
+      "name": "CONTRACT_DATE",
+      "label": "契約日",
+      "required": true,
+      "source": "backlog.contract_date"
+    },
+    {
+      "name": "CONTRACT_NO",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "CURE_PERIOD_DAYS",
+      "label": "追完期間（日）",
+      "required": true,
+      "source": "backlog.cure_period_days"
+    },
+    {
+      "name": "DELIVERY_LOCATION",
+      "label": "納品場所",
+      "required": false,
+      "source": "backlog.delivery_location"
+    },
+    {
+      "name": "INSPECTION_PERIOD_DAYS",
+      "label": "検品期間（日）",
+      "required": true,
+      "source": "backlog.inspection_period_days"
+    },
+    {
+      "name": "JURISDICTION",
+      "label": "管轄裁判所",
+      "required": true,
+      "source": "backlog.jurisdiction"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REPRESENTATIVE",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_B_ADDRESS",
+      "label": "乙（相手方）住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "PARTY_B_NAME",
+      "label": "乙（相手方）名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "PARTY_B_REPRESENTATIVE",
+      "label": "乙（相手方）代表者",
+      "required": true,
+      "source": "partner.representative"
+    },
+    {
+      "name": "PAYMENT_CONDITION_SUMMARY",
+      "label": "支払条件",
+      "required": false,
+      "source": "backlog.payment_condition_summary"
+    },
+    {
+      "name": "PRODUCT_SCOPE",
+      "label": "対象商品",
+      "required": false,
+      "source": "backlog.product_scope"
+    },
+    {
+      "name": "SPECIAL_TERMS",
+      "label": "特約事項",
+      "required": false,
+      "source": "backlog.special_terms"
+    },
+    {
+      "name": "WARRANTY_PERIOD",
+      "label": "保証期間",
+      "required": false,
+      "source": "backlog.warranty_period"
+    }
+  ]
+}

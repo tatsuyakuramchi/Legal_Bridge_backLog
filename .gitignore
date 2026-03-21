@@ -4,3 +4,6 @@ dist
 data/*.json
 tmp/*
 !.gitkeep
+docs_extract/
+backlog-initial-setup.md
+backlog-setup-*.md

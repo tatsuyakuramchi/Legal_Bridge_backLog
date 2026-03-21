@@ -77,4 +77,5 @@ export interface DashboardSnapshot {
   documents: DocumentRecord[];
   events: WorkflowEvent[];
   templates: TemplateDefinition[];
+  templateDefinitionsCount?: number;
 }

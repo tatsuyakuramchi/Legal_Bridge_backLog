@@ -1,0 +1,38 @@
+{
+  "id": "license_ledger",
+  "documentName": "利用許諾台帳（ライセンス台帳）",
+  "issueTypes": [
+    "ライセンス契約"
+  ],
+  "contractNoPrefix": "C",
+  "notes": "ライセンス基本契約書に合冊する台帳",
+  "templateFile": "template_ledger_v5__1_.html",
+  "topLevelVars": [
+    {
+      "name": "LICENSEE_IS_CORPORATION",
+      "label": "ライセンシー法人フラグ",
+      "required": true,
+      "source": "partner.is_corporation"
+    },
+    {
+      "name": "LICENSOR_IS_CORPORATION",
+      "label": "ライセンサー法人フラグ",
+      "required": true,
+      "source": "partner.is_corporation"
+    }
+  ],
+  "variables": [
+    {
+      "name": "LICENSEE_IS_CORPORATION",
+      "label": "ライセンシー法人フラグ",
+      "required": true,
+      "source": "partner.is_corporation"
+    },
+    {
+      "name": "LICENSOR_IS_CORPORATION",
+      "label": "ライセンサー法人フラグ",
+      "required": true,
+      "source": "partner.is_corporation"
+    }
+  ]
+}

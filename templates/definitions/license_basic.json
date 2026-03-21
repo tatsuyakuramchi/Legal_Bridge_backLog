@@ -1,0 +1,229 @@
+{
+  "id": "license_basic",
+  "documentName": "ライセンス利用許諾基本契約書",
+  "issueTypes": [
+    "ライセンス契約"
+  ],
+  "contractNoPrefix": "C",
+  "templateFile": "template_license_basic.html",
+  "topLevelVars": [
+    {
+      "name": "BANK_ACCOUNT_NAME",
+      "label": "口座名義",
+      "required": true,
+      "source": "partner.bank_account_holder"
+    },
+    {
+      "name": "BANK_ACCOUNT_NO",
+      "label": "口座番号",
+      "required": true,
+      "source": "partner.bank_account_number"
+    },
+    {
+      "name": "BANK_BRANCH",
+      "label": "支店名",
+      "required": true,
+      "source": "partner.bank_branch"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": true,
+      "source": "partner.bank_name"
+    },
+    {
+      "name": "CONTRACT_NO",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "CREDIT_NAME",
+      "label": "クレジット表記",
+      "required": false,
+      "source": "backlog.credit_name"
+    },
+    {
+      "name": "HAS_REMARKS",
+      "label": "備考あり",
+      "required": false,
+      "source": "backlog.has_remarks"
+    },
+    {
+      "name": "JURISDICTION",
+      "label": "管轄裁判所",
+      "required": true,
+      "source": "backlog.jurisdiction"
+    },
+    {
+      "name": "ORIGINAL_AUTHOR",
+      "label": "原著作者名",
+      "required": false,
+      "source": "backlog.original_author"
+    },
+    {
+      "name": "ORIGINAL_WORK",
+      "label": "原著作物名",
+      "required": true,
+      "source": "backlog.original_work"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_IS_CORPORATION",
+      "label": "甲法人フラグ",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "VENDOR_ADDRESS",
+      "label": "相手方住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "VENDOR_IS_CORPORATION",
+      "label": "相手方法人フラグ",
+      "required": true,
+      "source": "partner.is_corporation"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "VENDOR_REP",
+      "label": "相手方代表者",
+      "required": true,
+      "source": "partner.representative"
+    }
+  ],
+  "variables": [
+    {
+      "name": "BANK_ACCOUNT_NAME",
+      "label": "口座名義",
+      "required": true,
+      "source": "partner.bank_account_holder"
+    },
+    {
+      "name": "BANK_ACCOUNT_NO",
+      "label": "口座番号",
+      "required": true,
+      "source": "partner.bank_account_number"
+    },
+    {
+      "name": "BANK_BRANCH",
+      "label": "支店名",
+      "required": true,
+      "source": "partner.bank_branch"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": true,
+      "source": "partner.bank_name"
+    },
+    {
+      "name": "CONTRACT_NO",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "CREDIT_NAME",
+      "label": "クレジット表記",
+      "required": false,
+      "source": "backlog.credit_name"
+    },
+    {
+      "name": "HAS_REMARKS",
+      "label": "備考あり",
+      "required": false,
+      "source": "backlog.has_remarks"
+    },
+    {
+      "name": "JURISDICTION",
+      "label": "管轄裁判所",
+      "required": true,
+      "source": "backlog.jurisdiction"
+    },
+    {
+      "name": "ORIGINAL_AUTHOR",
+      "label": "原著作者名",
+      "required": false,
+      "source": "backlog.original_author"
+    },
+    {
+      "name": "ORIGINAL_WORK",
+      "label": "原著作物名",
+      "required": true,
+      "source": "backlog.original_work"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_IS_CORPORATION",
+      "label": "甲法人フラグ",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "VENDOR_ADDRESS",
+      "label": "相手方住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "VENDOR_IS_CORPORATION",
+      "label": "相手方法人フラグ",
+      "required": true,
+      "source": "partner.is_corporation"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "VENDOR_REP",
+      "label": "相手方代表者",
+      "required": true,
+      "source": "partner.representative"
+    }
+  ]
+}

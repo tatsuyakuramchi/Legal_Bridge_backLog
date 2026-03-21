@@ -1,0 +1,553 @@
+{
+  "id": "inspection_report",
+  "documentName": "検収書",
+  "issueTypes": [
+    "納品リクエスト"
+  ],
+  "contractNoPrefix": "PO",
+  "notes": "分割納品・金額変更・修正履歴・納期延長に対応",
+  "templateFile": "template_inspection_report.html",
+  "topLevelVars": [],
+  "deliveryVars": [
+    {
+      "name": "approval_comments",
+      "label": "approval_comments",
+      "required": true,
+      "source": "backlog.approval_comments",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "approval_date",
+      "label": "approval_date",
+      "required": true,
+      "source": "backlog.approval_date",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "approver_department",
+      "label": "approver_department",
+      "required": true,
+      "source": "backlog.approver_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "approver_name",
+      "label": "approver_name",
+      "required": true,
+      "source": "backlog.approver_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "business_description",
+      "label": "business_description",
+      "required": true,
+      "source": "backlog.business_description",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "contract_no",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "delivery_id",
+      "label": "delivery_id",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "delivery_type",
+      "label": "delivery_type",
+      "required": true,
+      "source": "backlog.delivery_type",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "delivery_url",
+      "label": "delivery_url",
+      "required": true,
+      "source": "backlog.delivery_url",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "milestone_name",
+      "label": "milestone_name",
+      "required": true,
+      "source": "backlog.milestone_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "order_no",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "partial_number",
+      "label": "partial_number",
+      "required": true,
+      "source": "backlog.partial_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "person_department",
+      "label": "person_department",
+      "required": true,
+      "source": "backlog.person_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "person_name",
+      "label": "person_name",
+      "required": true,
+      "source": "backlog.person_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "project_name",
+      "label": "project_name",
+      "required": true,
+      "source": "backlog.project_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "reviewer_department",
+      "label": "reviewer_department",
+      "required": true,
+      "source": "backlog.reviewer_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "reviewer_name",
+      "label": "reviewer_name",
+      "required": true,
+      "source": "backlog.reviewer_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "total_partials",
+      "label": "total_partials",
+      "required": true,
+      "source": "calc",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "vendor_invoice_num",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "vendor_name",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name",
+      "arrayPrefix": "d"
+    }
+  ],
+  "itemVars": [
+    {
+      "name": "amountChangeReason",
+      "label": "amountChangeReason",
+      "required": true,
+      "source": "backlog.amountchangereason",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "completionDate",
+      "label": "completionDate",
+      "required": true,
+      "source": "backlog.completiondate",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "hasAmountChange",
+      "label": "hasAmountChange",
+      "required": true,
+      "source": "backlog.hasamountchange",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "hasRevision",
+      "label": "hasRevision",
+      "required": true,
+      "source": "backlog.hasrevision",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "isCompleted",
+      "label": "isCompleted",
+      "required": true,
+      "source": "backlog.iscompleted",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "name",
+      "label": "name",
+      "required": true,
+      "source": "backlog.name",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "newAmount",
+      "label": "newAmount",
+      "required": true,
+      "source": "backlog.newamount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "no",
+      "label": "no",
+      "required": true,
+      "source": "backlog.no",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "notes",
+      "label": "notes",
+      "required": true,
+      "source": "backlog.notes",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "order_no",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "originalAmount",
+      "label": "originalAmount",
+      "required": true,
+      "source": "backlog.originalamount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "revisionDetail",
+      "label": "revisionDetail",
+      "required": true,
+      "source": "backlog.revisiondetail",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "spec",
+      "label": "spec",
+      "required": true,
+      "source": "backlog.spec",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "thisTimeQuantity",
+      "label": "thisTimeQuantity",
+      "required": true,
+      "source": "backlog.thistimequantity",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "totalQuantity",
+      "label": "totalQuantity",
+      "required": true,
+      "source": "backlog.totalquantity",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "unitPrice",
+      "label": "unitPrice",
+      "required": true,
+      "source": "backlog.unitprice",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ],
+  "variables": [
+    {
+      "name": "approval_comments",
+      "label": "approval_comments",
+      "required": true,
+      "source": "backlog.approval_comments",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "approval_date",
+      "label": "approval_date",
+      "required": true,
+      "source": "backlog.approval_date",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "approver_department",
+      "label": "approver_department",
+      "required": true,
+      "source": "backlog.approver_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "approver_name",
+      "label": "approver_name",
+      "required": true,
+      "source": "backlog.approver_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "business_description",
+      "label": "business_description",
+      "required": true,
+      "source": "backlog.business_description",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "contract_no",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "delivery_id",
+      "label": "delivery_id",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "delivery_type",
+      "label": "delivery_type",
+      "required": true,
+      "source": "backlog.delivery_type",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "delivery_url",
+      "label": "delivery_url",
+      "required": true,
+      "source": "backlog.delivery_url",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "milestone_name",
+      "label": "milestone_name",
+      "required": true,
+      "source": "backlog.milestone_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "order_no",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "partial_number",
+      "label": "partial_number",
+      "required": true,
+      "source": "backlog.partial_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "person_department",
+      "label": "person_department",
+      "required": true,
+      "source": "backlog.person_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "person_name",
+      "label": "person_name",
+      "required": true,
+      "source": "backlog.person_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "project_name",
+      "label": "project_name",
+      "required": true,
+      "source": "backlog.project_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "reviewer_department",
+      "label": "reviewer_department",
+      "required": true,
+      "source": "backlog.reviewer_department",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "reviewer_name",
+      "label": "reviewer_name",
+      "required": true,
+      "source": "backlog.reviewer_name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "total_partials",
+      "label": "total_partials",
+      "required": true,
+      "source": "calc",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "vendor_invoice_num",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "vendor_name",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "amountChangeReason",
+      "label": "amountChangeReason",
+      "required": true,
+      "source": "backlog.amountchangereason",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "completionDate",
+      "label": "completionDate",
+      "required": true,
+      "source": "backlog.completiondate",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "hasAmountChange",
+      "label": "hasAmountChange",
+      "required": true,
+      "source": "backlog.hasamountchange",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "hasRevision",
+      "label": "hasRevision",
+      "required": true,
+      "source": "backlog.hasrevision",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "isCompleted",
+      "label": "isCompleted",
+      "required": true,
+      "source": "backlog.iscompleted",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "name",
+      "label": "name",
+      "required": true,
+      "source": "backlog.name",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "newAmount",
+      "label": "newAmount",
+      "required": true,
+      "source": "backlog.newamount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "no",
+      "label": "no",
+      "required": true,
+      "source": "backlog.no",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "notes",
+      "label": "notes",
+      "required": true,
+      "source": "backlog.notes",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "order_no",
+      "label": "発注書番号",
+      "required": true,
+      "source": "auto",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "originalAmount",
+      "label": "originalAmount",
+      "required": true,
+      "source": "backlog.originalamount",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "revisionDetail",
+      "label": "revisionDetail",
+      "required": true,
+      "source": "backlog.revisiondetail",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "spec",
+      "label": "spec",
+      "required": true,
+      "source": "backlog.spec",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "thisTimeQuantity",
+      "label": "thisTimeQuantity",
+      "required": true,
+      "source": "backlog.thistimequantity",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "totalQuantity",
+      "label": "totalQuantity",
+      "required": true,
+      "source": "backlog.totalquantity",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "unitPrice",
+      "label": "unitPrice",
+      "required": true,
+      "source": "backlog.unitprice",
+      "arrayPrefix": "items",
+      "isArray": true
+    }
+  ]
+}

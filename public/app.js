@@ -1,5 +1,6 @@
 const state = {
-  dashboard: null
+  dashboard: null,
+  templateDefinitions: []
 };
 
 const el = {
@@ -10,10 +11,16 @@ const el = {
   events: document.getElementById("events"),
   issueCount: document.getElementById("issue-count"),
   configForm: document.getElementById("config-form"),
+  templateForm: document.getElementById("template-form"),
+  templateDefinitions: document.getElementById("template-definitions"),
+  templateDefinitionCount: document.getElementById("template-definition-count"),
+  backlogSetupChecklist: document.getElementById("backlog-setup-checklist"),
   runPoller: document.getElementById("run-poller"),
   addSample: document.getElementById("add-sample"),
   testBacklog: document.getElementById("test-backlog"),
+  showBacklogSetup: document.getElementById("show-backlog-setup"),
   testSlack: document.getElementById("test-slack"),
+  validateTemplates: document.getElementById("validate-templates"),
   flash: document.getElementById("flash")
 };
 
@@ -49,6 +56,7 @@ function render() {
 
   el.title.textContent = dashboard.config.appTitle;
   el.issueCount.textContent = `${dashboard.issues.length}件`;
+  el.templateDefinitionCount.textContent = `${state.templateDefinitions.length}件`;
   el.health.innerHTML = Object.entries(dashboard.health)
     .map(
       ([key, value]) => `
@@ -58,6 +66,26 @@ function render() {
       </div>`
     )
     .join("");
+
+  el.templateDefinitions.innerHTML = state.templateDefinitions.length
+    ? state.templateDefinitions
+        .map(
+          (definition) => `
+      <article class="issue-card">
+        <header>
+          <div>
+            <div class="meta">${definition.id}</div>
+            <strong>${definition.documentName}</strong>
+          </div>
+          <span class="badge">${definition.contractNoPrefix}</span>
+        </header>
+        <div class="meta">${definition.templateFile}</div>
+        <div class="meta">variables: ${definition.variables.length}</div>
+        <div class="meta">issueTypes: ${(definition.issueTypes || []).join(", ")}</div>
+      </article>`
+        )
+        .join("")
+    : `<div class="stack-item"><div class="meta">テンプレート定義はまだありません。</div></div>`;
 
   el.issues.innerHTML = dashboard.issues
     .map(
@@ -145,7 +173,14 @@ function render() {
 }
 
 async function load() {
-  state.dashboard = await fetchJson("/api/dashboard");
+  const [dashboard, definitions, checklist] = await Promise.all([
+    fetchJson("/api/dashboard"),
+    fetchJson("/api/template-definitions"),
+    fetch("/api/backlog-setup/checklist").then((response) => response.text())
+  ]);
+  state.dashboard = dashboard;
+  state.templateDefinitions = definitions;
+  el.backlogSetupChecklist.textContent = checklist;
   render();
 }
 
@@ -156,6 +191,24 @@ el.configForm.addEventListener("submit", async (event) => {
   try {
     await fetchJson("/api/config", { method: "POST", body: JSON.stringify(body) });
     showFlash("設定を保存しました。");
+    await load();
+  } catch (error) {
+    showFlash(error.message, true);
+  }
+});
+
+el.templateForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(el.templateForm);
+  const body = Object.fromEntries(formData.entries());
+  body.issueTypes = String(body.issueTypes || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  try {
+    await fetchJson("/api/template-definitions", { method: "POST", body: JSON.stringify(body) });
+    showFlash("テンプレート定義を追加しました。");
+    el.templateForm.reset();
     await load();
   } catch (error) {
     showFlash(error.message, true);
@@ -182,10 +235,32 @@ el.testBacklog.addEventListener("click", async () => {
   }
 });
 
+el.showBacklogSetup.addEventListener("click", async () => {
+  try {
+    el.backlogSetupChecklist.textContent = await fetch("/api/backlog-setup/checklist").then((response) =>
+      response.text()
+    );
+    showFlash("Backlog 設定チェックリストを更新しました。");
+  } catch (error) {
+    showFlash(error.message, true);
+  }
+});
+
 el.testSlack.addEventListener("click", async () => {
   try {
     const result = await fetchJson("/api/integrations/slack/test", { method: "POST" });
     showFlash(`Slack 接続OK: ${result.channel}`);
+    await load();
+  } catch (error) {
+    showFlash(error.message, true);
+  }
+});
+
+el.validateTemplates.addEventListener("click", async () => {
+  try {
+    const results = await fetchJson("/api/template-definitions/validate", { method: "POST" });
+    const passed = results.filter((result) => result.passed).length;
+    showFlash(`Template検証完了: ${passed}/${results.length} 件成功`);
     await load();
   } catch (error) {
     showFlash(error.message, true);

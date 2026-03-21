@@ -1,0 +1,241 @@
+{
+  "id": "service_basic",
+  "documentName": "業務委託基本契約書",
+  "issueTypes": [
+    "業務委託"
+  ],
+  "contractNoPrefix": "C",
+  "templateFile": "template_service_basic.html",
+  "topLevelVars": [
+    {
+      "name": "ACCOUNT_HOLDER_KANA",
+      "label": "口座名義（カナ）",
+      "required": true,
+      "source": "partner.bank_account_holder"
+    },
+    {
+      "name": "ACCOUNT_NUMBER",
+      "label": "口座番号",
+      "required": true,
+      "source": "partner.bank_account_number"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "口座種別",
+      "required": true,
+      "source": "partner.bank_account_type"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": true,
+      "source": "partner.bank_name"
+    },
+    {
+      "name": "BRANCH_NAME",
+      "label": "支店名",
+      "required": true,
+      "source": "partner.bank_branch"
+    },
+    {
+      "name": "CONTRACT_DATE_DAY",
+      "label": "契約日（日）",
+      "required": true,
+      "source": "backlog.contract_date_day"
+    },
+    {
+      "name": "CONTRACT_DATE_MONTH",
+      "label": "契約月",
+      "required": true,
+      "source": "backlog.contract_date_month"
+    },
+    {
+      "name": "CONTRACT_DATE_YEAR",
+      "label": "契約年",
+      "required": true,
+      "source": "backlog.contract_date_year"
+    },
+    {
+      "name": "INVOICE_REGISTRATION_NUMBER",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number"
+    },
+    {
+      "name": "IS_INVOICE_ISSUER",
+      "label": "インボイス発行事業者",
+      "required": true,
+      "source": "partner.is_invoice_issuer"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "REMARKS",
+      "label": "備考",
+      "required": false,
+      "source": "backlog.remarks"
+    },
+    {
+      "name": "VENDOR_ADDRESS",
+      "label": "相手方住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "VENDOR_EMAIL",
+      "label": "相手方メール",
+      "required": true,
+      "source": "partner.contact_email"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "VENDOR_PHONE",
+      "label": "VENDOR_PHONE",
+      "required": true,
+      "source": "backlog.vendor_phone"
+    },
+    {
+      "name": "VENDOR_REP",
+      "label": "相手方代表者",
+      "required": true,
+      "source": "partner.representative"
+    }
+  ],
+  "variables": [
+    {
+      "name": "ACCOUNT_HOLDER_KANA",
+      "label": "口座名義（カナ）",
+      "required": true,
+      "source": "partner.bank_account_holder"
+    },
+    {
+      "name": "ACCOUNT_NUMBER",
+      "label": "口座番号",
+      "required": true,
+      "source": "partner.bank_account_number"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "口座種別",
+      "required": true,
+      "source": "partner.bank_account_type"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": true,
+      "source": "partner.bank_name"
+    },
+    {
+      "name": "BRANCH_NAME",
+      "label": "支店名",
+      "required": true,
+      "source": "partner.bank_branch"
+    },
+    {
+      "name": "CONTRACT_DATE_DAY",
+      "label": "契約日（日）",
+      "required": true,
+      "source": "backlog.contract_date_day"
+    },
+    {
+      "name": "CONTRACT_DATE_MONTH",
+      "label": "契約月",
+      "required": true,
+      "source": "backlog.contract_date_month"
+    },
+    {
+      "name": "CONTRACT_DATE_YEAR",
+      "label": "契約年",
+      "required": true,
+      "source": "backlog.contract_date_year"
+    },
+    {
+      "name": "INVOICE_REGISTRATION_NUMBER",
+      "label": "インボイス登録番号",
+      "required": true,
+      "source": "partner.invoice_registration_number"
+    },
+    {
+      "name": "IS_INVOICE_ISSUER",
+      "label": "インボイス発行事業者",
+      "required": true,
+      "source": "partner.is_invoice_issuer"
+    },
+    {
+      "name": "PARTY_A_ADDRESS",
+      "label": "甲（当社）住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_NAME",
+      "label": "甲（当社）名称",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "PARTY_A_REP",
+      "label": "甲（当社）代表者",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "REMARKS",
+      "label": "備考",
+      "required": false,
+      "source": "backlog.remarks"
+    },
+    {
+      "name": "VENDOR_ADDRESS",
+      "label": "相手方住所",
+      "required": true,
+      "source": "partner.address"
+    },
+    {
+      "name": "VENDOR_EMAIL",
+      "label": "相手方メール",
+      "required": true,
+      "source": "partner.contact_email"
+    },
+    {
+      "name": "VENDOR_NAME",
+      "label": "相手方名称",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "VENDOR_PHONE",
+      "label": "VENDOR_PHONE",
+      "required": true,
+      "source": "backlog.vendor_phone"
+    },
+    {
+      "name": "VENDOR_REP",
+      "label": "相手方代表者",
+      "required": true,
+      "source": "partner.representative"
+    }
+  ]
+}

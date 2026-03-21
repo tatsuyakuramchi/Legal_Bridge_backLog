@@ -17,7 +17,9 @@
         <div class="actions">
           <button id="run-poller">ポーリング実行</button>
           <button id="test-backlog" class="secondary">Backlog接続テスト</button>
+          <button id="show-backlog-setup" class="secondary">Backlog設定確認</button>
           <button id="test-slack" class="secondary">Slack接続テスト</button>
+          <button id="validate-templates" class="secondary">Template検証</button>
           <button id="add-sample" class="secondary">サンプル課題追加</button>
         </div>
         <div class="config">
@@ -32,19 +34,52 @@
             <button type="submit">保存</button>
           </form>
         </div>
+        <div class="config">
+          <h2>Template追加</h2>
+          <form id="template-form">
+            <label>Definition ID<input name="id" placeholder="service_basic" /></label>
+            <label>Template File<input name="templateFile" placeholder="template_service_basic.html" /></label>
+            <label>Document Name<input name="documentName" placeholder="業務委託基本契約書" /></label>
+            <label>Issue Types<input name="issueTypes" placeholder="業務委託契約, 基本契約" /></label>
+            <label>Prefix
+              <select name="contractNoPrefix">
+                <option value="C">C</option>
+                <option value="PO">PO</option>
+                <option value="LIC">LIC</option>
+              </select>
+            </label>
+            <label>Notes<input name="notes" placeholder="任意メモ" /></label>
+            <button type="submit">Definition作成</button>
+          </form>
+        </div>
       </aside>
       <main class="content">
         <section class="hero">
           <div>
             <div class="eyebrow">Admin UI</div>
             <h2 id="app-title">Legal Bridge Local App</h2>
-            <p>Backlog の課題同期、文書生成、Slack 通知の状態をローカル PC から確認します。</p>
+            <p>Backlog の課題同期、文書生成、Slack 通知、テンプレート定義の状態をローカル PC から確認します。</p>
           </div>
           <div class="health-grid" id="health-grid"></div>
         </section>
 
         <section class="panel">
           <div id="flash" class="flash flash-ok">準備完了</div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Backlog設定チェック</h3>
+          </div>
+          <pre id="backlog-setup-checklist" class="stack-item checklist">未取得</pre>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Template定義</h3>
+            <span id="template-definition-count"></span>
+          </div>
+          <div id="template-definitions" class="card-grid"></div>
         </section>
 
         <section class="panel">
