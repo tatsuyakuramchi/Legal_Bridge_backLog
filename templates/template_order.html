@@ -2,203 +2,718 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>発注書</title>
+  <title>発注書テンプレート（発注時点情報に限定・税計算なし）</title>
   <style>
-    @page { size: A4; margin: 14mm 16mm; }
+    @page { size: A4; margin: 12mm 15mm; }
+
+    :root{
+      --ink:#111;
+      --muted:#555;
+      --line:#cfcfcf;
+      --panel:#f3f3f3;
+      --panel2:#fafafa;
+    }
+
+    * { box-sizing: border-box; }
     body {
       font-family: "Noto Sans JP", "Yu Gothic", sans-serif;
-      color: #111;
       font-size: 10pt;
-      line-height: 1.5;
+      line-height: 1.45;
+      color: var(--ink);
+    }
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .header-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 6px;
+      margin-bottom: 14px;
+      gap: 12px;
+    }
+    .title-box h1{
+      font-size: 20pt;
       margin: 0;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
     }
-    * { box-sizing: border-box; }
-    .page { width: 100%; }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 2px solid #111;
-      padding-bottom: 10px;
-      margin-bottom: 16px;
-    }
-    h1 {
-      margin: 0;
-      font-size: 22pt;
-      letter-spacing: 0.08em;
-    }
-    .muted { color: #555; font-size: 9pt; }
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-    .box {
-      border: 1px solid #d0d0d0;
-      padding: 12px;
-      background: #fafafa;
-    }
-    .label {
+    .doc-info{
+      text-align:right;
       font-size: 9pt;
-      color: #555;
-      margin-bottom: 4px;
+      line-height: 1.6;
+      color: var(--muted);
+      white-space: nowrap;
     }
-    .vendor-name {
-      font-size: 14pt;
-      font-weight: 700;
+
+    .party-grid{
+      display:grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 12px;
+      align-items:start;
       margin-bottom: 8px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+    .vendor-section { font-size: 11pt; }
+    .vendor-name{
+      font-size: 13pt;
+      font-weight: 800;
+      border-bottom: 1px solid var(--ink);
+      display: inline-block;
+      min-width: 250px;
+      padding-bottom: 2px;
     }
-    th, td {
-      border: 1px solid #cfcfcf;
-      padding: 8px 10px;
+    .company-section{
+      font-size: 9pt;
+      background: var(--panel2);
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+    }
+
+    .section-mark{
+      background: transparent;
+      color: var(--ink);
+      padding: 2px 0 2px 10px;
+      font-weight: 800;
+      font-size: 10pt;
+      margin-top: 12px;
+      margin-bottom: 6px;
+      display: inline-block;
+      border-left: 4px solid var(--ink);
+    }
+
+    table.summary{
+      width:100%;
+      border-collapse:collapse;
+      margin-bottom: 12px;
+      font-size: 10pt;
+    }
+    table.summary th, table.summary td{
+      border: 1px solid var(--line);
+      padding: 7px 8px;
       vertical-align: top;
     }
-    th {
-      background: #f2f2f2;
-      width: 28%;
+    table.summary th{
+      background: var(--panel);
+      width: 26%;
+      text-align:left;
+    }
+
+    table.items{
+      width:100%;
+      border-collapse:collapse;
+      margin-top: 4px;
+      font-size: 9pt;
+    }
+    table.items thead { display: table-header-group; }
+
+    table.items th{
+      background: var(--panel);
+      color: var(--ink);
+      padding: 6px;
+      text-align:center;
+      font-weight: 800;
+      border: 1px solid var(--line);
+    }
+    table.items td{
+      border: 1px solid var(--line);
+      padding: 6px;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    table.items tr{ break-inside: avoid; page-break-inside: avoid; }
+
+    .right{ text-align:right; }
+    .center{ text-align:center; }
+
+    .item-labels{
+      margin-bottom: 4px;
+    }
+    .category-label{
+      display:inline-block;
+      font-size: 7.5pt;
+      padding: 1px 5px;
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 2px;
+      color: var(--ink);
+      white-space: nowrap;
+      margin-right: 4px;
+    }
+    .category-label.expense{
+      background: #ffedd5;
+      color: #9a3412;
+      border-color: #fdba74;
+    }
+    .rights-label{
+      display:inline-block;
+      font-size: 7.5pt;
+      padding: 1px 5px;
+      border: 1px solid #c4b5fd;
+      background: #f3e8ff;
+      border-radius: 2px;
+      color: #7c3aed;
+      white-space: nowrap;
+    }
+    .ip-rights-block{
+      font-size: 8.5pt;
+      margin-top: 6px;
+      padding: 5px 8px;
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      break-inside: avoid;
+    }
+    .ip-rights-block .ip-title{
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+    .ip-included{
+      color: var(--muted);
+      font-style: italic;
+    }
+    .ip-ledger-link{
+      margin-top: 3px;
+      font-size: 8pt;
+      color: #4338ca;
+      font-weight: 600;
+    }
+    .delivery-date-badge{
+      display:inline-block;
+      font-size: 8pt;
+      padding: 1px 6px;
+      border: 1px solid #93c5fd;
+      background: #eff6ff;
+      border-radius: 2px;
+      color: #1e40af;
+      white-space: nowrap;
+      margin-left: 4px;
+    }
+
+    tr.expense-row{ background: var(--panel2); }
+
+    .item-name-block{
+      font-weight: 800;
+      font-size: 10pt;
+      margin-bottom: 3px;
+      display:inline-block;
+    }
+    .item-spec-block{
+      font-size: 8.5pt;
+      color: var(--muted);
+      white-space: pre-wrap;
+      border-top: 1px dashed var(--line);
+      padding-top: 4px;
+      margin-top: 4px;
+      break-inside: avoid;
+    }
+
+    .item-detail-row td{
+      background: #fff;
+      border-top: 0;
+      vertical-align: top;
+    }
+    .item-detail-row td:first-child{
+      border-right: 1px solid var(--line);
+    }
+    .detail-cell{
+      padding-top: 4px;
+      padding-bottom: 8px;
+    }
+
+    .pay-method-badge{
+      display:inline-block;
+      font-size: 7.5pt;
+      padding: 2px 6px;
+      border-radius: 2px;
+      font-weight: 800;
+      border: 1px solid var(--ink);
+      background:#fff;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+
+    .performance-detail, .subscription-detail, .milestone-detail{
+      font-size: 8.5pt;
+      color: var(--ink);
+      background: transparent;
+      padding: 4px 8px;
+      margin-top: 6px;
+      border-left: 3px solid var(--ink);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      break-inside: avoid;
+    }
+
+    .amount-note{
+      font-size: 8.5pt;
+      color: var(--muted);
+      font-weight: normal;
+      margin-top: 2px;
+    }
+    .total-amount{
+      font-size: 13pt;
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+
+    .sum-row{ background: var(--panel); font-weight: 900; }
+    .note-row{ background: transparent; font-size: 9pt; color: var(--muted); }
+
+    .terms-section{
+      margin-top: 12px;
+      font-size: 9pt;
+      padding: 10px 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+    }
+    .terms-title{
+      font-weight: 900;
+      margin-bottom: 6px;
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 3px;
+    }
+
+    .sign-table{
+      width:100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 9pt;
+    }
+    .sign-table th, .sign-table td{
+      border:1px solid var(--line);
+      padding: 8px;
+      vertical-align: top;
+    }
+    .sign-table th{
+      width: 22%;
+      background: var(--panel);
       text-align: left;
     }
-    .items th, .items td { font-size: 9pt; }
-    .items th { width: auto; }
-    .total {
-      font-size: 16pt;
-      font-weight: 700;
+    .sign-box{
+      height: 22mm;
+      border: 1px dashed var(--line);
+      margin-top: 4px;
     }
-    .note {
-      white-space: pre-wrap;
+    .small-muted{ color: var(--muted); font-size: 8.5pt; }
+
+    .callout{
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--ink);
+      padding: 8px 10px;
+      margin-top: 8px;
+      background: #fff;
+      font-size: 9pt;
+    }
+
+    @media print{
+      a{ color: inherit; text-decoration:none; }
     }
   </style>
 </head>
+
 <body>
-  <div class="page">
-    <div class="header">
-      <div>
-        <h1>発注書</h1>
-        <div class="muted">案件名: {{PROJECT_TITLE}}</div>
+  
+
+  <div class="header-row">
+    <div class="title-box"><h1>発 注 書</h1></div>
+    <div class="doc-info">
+      発注番号: <strong>{{ORDER_NO}}</strong><br>
+      発行日: {{ORDER_DATE_YEAR}}年{{ORDER_DATE_MONTH}}月{{ORDER_DATE_DAY}}日
+    </div>
+  </div>
+
+  <div class="party-grid">
+    <div class="vendor-section">
+      <div class="vendor-name">{{VENDOR_NAME}} <span style="font-size:11pt; font-weight:normal;">{{VENDOR_SUFFIX}}</span></div>
+      <div style="margin-top:8px; font-size:9pt; color:var(--muted);">
+        {{VENDOR_ADDRESS}}
       </div>
-      <div class="muted">
-        発注番号: <strong>{{ORDER_NO}}</strong><br>
-        発注日: {{ORDER_DATE_YEAR}}年{{ORDER_DATE_MONTH}}月{{ORDER_DATE_DAY}}日
+      {{#if VENDOR_EMAIL}}
+      <div style="margin-top:4px; font-size:9pt; color:var(--muted);">
+        E-mail: {{VENDOR_EMAIL}}
       </div>
+      {{/if}}
+      {{#if VENDOR_CONTACT_NAME}}
+      <div style="margin-top:6px; font-size:9pt;">
+        {{#if VENDOR_CONTACT_DEPARTMENT}}{{VENDOR_CONTACT_DEPARTMENT}} {{/if}}{{VENDOR_CONTACT_NAME}} 様
+      </div>
+      {{/if}}
+      <div style="margin-top:10px;">下記内容にて発注いたします。<br>本発注書のご確認をお願い申し上げます。</div>
+      <div style="margin-top:14px; font-size:10pt;">件名: <strong>{{PROJECT_TITLE}}</strong></div>
     </div>
 
-    <div class="grid">
-      <div class="box">
-        <div class="label">発注先</div>
-        <div class="vendor-name">{{VENDOR_NAME}}{{#if VENDOR_SUFFIX}} {{VENDOR_SUFFIX}}{{/if}}</div>
-        <div>{{VENDOR_ADDRESS}}</div>
-        {{#if VENDOR_EMAIL}}<div class="muted">E-mail: {{VENDOR_EMAIL}}</div>{{/if}}
-        {{#if VENDOR_CONTACT_NAME}}
-        <div class="muted">
-          {{#if VENDOR_CONTACT_DEPARTMENT}}{{VENDOR_CONTACT_DEPARTMENT}} {{/if}}{{VENDOR_CONTACT_NAME}} 様
-        </div>
-        {{/if}}
+    <div class="company-section">
+      <div style="font-weight:900; font-size:11pt; margin-bottom:5px;">{{PARTY_A_NAME}}</div>
+      {{PARTY_A_ADDRESS}}<br>
+      {{PARTY_A_REP}}
+      {{#if STAFF_NAME}}
+      <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--line); font-size:9pt;">
+        <strong>担当:</strong> {{STAFF_NAME}}<br>
+        {{#if STAFF_PHONE}}TEL: {{STAFF_PHONE}}<br>{{/if}}
+        {{#if STAFF_EMAIL}}E-mail: {{STAFF_EMAIL}}{{/if}}
       </div>
-      <div class="box">
-        <div class="label">発注者</div>
-        <div><strong>{{PARTY_A_NAME}}</strong></div>
-        <div>{{PARTY_A_ADDRESS}}</div>
-        <div>{{PARTY_A_REP}}</div>
-        {{#if STAFF_NAME}}
-        <div class="muted" style="margin-top:8px;">
-          担当: {{STAFF_NAME}}<br>
-          {{#if STAFF_PHONE}}TEL: {{STAFF_PHONE}}<br>{{/if}}
-          {{#if STAFF_EMAIL}}E-mail: {{STAFF_EMAIL}}{{/if}}
-        </div>
-        {{/if}}
-      </div>
+      {{/if}}
     </div>
+  </div>
 
-    <table>
-      <tr>
-        <th>発注金額合計（税抜）</th>
-        <td>
-          <div class="total">¥ {{formatCurrency grandTotalExTax}}</div>
-          {{#if totalFee}}<div class="muted">固定費: ¥{{formatCurrency totalFee}}</div>{{/if}}
-          {{#if totalExp}}<div class="muted">実費: ¥{{formatCurrency totalExp}}</div>{{/if}}
-        </td>
-      </tr>
-      <tr>
-        <th>納期</th>
-        <td>{{DELIVERY_DATE}}</td>
-      </tr>
-      <tr>
-        <th>支払条件</th>
-        <td>
-          {{#if PAYMENT_TERMS}}
-          {{PAYMENT_TERMS}}
-          {{else}}
-          別途協議のうえ確定
-          {{/if}}
-          {{#if items}}
-          <div class="muted" style="margin-top:8px;">
-            {{#each items}}
-            {{#if payment_date}}<div>No.{{add @index 1}}: {{payment_date}}</div>{{/if}}
-            {{/each}}
+  <div class="section-mark">■ 発注概要</div>
+  <table class="summary">
+    <tr>
+      <th>発注合計金額（税抜）</th>
+      <td>
+        
+          <!-- 業績連動のみ -->
+          <div style="font-size:11pt; font-weight:900;">
+            業績連動型（売上等に基づき算出）
           </div>
-          {{/if}}
-        </td>
-      </tr>
-      <tr>
-        <th>備考</th>
-        <td class="note">{{REMARKS}}</td>
-      </tr>
-    </table>
-
-    <table class="items">
-      <thead>
-        <tr>
-          <th>No.</th>
-          <th>内容</th>
-          <th>仕様</th>
-          <th>単価</th>
-          <th>数量</th>
-          <th>納期</th>
-        </tr>
-      </thead>
-      <tbody>
-        {{#if items}}
-          {{#each items}}
-          <tr>
-            <td>{{add @index 1}}</td>
-            <td>{{#if item_name}}{{item_name}}{{else}}{{name}}{{/if}}</td>
-            <td>{{#if detailText}}{{detailText}}{{else}}{{spec}}{{/if}}</td>
-            <td>{{#if unit_price}}{{formatCurrency unit_price}}{{else}}{{formatCurrency unitPrice}}{{/if}}</td>
-            <td>{{#if qty}}{{qty}}{{else}}{{thisTimeQuantity}}{{/if}}</td>
-            <td>{{#if deliveryDateStr}}{{deliveryDateStr}}{{else}}{{payment_date}}{{/if}}</td>
-          </tr>
-          {{/each}}
+          <div class="amount-note">※ 金額は報告に基づき支払通知書にて確定</div>
         {{else}}
-          <tr>
-            <td>1</td>
-            <td>{{ITEM_NAME}}</td>
-            <td>{{SPECIAL_TERMS}}</td>
-            <td>-</td>
-            <td>-</td>
-            <td>{{DELIVERY_DATE}}</td>
-          </tr>
+          <!-- 固定額 + 業績連動の混合 -->
+          <div style="font-size:11pt; font-weight:900;">
+            業績連動型の支払を含む
+          </div>
+          <div class="amount-note">
+            ※ 固定額部分（税抜）:
+            <span class="total-amount">¥ {{formatCurrency grandTotalExTax}}</span>
+          </div>
+          <div class="amount-note">※ 業績連動部分は売上等に基づき別途算出</div>
+        {{else}}
+          <!-- サブスクリプションのみ -->
+          <div style="font-size:11pt; font-weight:900;">
+            サブスクリプション契約
+          </div>
+          <div class="amount-note">※ 各業務明細の課金サイクル・金額に従う</div>
+        {{else}}
+          <!-- 固定額 + サブスクリプション -->
+          <div class="total-amount">¥ {{formatCurrency grandTotalExTax}} （税抜）</div>
+          <div class="amount-note">※ サブスクリプション契約を含む</div>
+        {{else}}
+          <div class="total-amount">¥ {{formatCurrency grandTotalExTax}} （税抜）</div>
+          <div class="amount-note">
+            （内訳）業務委託料: ¥{{formatCurrency totalFee}} / 立替経費: ¥{{formatCurrency totalExp}}
+          </div>
+        {{else}}
+          <div class="total-amount">¥ {{formatCurrency grandTotalExTax}} （税抜）</div>
         {{/if}}
-      </tbody>
-    </table>
+        <div class="amount-note">
+          ※ 消費税等の精算は、支払通知書（請求・支払処理）にて行う。
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <th>納期</th>
+      <td>{{DELIVERY_DATE}}</td>
+    </tr>
+    <tr>
+      <th>支払条件</th>
+      <td>
+         1 && items.some(function(r){return !!r.payment_date;})) { ?>
+          <div>
+            {{#each items}}
+              <div style="font-size:9pt;">No.{{add @index 1}}　{{payment_date}}</div>
+            {{/if}}
+          </div>
+        {{else}}
+          <!-- 業績連動のみ -->
+          <div>報告後所定の期日に支払</div>
+          <div class="amount-note">※ 各業務明細の支払条件に従う</div>
+        {{else}}
+          <!-- 固定額 + 業績連動の混合 -->
+          <div>{{PAYMENT_TERMS}}（固定額部分）</div>
+          <div class="amount-note">※ 業績連動部分は報告後所定の期日に支払</div>
+        {{else}}
+          <!-- サブスクリプションのみ -->
+          <div>契約に基づく定期支払</div>
+          <div class="amount-note">※ 各業務明細の課金サイクルに従う</div>
+        {{else}}
+          <!-- 固定額のみ、または固定額＋サブスク -->
+          {{PAYMENT_TERMS}}
+        {{/if}}
+      </td>
+    </tr>
+  </table>
 
-    {{#if BANK_NAME}}
-    <table>
+  <div class="section-mark">■ 業務明細</div>
+  <table class="items">
+    <thead>
       <tr>
-        <th>振込先</th>
-        <td>
-          {{BANK_NAME}} {{BRANCH_NAME}}<br>
-          {{ACCOUNT_TYPE}} {{ACCOUNT_NUMBER}}<br>
-          {{ACCOUNT_HOLDER_KANA}}
+        <th style="width:6mm;">No</th>
+        <th>業務内容・成果物</th>
+        <th style="width:18mm;">支払方法</th>
+        <th style="width:15mm;">数量</th>
+        <th style="width:22mm;">単価</th>
+        <th style="width:24mm;">金額（税抜）</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#if items}}
+          for (var i=0; i<items.length; i++){
+            var r = items[i];
+            var isExpense = (r.category === '立替経費');
+            var payMethod = r.pay_method || '固定額';
+            var isPerformance = (payMethod === '業績連動' || payMethod === 'PERFORMANCE' || payMethod === '固定＋業績連動' || payMethod === 'FIXED_PLUS_ROYALTY');
+            var isPurePerformance = (payMethod === '業績連動' || payMethod === 'PERFORMANCE');
+            var isFixedPlusRoyalty = (payMethod === '固定＋業績連動' || payMethod === 'FIXED_PLUS_ROYALTY');
+            var isSubscription = (payMethod === 'サブスクリプション' || payMethod === 'サブスク' || payMethod === 'SUBSCRIPTION');
+            var isMilestone = (payMethod === '分割払い' || payMethod === 'MILESTONE');
+            var rightsLabel = r.rights_label || '';
+            var deliveryDateStr = r.delivery_date ? (typeof r.delivery_date === 'string' ? r.delivery_date.split('T')[0] : r.delivery_date) : '';
+            var detailText = '';
+            if (r.spec) detailText += r.spec;
+      ?>
+        <tr class="">
+          <td class="center">{{add @index 1}}</td>
+          <td>
+            
+            <div class="item-labels">
+              <span class="category-label ">{{category}}</span>{{/if}}
+              {{#if rightsLabel}}<span class="rights-label">{{rightsLabel}}</span>{{/if}}
+            </div>
+            {{/if}}
+            <div class="item-name-block">{{item_name}}</div>
+            {{#if deliveryDateStr}}<span class="delivery-date-badge">納期: {{deliveryDateStr}}</span>{{/if}}
+          </td>
+
+          <td class="center">
+            <span class="pay-method-badge"></span>
+          </td>
+
+          <td class="right"></td>
+
+          <td class="right">
+            {{#if isPurePerformance}}
+              <span style="font-size:8.5pt;">{{first_rate}}%</span>
+            {{else}}
+              ¥
+              <div style="font-size:7.5pt; color:var(--muted);">+ 業績連動{{first_rate}}%</div>
+            {{else}}
+              <span style="font-size:8.5pt;">¥/</span>
+            {{else}}
+              ¥
+            {{/if}}
+          </td>
+
+          <td class="right">
+            {{#if isPurePerformance}}
+              <span style="font-size:8.5pt;">売上連動</span>
+            {{else}}
+              ¥
+              <div class="amount-note">+ 売上連動</div>
+            {{else}}
+              ¥
+            {{/if}}
+          </td>
+        </tr>
+
+        
+        <tr class="item-detail-row ">
+          <td></td>
+          <td colspan="5" class="detail-cell">
+            {{#if detailText}}
+            <div class="item-spec-block">{{detailText}}</div>
+            {{/if}}
+
+            
+            <div class="ip-rights-block">
+              <div class="ip-title">知的財産権: 発注者帰属</div>
+              {{#if transfer_fee}}
+                <div>譲渡代金: ¥</div>
+              {{else}}
+                <div class="ip-included">※ 譲渡代金は報酬に含む</div>
+              {{/if}}
+            </div>
+            {{/if}}
+
+            
+            <div class="ip-rights-block">
+              <div class="ip-title">知的財産権: 受注者帰属（利用許諾）</div>
+              
+                <div>利用許諾条件: {{license_terms}}</div>
+              {{/if}}
+              {{#if license_fee}}
+                <div>利用許諾料: ¥</div>
+              {{else}}
+                <div class="ip-included">※ 利用許諾料は報酬に含む</div>
+              {{/if}}
+              
+                <div class="ip-ledger-link">権利台帳: {{linked_license_contract_title}}</div>
+              {{/if}}
+            </div>
+            {{/if}}
+
+            {{#if isPerformance}}
+              <div class="performance-detail">
+                <strong>【業績連動条件】</strong><br>
+                基準: {{base_price_type}}<br>
+                
+                報告タイミング: {{trigger_event}}（イベント型）
+                 / 報告頻度: {{/if}}
+                {{else}}
+                報告頻度: （定期報告型）
+                {{/if}}<br>
+                <strong>【初回】</strong> 料率: {{first_rate}}%
+                 / 支払: {{first_payment_timing}}{{/if}}
+                <br>
+                <strong>【2回目以降】</strong> 料率: {{second_rate}}%
+                 / 支払: {{second_payment_timing}}{{/if}}
+                {{/if}}
+              </div>
+            {{/if}}
+
+            {{#if isSubscription}}
+              <div class="subscription-detail">
+                <strong>【サブスクリプション】</strong><br>
+                課金: 
+                 / 開始: {{sub_start_date}}{{/if}}
+                 / 自動更新あり{{/if}}
+              </div>
+            {{/if}}
+
+            
+              <div class="milestone-detail">
+                <strong>【分割払いスケジュール】</strong><br>
+                {{milestones}}
+              </div>
+            {{/if}}
+          </td>
+        </tr>
+        {{/if}}
+      
+        <tr>
+          <td class="center">1</td>
+          <td><div class="item-name-block">{{ITEM_NAME}}</div></td>
+          <td class="center"><span class="pay-method-badge">固定額</span></td>
+          <td class="right">1</td>
+          <td class="right">¥</td>
+          <td class="right">¥</td>
+        </tr>
+      {{/if}}
+
+      {{#if showTotalSection}}
+      <tr class="sum-row">
+        <td colspan="5" class="right">
+          {{#if hasPerformance}}固定額部分 小計（税抜）{{else}}小計（税抜）{{/if}}
+        </td>
+        <td class="right">¥{{formatCurrency grandTotalExTax}}</td>
+      </tr>
+      {{/if}}
+
+      {{#if hasPerformance}}
+      <tr class="note-row">
+        <td colspan="6" class="center">
+          ※ 業績連動部分の支払額は、売上報告に基づき別途算出されます（支払通知書にて確定）
         </td>
       </tr>
+      {{/if}}
+    </tbody>
+  </table>
+
+  {{#if SPECIAL_TERMS}}
+  <div class="terms-section">
+    <div class="terms-title">特約事項</div>
+    <div style="white-space: pre-wrap;">{{SPECIAL_TERMS}}</div>
+  </div>
+  {{/if}}
+
+  {{#if REMARKS}}
+  <div class="terms-section">
+    <div class="terms-title">備考</div>
+    <div style="white-space: pre-wrap;">{{REMARKS}}</div>
+  </div>
+  {{/if}}
+
+  
+  <div class="callout" style="margin-top: 12px;">
+    <strong>準拠契約:</strong> 本発注書は、甲乙間で締結済みの基本業務委託契約書（{{MASTER_CONTRACT_REF}}）に基づき発行されるものである。本発注書に定めのない事項については、基本業務委託契約書の定めによるものとする。
+  </div>
+  {{/if}}
+
+  
+  <div class="callout" style="margin-top: 12px;">
+    <strong>適用約款:</strong> 本発注書には別紙「業務委託基本契約約款（スポット契約用）」が適用される。受注者は本発注書を承諾することにより、当該約款の内容にも同意したものとする。
+  </div>
+  {{/if}}
+
+  
+  <div class="terms-section">
+    <div class="terms-title">支払先情報</div>
+    {{#if BANK_NAME}}
+    <table class="summary" style="margin-bottom:6px;">
+      <tr><th>金融機関</th><td>{{BANK_NAME}} {{BRANCH_NAME}}</td></tr>
+      <tr><th>口座</th><td>{{ACCOUNT_TYPE}} {{ACCOUNT_NUMBER}}</td></tr>
+      <tr><th>口座名義</th><td>{{ACCOUNT_HOLDER_KANA}}</td></tr>
+      
+      <tr><th>適格請求書発行事業者</th><td>登録番号: T{{INVOICE_REGISTRATION_NUMBER}}</td></tr>
+      {{/if}}
     </table>
+    {{else}}
+    <div style="white-space: pre-wrap;">{{BANK_INFO}}</div>
+    {{/if}}
+    {{#if TRANSFER_FEE_PAYER}}
+    <div class="small-muted" style="margin-top:4px;">※ 振込手数料: {{TRANSFER_FEE_PAYER}}負担</div>
     {{/if}}
   </div>
+  {{/if}}
+
+  
+  <div class="section-mark">■ 署名欄</div>
+  <table class="sign-table" style="margin-top: 6px;">
+    <tr>
+      <th style="width:50%;">発注者（甲）</th>
+      <th style="width:50%;">受注者（乙）</th>
+    </tr>
+    <tr>
+      <td>
+        <div>{{PARTY_A_NAME}}</div>
+        <div class="small-muted">{{PARTY_A_ADDRESS}}</div>
+        <div style="margin-top:4px;">{{PARTY_A_REP}}</div>
+        <div class="sign-box"></div>
+      </td>
+      <td>
+        <div>{{VENDOR_NAME}}</div>
+        <div class="small-muted">{{VENDOR_ADDRESS}}</div>
+        <div style="margin-top:4px;"></div>
+        <div class="sign-box"></div>
+      </td>
+    </tr>
+  </table>
+  {{/if}}
+
+  
+    <div class="section-mark">■ 受領確認（承諾）</div>
+
+    <div class="callout">
+      <div style="font-weight:900;">承諾方法</div>
+      <div class="small-muted">
+        {{ACCEPT_METHOD}}
+        {{#if ACCEPT_REPLY_DUE_DATE}}<br>返信期限: {{ACCEPT_REPLY_DUE_DATE}}{{/if}}
+      </div>
+      
+        <div class="small-muted" style="margin-top:6px;">
+          なお、貴社が本発注に基づく業務へ着手した場合、当該時点で本発注内容に承諾したものとして取り扱うことがあります。
+        </div>
+      {{/if}}
+    </div>
+
+    <table class="sign-table">
+      <tr>
+        <th>受領日</th>
+        <td>{{VENDOR_ACCEPT_DATE}}</td>
+      </tr>
+      <tr>
+        <th>受領者</th>
+        <td>
+          {{VENDOR_ACCEPT_NAME}}
+          <div class="sign-box"></div>
+          <div class="small-muted">※ 記名押印（または署名）欄</div>
+        </td>
+      </tr>
+    </table>
+  {{/if}}
+
+  
+  
+  {{/if}}
+
 </body>
 </html>

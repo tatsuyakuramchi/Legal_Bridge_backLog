@@ -9,6 +9,8 @@ type SlackPostMessageResponse = {
 };
 
 type SlackCommandHandler = (payload: { text: string; channel: string; user?: string }) => Promise<string | void>;
+type SlackInteractiveHandler = (payload: Record<string, unknown>) => Promise<void>;
+type SlackEventHandler = (payload: { type: string; event: Record<string, unknown>; envelope: Record<string, unknown> }) => Promise<void>;
 
 export class SlackService {
   private socketClient: SocketModeClient | null = null;
@@ -24,29 +26,74 @@ export class SlackService {
   }
 
   async postMessage(config: AppConfig, text: string, channel?: string): Promise<SlackPostMessageResponse> {
+    return this.postBlocks(config, { text, channel });
+  }
+
+  async postBlocks(
+    config: AppConfig,
+    input: {
+      text: string;
+      channel?: string;
+      blocks?: Array<Record<string, unknown>>;
+    }
+  ): Promise<SlackPostMessageResponse> {
     const token = this.resolveBotToken();
-    const targetChannel = channel ?? this.resolveChannel(config);
+    const targetChannel = input.channel ?? this.resolveChannel(config);
     if (!token || !targetChannel) {
       throw new Error("Slack credentials are not configured.");
     }
 
-    const response = await fetch("https://slack.com/api/chat.postMessage", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json; charset=utf-8"
-      },
-      body: JSON.stringify({ channel: targetChannel, text })
+    return this.callApi<SlackPostMessageResponse>(token, "chat.postMessage", {
+      channel: targetChannel,
+      text: input.text,
+      blocks: input.blocks
     });
-
-    const payload = (await response.json()) as SlackPostMessageResponse;
-    if (!response.ok || !payload.ok) {
-      throw new Error(`Slack API error: ${payload.error ?? response.statusText}`);
-    }
-    return payload;
   }
 
-  async startSocketMode(config: AppConfig, onCommand: SlackCommandHandler): Promise<boolean> {
+  async updateMessage(
+    _config: AppConfig,
+    input: {
+      channel: string;
+      ts: string;
+      text: string;
+      blocks?: Array<Record<string, unknown>>;
+    }
+  ): Promise<SlackPostMessageResponse> {
+    const token = this.resolveBotToken();
+    if (!token) {
+      throw new Error("Slack credentials are not configured.");
+    }
+    return this.callApi<SlackPostMessageResponse>(token, "chat.update", input);
+  }
+
+  async openModal(triggerId: string, view: Record<string, unknown>): Promise<void> {
+    const token = this.resolveBotToken();
+    if (!token) {
+      throw new Error("Slack credentials are not configured.");
+    }
+    await this.callApi(token, "views.open", {
+      trigger_id: triggerId,
+      view
+    });
+  }
+
+  async getFileInfo(fileId: string): Promise<Record<string, unknown>> {
+    const token = this.resolveBotToken();
+    if (!token) {
+      throw new Error("Slack credentials are not configured.");
+    }
+    const response = await this.callApi<{ ok: true; file: Record<string, unknown> }>(token, "files.info", {
+      file: fileId
+    });
+    return response.file;
+  }
+
+  async startSocketMode(
+    config: AppConfig,
+    onCommand: SlackCommandHandler,
+    onInteractive?: SlackInteractiveHandler,
+    onEvent?: SlackEventHandler
+  ): Promise<boolean> {
     if (!this.isConfigured(config)) {
       return false;
     }
@@ -73,7 +120,19 @@ export class SlackService {
     client.on("events_api", async ({ body, ack }) => {
       await ack();
       const event = body.event;
-      if (!event || "bot_id" in event || event.type !== "app_mention") {
+      if (!event || "bot_id" in event) {
+        return;
+      }
+
+      if (onEvent) {
+        await onEvent({
+          type: String(event.type ?? ""),
+          event: event as Record<string, unknown>,
+          envelope: body as Record<string, unknown>
+        });
+      }
+
+      if (event.type !== "app_mention") {
         return;
       }
 
@@ -84,6 +143,13 @@ export class SlackService {
       });
       if (reply && "channel" in event) {
         await this.postMessage(config, reply, String(event.channel));
+      }
+    });
+
+    client.on("interactive", async ({ body, ack }) => {
+      await ack();
+      if (onInteractive) {
+        await onInteractive(body as Record<string, unknown>);
       }
     });
 
@@ -116,5 +182,26 @@ export class SlackService {
 
   private resolveChannel(config: AppConfig): string {
     return (config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "").trim();
+  }
+
+  private async callApi<T = { ok: boolean; error?: string }>(
+    token: string,
+    method: string,
+    body: Record<string, unknown>
+  ): Promise<T> {
+    const response = await fetch(`https://slack.com/api/${method}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json; charset=utf-8"
+      },
+      body: JSON.stringify(body)
+    });
+
+    const payload = (await response.json()) as { ok?: boolean; error?: string } & T;
+    if (!response.ok || !payload.ok) {
+      throw new Error(`Slack API error: ${payload.error ?? response.statusText}`);
+    }
+    return payload;
   }
 }

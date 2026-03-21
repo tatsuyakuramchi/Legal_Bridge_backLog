@@ -8,6 +8,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/src/server.js",
     "check": "tsc --noEmit -p tsconfig.json",
+    "test:unit": "tsx scripts/run-unit-tests.ts",
     "sample:docs": "tsx scripts/generate-sample-docs.ts",
     "templates:list": "node dist/scripts/template-manager.js list",
     "templates:validate": "node dist/scripts/template-manager.js validate",

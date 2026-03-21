@@ -9,7 +9,103 @@
   "contractNoPrefix": "C",
   "notes": "検収書・利用許諾報告書・業務委託報酬計算書に合冊",
   "templateFile": "template_payment_notice.html",
-  "topLevelVars": [],
+  "topLevelVars": [
+    {
+      "name": "totalWithTax",
+      "label": "支払対象額（税込合計）",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "paymentAmount",
+      "label": "差引振込額",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "showWithholdingNote",
+      "label": "源泉徴収注記表示",
+      "required": false,
+      "source": "calc",
+      "note": "vendor_type=INDIVかつwitholdingTax>0の場合true"
+    },
+    {
+      "name": "withholdingRateLabel",
+      "label": "源泉徴収税率ラベル",
+      "required": false,
+      "source": "calc"
+    },
+    {
+      "name": "expenseAmount",
+      "label": "立替経費",
+      "required": false,
+      "source": "calc"
+    },
+    {
+      "name": "SENDER_NAME",
+      "label": "送信者名（当社）",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "SENDER_ZIP",
+      "label": "送信者郵便番号",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "SENDER_ADDRESS",
+      "label": "送信者住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "SENDER_DEPT",
+      "label": "送信者部署",
+      "required": false,
+      "source": "user.department"
+    },
+    {
+      "name": "vendorSuffix",
+      "label": "相手方敬称",
+      "required": false,
+      "source": "calc",
+      "note": "vendor_type=CORPなら「御中」、INDIVなら「様」"
+    },
+    {
+      "name": "inspections",
+      "label": "検収書データ配列",
+      "required": false,
+      "source": "calc",
+      "note": "2ページ目（検収書）の表示制御フラグ"
+    },
+    {
+      "name": "royalties",
+      "label": "ロイヤリティデータ配列",
+      "required": false,
+      "source": "calc",
+      "note": "3ページ目（利用許諾料報告書）の表示制御フラグ"
+    },
+    {
+      "name": "revenue_shares",
+      "label": "レベニューシェアデータ配列",
+      "required": false,
+      "source": "calc",
+      "note": "4ページ目（レベニューシェア報告書）の表示制御フラグ"
+    },
+    {
+      "name": "revshare_basis",
+      "label": "レベニューシェア算出基準",
+      "required": false,
+      "source": "backlog.revshare_basis"
+    },
+    {
+      "name": "revshare_note",
+      "label": "レベニューシェア備考",
+      "required": false,
+      "source": "backlog.revshare_note"
+    }
+  ],
   "deliveryVars": [
     {
       "name": "SENDER_ADDRESS",
@@ -151,9 +247,168 @@
       "source": "backlog.unit_price",
       "arrayPrefix": "items",
       "isArray": true
+    },
+    {
+      "name": "work_name",
+      "label": "対象作品名",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "period_text",
+      "label": "計算期間テキスト",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "trigger_type",
+      "label": "トリガー種別",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "period_start",
+      "label": "計算期間開始",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "period_end",
+      "label": "計算期間終了",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "share_rate",
+      "label": "分配率",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "deduction",
+      "label": "控除額",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "deduction_note",
+      "label": "控除額備考",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
     }
   ],
   "variables": [
+    {
+      "name": "totalWithTax",
+      "label": "支払対象額（税込合計）",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "paymentAmount",
+      "label": "差引振込額",
+      "required": true,
+      "source": "calc"
+    },
+    {
+      "name": "showWithholdingNote",
+      "label": "源泉徴収注記表示",
+      "required": false,
+      "source": "calc",
+      "note": "vendor_type=INDIVかつwitholdingTax>0の場合true"
+    },
+    {
+      "name": "withholdingRateLabel",
+      "label": "源泉徴収税率ラベル",
+      "required": false,
+      "source": "calc"
+    },
+    {
+      "name": "expenseAmount",
+      "label": "立替経費",
+      "required": false,
+      "source": "calc"
+    },
+    {
+      "name": "SENDER_NAME",
+      "label": "送信者名（当社）",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "SENDER_ZIP",
+      "label": "送信者郵便番号",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "SENDER_ADDRESS",
+      "label": "送信者住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "SENDER_DEPT",
+      "label": "送信者部署",
+      "required": false,
+      "source": "user.department"
+    },
+    {
+      "name": "vendorSuffix",
+      "label": "相手方敬称",
+      "required": false,
+      "source": "calc",
+      "note": "vendor_type=CORPなら「御中」、INDIVなら「様」"
+    },
+    {
+      "name": "inspections",
+      "label": "検収書データ配列",
+      "required": false,
+      "source": "calc",
+      "note": "2ページ目（検収書）の表示制御フラグ"
+    },
+    {
+      "name": "royalties",
+      "label": "ロイヤリティデータ配列",
+      "required": false,
+      "source": "calc",
+      "note": "3ページ目（利用許諾料報告書）の表示制御フラグ"
+    },
+    {
+      "name": "revenue_shares",
+      "label": "レベニューシェアデータ配列",
+      "required": false,
+      "source": "calc",
+      "note": "4ページ目（レベニューシェア報告書）の表示制御フラグ"
+    },
+    {
+      "name": "revshare_basis",
+      "label": "レベニューシェア算出基準",
+      "required": false,
+      "source": "backlog.revshare_basis"
+    },
+    {
+      "name": "revshare_note",
+      "label": "レベニューシェア備考",
+      "required": false,
+      "source": "backlog.revshare_note"
+    },
     {
       "name": "SENDER_ADDRESS",
       "label": "SENDER_ADDRESS",
@@ -292,6 +547,70 @@
       "source": "backlog.unit_price",
       "arrayPrefix": "items",
       "isArray": true
+    },
+    {
+      "name": "work_name",
+      "label": "対象作品名",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "period_text",
+      "label": "計算期間テキスト",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "trigger_type",
+      "label": "トリガー種別",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "period_start",
+      "label": "計算期間開始",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "period_end",
+      "label": "計算期間終了",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "share_rate",
+      "label": "分配率",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "deduction",
+      "label": "控除額",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "deduction_note",
+      "label": "控除額備考",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
     }
   ]
 }

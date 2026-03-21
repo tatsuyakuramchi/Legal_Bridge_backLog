@@ -16,9 +16,13 @@
         </div>
         <div class="actions">
           <button id="run-poller">ポーリング実行</button>
+          <button id="run-approval-reminder" class="secondary">承認リマインド</button>
+          <button id="run-stamp-reminder" class="secondary">押印リマインド</button>
           <button id="test-backlog" class="secondary">Backlog接続テスト</button>
+          <button id="test-cloudsign" class="secondary">CloudSign接続テスト</button>
           <button id="show-backlog-setup" class="secondary">Backlog設定確認</button>
           <button id="test-slack" class="secondary">Slack接続テスト</button>
+          <button id="sync-cloudsign" class="secondary">CloudSign同期</button>
           <button id="validate-templates" class="secondary">Template検証</button>
           <button id="add-sample" class="secondary">サンプル課題追加</button>
         </div>
@@ -40,7 +44,7 @@
             <label>Definition ID<input name="id" placeholder="service_basic" /></label>
             <label>Template File<input name="templateFile" placeholder="template_service_basic.html" /></label>
             <label>Document Name<input name="documentName" placeholder="業務委託基本契約書" /></label>
-            <label>Issue Types<input name="issueTypes" placeholder="業務委託契約, 基本契約" /></label>
+            <label>Issue Types<input name="issueTypes" placeholder="業務委託, 基本契約" /></label>
             <label>Prefix
               <select name="contractNoPrefix">
                 <option value="C">C</option>
@@ -48,8 +52,8 @@
                 <option value="LIC">LIC</option>
               </select>
             </label>
-            <label>Notes<input name="notes" placeholder="任意メモ" /></label>
-            <button type="submit">Definition作成</button>
+            <label>Notes<input name="notes" placeholder="補足メモ" /></label>
+            <button type="submit">Definition追加</button>
           </form>
         </div>
       </aside>
@@ -84,10 +88,56 @@
 
         <section class="panel">
           <div class="panel-head">
+            <h3>CSV一括発注書</h3>
+          </div>
+          <form id="bulk-order-form" class="bulk-order-form">
+            <label>CSV File<input id="bulk-order-file" name="bulkOrderFile" type="file" accept=".csv,text/csv" /></label>
+            <label>CSV Text<textarea id="bulk-order-text" name="csvText" rows="8" placeholder="vendor_name,project_title,delivery_date,unit_price,quantity,description,payment_terms,notes,has_base_contract"></textarea></label>
+            <label>Output Mode
+              <select name="outputMode">
+                <option value="individual">個別PDF</option>
+                <option value="merged">合冊PDF</option>
+                <option value="both">両方</option>
+              </select>
+            </label>
+            <label class="checkbox-row"><input type="checkbox" name="previewOnly" /> Preview only</label>
+            <label class="checkbox-row"><input type="checkbox" name="notifySlack" /> Slack通知</label>
+            <label class="checkbox-row"><input type="checkbox" name="createBacklogIssues" /> Backlog課題作成（未対応）</label>
+            <div class="inline-actions">
+              <button type="submit">取込実行</button>
+            </div>
+          </form>
+          <div id="bulk-order-result" class="stack"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
             <h3>課題一覧</h3>
             <span id="issue-count"></span>
           </div>
           <div id="issues" class="card-grid"></div>
+        </section>
+
+        <section class="panel dual">
+          <div>
+            <div class="panel-head">
+              <h3>契約台帳</h3>
+            </div>
+            <div id="contracts" class="stack"></div>
+          </div>
+          <div>
+            <div class="panel-head">
+              <h3>納品台帳</h3>
+            </div>
+            <div id="deliveries" class="stack"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>ポーリングログ</h3>
+          </div>
+          <div id="polling-logs" class="stack"></div>
         </section>
 
         <section class="panel dual">

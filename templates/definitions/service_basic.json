@@ -120,6 +120,13 @@
       "label": "相手方代表者",
       "required": true,
       "source": "partner.representative"
+    },
+    {
+      "name": "invoiceRegistrationDisplay",
+      "label": "インボイス登録番号（表示用）",
+      "required": false,
+      "source": "partner.invoice_registration_number",
+      "note": "IS_INVOICE_ISSUER=trueの場合のみ表示。取引先コードで自動補完"
     }
   ],
   "variables": [
@@ -236,6 +243,13 @@
       "label": "相手方代表者",
       "required": true,
       "source": "partner.representative"
+    },
+    {
+      "name": "invoiceRegistrationDisplay",
+      "label": "インボイス登録番号（表示用）",
+      "required": false,
+      "source": "partner.invoice_registration_number",
+      "note": "IS_INVOICE_ISSUER=trueの場合のみ表示。取引先コードで自動補完"
     }
   ]
 }

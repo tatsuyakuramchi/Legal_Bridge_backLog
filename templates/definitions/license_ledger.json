@@ -5,7 +5,7 @@
     "ライセンス契約"
   ],
   "contractNoPrefix": "C",
-  "notes": "ライセンス基本契約書に合冊する台帳",
+  "notes": "ライセンス基本契約書に合冊する台帳。再許諾（Sub-license）セクションはHandlebars変数化済み。sublicensesテーブルから動的生成。",
   "templateFile": "template_ledger_v5__1_.html",
   "topLevelVars": [
     {
@@ -19,6 +19,353 @@
       "label": "ライセンサー法人フラグ",
       "required": true,
       "source": "partner.is_corporation"
+    },
+    {
+      "name": "台帳ID",
+      "label": "台帳ID",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "基本契約名",
+      "label": "基本契約名",
+      "required": true,
+      "source": "backlog.基本契約名"
+    },
+    {
+      "name": "契約書番号",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto",
+      "note": "CONTRACT_NOと同じ値"
+    },
+    {
+      "name": "ライセンス種別名",
+      "label": "ライセンス種別名",
+      "required": true,
+      "source": "backlog.ライセンス種別名",
+      "note": "例：非独占的・専属的・独占的"
+    },
+    {
+      "name": "許諾開始日",
+      "label": "許諾開始日",
+      "required": true,
+      "source": "backlog.許諾開始日"
+    },
+    {
+      "name": "許諾期間注記",
+      "label": "許諾期間注記",
+      "required": false,
+      "source": "backlog.許諾期間注記"
+    },
+    {
+      "name": "原著作物名",
+      "label": "原著作物名",
+      "required": true,
+      "source": "backlog.原著作物名"
+    },
+    {
+      "name": "原著作物補記",
+      "label": "原著作物補記",
+      "required": false,
+      "source": "backlog.原著作物補記"
+    },
+    {
+      "name": "対象製品予定名",
+      "label": "対象製品予定名",
+      "required": false,
+      "source": "backlog.対象製品予定名"
+    },
+    {
+      "name": "素材名",
+      "label": "素材名",
+      "required": false,
+      "source": "backlog.素材名"
+    },
+    {
+      "name": "素材番号",
+      "label": "素材番号",
+      "required": false,
+      "source": "backlog.素材番号"
+    },
+    {
+      "name": "素材権利者",
+      "label": "素材権利者",
+      "required": false,
+      "source": "backlog.素材権利者"
+    },
+    {
+      "name": "監修者",
+      "label": "監修者",
+      "required": false,
+      "source": "backlog.監修者"
+    },
+    {
+      "name": "発行日",
+      "label": "発行日",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "特記事項_本文",
+      "label": "特記事項本文",
+      "required": false,
+      "source": "backlog.特記事項"
+    },
+    {
+      "name": "licensor名",
+      "label": "ライセンサー名",
+      "required": true,
+      "source": "partner.name",
+      "note": "LICENSOR_IS_CORPORATION=falseの場合も同フィールド"
+    },
+    {
+      "name": "licensor_住所",
+      "label": "ライセンサー住所",
+      "required": false,
+      "source": "partner.address"
+    },
+    {
+      "name": "licensor_氏名会社名",
+      "label": "ライセンサー氏名/会社名",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "licensor_代表者名",
+      "label": "ライセンサー代表者名",
+      "required": false,
+      "source": "partner.representative",
+      "note": "LICENSOR_IS_CORPORATION=trueの場合のみ表示"
+    },
+    {
+      "name": "licensee名",
+      "label": "ライセンシー名",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "licensee_住所",
+      "label": "ライセンシー住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "licensee_氏名会社名",
+      "label": "ライセンシー氏名/会社名",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "licensee_代表者名",
+      "label": "ライセンシー代表者名",
+      "required": false,
+      "source": "fixed:company",
+      "note": "LICENSEE_IS_CORPORATION=trueの場合のみ表示"
+    },
+    {
+      "name": "金銭条件1_地域言語ラベル",
+      "label": "金銭条件1 地域/言語",
+      "required": true,
+      "source": "backlog.金銭条件1_地域言語ラベル"
+    },
+    {
+      "name": "金銭条件1_基準価格ラベル",
+      "label": "金銭条件1 基準価格",
+      "required": false,
+      "source": "backlog.金銭条件1_基準価格ラベル"
+    },
+    {
+      "name": "金銭条件1_計算方式",
+      "label": "金銭条件1 計算方式",
+      "required": true,
+      "source": "backlog.金銭条件1_計算方式"
+    },
+    {
+      "name": "金銭条件1_料率",
+      "label": "金銭条件1 料率",
+      "required": true,
+      "source": "backlog.金銭条件1_料率"
+    },
+    {
+      "name": "金銭条件1_計算期間",
+      "label": "金銭条件1 計算期間",
+      "required": true,
+      "source": "backlog.金銭条件1_計算期間"
+    },
+    {
+      "name": "金銭条件1_MG_AG",
+      "label": "金銭条件1 MG/AG",
+      "required": false,
+      "source": "backlog.金銭条件1_MG_AG"
+    },
+    {
+      "name": "金銭条件1_支払条件",
+      "label": "金銭条件1 支払条件",
+      "required": true,
+      "source": "backlog.金銭条件1_支払条件"
+    },
+    {
+      "name": "金銭条件1_計算式",
+      "label": "金銭条件1 計算式",
+      "required": false,
+      "source": "backlog.金銭条件1_計算式"
+    },
+    {
+      "name": "金銭条件1_補足条件",
+      "label": "金銭条件1 補足条件",
+      "required": false,
+      "source": "backlog.金銭条件1_補足条件"
+    },
+    {
+      "name": "金銭条件1_通貨",
+      "label": "金銭条件1 通貨",
+      "required": true,
+      "source": "backlog.金銭条件1_通貨"
+    },
+    {
+      "name": "金銭条件2_見出し",
+      "label": "金銭条件2 見出し",
+      "required": false,
+      "source": "backlog.金銭条件2_見出し"
+    },
+    {
+      "name": "金銭条件2_地域",
+      "label": "金銭条件2 地域",
+      "required": false,
+      "source": "backlog.金銭条件2_地域"
+    },
+    {
+      "name": "金銭条件2_言語",
+      "label": "金銭条件2 言語",
+      "required": false,
+      "source": "backlog.金銭条件2_言語"
+    },
+    {
+      "name": "金銭条件2_計算方式",
+      "label": "金銭条件2 計算方式",
+      "required": false,
+      "source": "backlog.金銭条件2_計算方式"
+    },
+    {
+      "name": "金銭条件2_分配率",
+      "label": "金銭条件2 分配率",
+      "required": false,
+      "source": "backlog.金銭条件2_分配率"
+    },
+    {
+      "name": "金銭条件2_MG_AG",
+      "label": "金銭条件2 MG/AG",
+      "required": false,
+      "source": "backlog.金銭条件2_MG_AG"
+    },
+    {
+      "name": "金銭条件2_支払条件",
+      "label": "金銭条件2 支払条件",
+      "required": false,
+      "source": "backlog.金銭条件2_支払条件"
+    },
+    {
+      "name": "金銭条件2_計算式",
+      "label": "金銭条件2 計算式",
+      "required": false,
+      "source": "backlog.金銭条件2_計算式"
+    },
+    {
+      "name": "金銭条件2_計算式注記",
+      "label": "金銭条件2 計算式注記",
+      "required": false,
+      "source": "backlog.金銭条件2_計算式注記"
+    },
+    {
+      "name": "金銭条件2_補足条件",
+      "label": "金銭条件2 補足条件",
+      "required": false,
+      "source": "backlog.金銭条件2_補足条件"
+    },
+    {
+      "name": "金銭条件2_概要",
+      "label": "金銭条件2 概要",
+      "required": false,
+      "source": "backlog.金銭条件2_概要"
+    },
+    {
+      "name": "金銭条件2_通貨",
+      "label": "金銭条件2 通貨",
+      "required": false,
+      "source": "backlog.金銭条件2_通貨"
+    },
+    {
+      "name": "金銭条件3_見出し",
+      "label": "金銭条件3 見出し",
+      "required": false,
+      "source": "backlog.金銭条件3_見出し"
+    },
+    {
+      "name": "金銭条件3_地域",
+      "label": "金銭条件3 地域",
+      "required": false,
+      "source": "backlog.金銭条件3_地域"
+    },
+    {
+      "name": "金銭条件3_言語",
+      "label": "金銭条件3 言語",
+      "required": false,
+      "source": "backlog.金銭条件3_言語"
+    },
+    {
+      "name": "金銭条件3_計算方式",
+      "label": "金銭条件3 計算方式",
+      "required": false,
+      "source": "backlog.金銭条件3_計算方式"
+    },
+    {
+      "name": "金銭条件3_料率",
+      "label": "金銭条件3 料率",
+      "required": false,
+      "source": "backlog.金銭条件3_料率"
+    },
+    {
+      "name": "金銭条件3_MG_AG",
+      "label": "金銭条件3 MG/AG",
+      "required": false,
+      "source": "backlog.金銭条件3_MG_AG"
+    },
+    {
+      "name": "金銭条件3_支払条件",
+      "label": "金銭条件3 支払条件",
+      "required": false,
+      "source": "backlog.金銭条件3_支払条件"
+    },
+    {
+      "name": "金銭条件3_計算式",
+      "label": "金銭条件3 計算式",
+      "required": false,
+      "source": "backlog.金銭条件3_計算式"
+    },
+    {
+      "name": "金銭条件3_計算式注記",
+      "label": "金銭条件3 計算式注記",
+      "required": false,
+      "source": "backlog.金銭条件3_計算式注記"
+    },
+    {
+      "name": "金銭条件3_補足条件",
+      "label": "金銭条件3 補足条件",
+      "required": false,
+      "source": "backlog.金銭条件3_補足条件"
+    },
+    {
+      "name": "金銭条件3_概要",
+      "label": "金銭条件3 概要",
+      "required": false,
+      "source": "backlog.金銭条件3_概要"
+    },
+    {
+      "name": "金銭条件3_通貨",
+      "label": "金銭条件3 通貨",
+      "required": false,
+      "source": "backlog.金銭条件3_通貨"
     }
   ],
   "variables": [
@@ -33,6 +380,516 @@
       "label": "ライセンサー法人フラグ",
       "required": true,
       "source": "partner.is_corporation"
+    },
+    {
+      "name": "台帳ID",
+      "label": "台帳ID",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "基本契約名",
+      "label": "基本契約名",
+      "required": true,
+      "source": "backlog.基本契約名"
+    },
+    {
+      "name": "契約書番号",
+      "label": "契約書番号",
+      "required": true,
+      "source": "auto",
+      "note": "CONTRACT_NOと同じ値"
+    },
+    {
+      "name": "ライセンス種別名",
+      "label": "ライセンス種別名",
+      "required": true,
+      "source": "backlog.ライセンス種別名",
+      "note": "例：非独占的・専属的・独占的"
+    },
+    {
+      "name": "許諾開始日",
+      "label": "許諾開始日",
+      "required": true,
+      "source": "backlog.許諾開始日"
+    },
+    {
+      "name": "許諾期間注記",
+      "label": "許諾期間注記",
+      "required": false,
+      "source": "backlog.許諾期間注記"
+    },
+    {
+      "name": "原著作物名",
+      "label": "原著作物名",
+      "required": true,
+      "source": "backlog.原著作物名"
+    },
+    {
+      "name": "原著作物補記",
+      "label": "原著作物補記",
+      "required": false,
+      "source": "backlog.原著作物補記"
+    },
+    {
+      "name": "対象製品予定名",
+      "label": "対象製品予定名",
+      "required": false,
+      "source": "backlog.対象製品予定名"
+    },
+    {
+      "name": "素材名",
+      "label": "素材名",
+      "required": false,
+      "source": "backlog.素材名"
+    },
+    {
+      "name": "素材番号",
+      "label": "素材番号",
+      "required": false,
+      "source": "backlog.素材番号"
+    },
+    {
+      "name": "素材権利者",
+      "label": "素材権利者",
+      "required": false,
+      "source": "backlog.素材権利者"
+    },
+    {
+      "name": "監修者",
+      "label": "監修者",
+      "required": false,
+      "source": "backlog.監修者"
+    },
+    {
+      "name": "発行日",
+      "label": "発行日",
+      "required": true,
+      "source": "auto"
+    },
+    {
+      "name": "特記事項_本文",
+      "label": "特記事項本文",
+      "required": false,
+      "source": "backlog.特記事項"
+    },
+    {
+      "name": "licensor名",
+      "label": "ライセンサー名",
+      "required": true,
+      "source": "partner.name",
+      "note": "LICENSOR_IS_CORPORATION=falseの場合も同フィールド"
+    },
+    {
+      "name": "licensor_住所",
+      "label": "ライセンサー住所",
+      "required": false,
+      "source": "partner.address"
+    },
+    {
+      "name": "licensor_氏名会社名",
+      "label": "ライセンサー氏名/会社名",
+      "required": true,
+      "source": "partner.name"
+    },
+    {
+      "name": "licensor_代表者名",
+      "label": "ライセンサー代表者名",
+      "required": false,
+      "source": "partner.representative",
+      "note": "LICENSOR_IS_CORPORATION=trueの場合のみ表示"
+    },
+    {
+      "name": "licensee名",
+      "label": "ライセンシー名",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "licensee_住所",
+      "label": "ライセンシー住所",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "licensee_氏名会社名",
+      "label": "ライセンシー氏名/会社名",
+      "required": true,
+      "source": "fixed:company"
+    },
+    {
+      "name": "licensee_代表者名",
+      "label": "ライセンシー代表者名",
+      "required": false,
+      "source": "fixed:company",
+      "note": "LICENSEE_IS_CORPORATION=trueの場合のみ表示"
+    },
+    {
+      "name": "金銭条件1_地域言語ラベル",
+      "label": "金銭条件1 地域/言語",
+      "required": true,
+      "source": "backlog.金銭条件1_地域言語ラベル"
+    },
+    {
+      "name": "金銭条件1_基準価格ラベル",
+      "label": "金銭条件1 基準価格",
+      "required": false,
+      "source": "backlog.金銭条件1_基準価格ラベル"
+    },
+    {
+      "name": "金銭条件1_計算方式",
+      "label": "金銭条件1 計算方式",
+      "required": true,
+      "source": "backlog.金銭条件1_計算方式"
+    },
+    {
+      "name": "金銭条件1_料率",
+      "label": "金銭条件1 料率",
+      "required": true,
+      "source": "backlog.金銭条件1_料率"
+    },
+    {
+      "name": "金銭条件1_計算期間",
+      "label": "金銭条件1 計算期間",
+      "required": true,
+      "source": "backlog.金銭条件1_計算期間"
+    },
+    {
+      "name": "金銭条件1_MG_AG",
+      "label": "金銭条件1 MG/AG",
+      "required": false,
+      "source": "backlog.金銭条件1_MG_AG"
+    },
+    {
+      "name": "金銭条件1_支払条件",
+      "label": "金銭条件1 支払条件",
+      "required": true,
+      "source": "backlog.金銭条件1_支払条件"
+    },
+    {
+      "name": "金銭条件1_計算式",
+      "label": "金銭条件1 計算式",
+      "required": false,
+      "source": "backlog.金銭条件1_計算式"
+    },
+    {
+      "name": "金銭条件1_補足条件",
+      "label": "金銭条件1 補足条件",
+      "required": false,
+      "source": "backlog.金銭条件1_補足条件"
+    },
+    {
+      "name": "金銭条件1_通貨",
+      "label": "金銭条件1 通貨",
+      "required": true,
+      "source": "backlog.金銭条件1_通貨"
+    },
+    {
+      "name": "金銭条件2_見出し",
+      "label": "金銭条件2 見出し",
+      "required": false,
+      "source": "backlog.金銭条件2_見出し"
+    },
+    {
+      "name": "金銭条件2_地域",
+      "label": "金銭条件2 地域",
+      "required": false,
+      "source": "backlog.金銭条件2_地域"
+    },
+    {
+      "name": "金銭条件2_言語",
+      "label": "金銭条件2 言語",
+      "required": false,
+      "source": "backlog.金銭条件2_言語"
+    },
+    {
+      "name": "金銭条件2_計算方式",
+      "label": "金銭条件2 計算方式",
+      "required": false,
+      "source": "backlog.金銭条件2_計算方式"
+    },
+    {
+      "name": "金銭条件2_分配率",
+      "label": "金銭条件2 分配率",
+      "required": false,
+      "source": "backlog.金銭条件2_分配率"
+    },
+    {
+      "name": "金銭条件2_MG_AG",
+      "label": "金銭条件2 MG/AG",
+      "required": false,
+      "source": "backlog.金銭条件2_MG_AG"
+    },
+    {
+      "name": "金銭条件2_支払条件",
+      "label": "金銭条件2 支払条件",
+      "required": false,
+      "source": "backlog.金銭条件2_支払条件"
+    },
+    {
+      "name": "金銭条件2_計算式",
+      "label": "金銭条件2 計算式",
+      "required": false,
+      "source": "backlog.金銭条件2_計算式"
+    },
+    {
+      "name": "金銭条件2_計算式注記",
+      "label": "金銭条件2 計算式注記",
+      "required": false,
+      "source": "backlog.金銭条件2_計算式注記"
+    },
+    {
+      "name": "金銭条件2_補足条件",
+      "label": "金銭条件2 補足条件",
+      "required": false,
+      "source": "backlog.金銭条件2_補足条件"
+    },
+    {
+      "name": "金銭条件2_概要",
+      "label": "金銭条件2 概要",
+      "required": false,
+      "source": "backlog.金銭条件2_概要"
+    },
+    {
+      "name": "金銭条件2_通貨",
+      "label": "金銭条件2 通貨",
+      "required": false,
+      "source": "backlog.金銭条件2_通貨"
+    },
+    {
+      "name": "金銭条件3_見出し",
+      "label": "金銭条件3 見出し",
+      "required": false,
+      "source": "backlog.金銭条件3_見出し"
+    },
+    {
+      "name": "金銭条件3_地域",
+      "label": "金銭条件3 地域",
+      "required": false,
+      "source": "backlog.金銭条件3_地域"
+    },
+    {
+      "name": "金銭条件3_言語",
+      "label": "金銭条件3 言語",
+      "required": false,
+      "source": "backlog.金銭条件3_言語"
+    },
+    {
+      "name": "金銭条件3_計算方式",
+      "label": "金銭条件3 計算方式",
+      "required": false,
+      "source": "backlog.金銭条件3_計算方式"
+    },
+    {
+      "name": "金銭条件3_料率",
+      "label": "金銭条件3 料率",
+      "required": false,
+      "source": "backlog.金銭条件3_料率"
+    },
+    {
+      "name": "金銭条件3_MG_AG",
+      "label": "金銭条件3 MG/AG",
+      "required": false,
+      "source": "backlog.金銭条件3_MG_AG"
+    },
+    {
+      "name": "金銭条件3_支払条件",
+      "label": "金銭条件3 支払条件",
+      "required": false,
+      "source": "backlog.金銭条件3_支払条件"
+    },
+    {
+      "name": "金銭条件3_計算式",
+      "label": "金銭条件3 計算式",
+      "required": false,
+      "source": "backlog.金銭条件3_計算式"
+    },
+    {
+      "name": "金銭条件3_計算式注記",
+      "label": "金銭条件3 計算式注記",
+      "required": false,
+      "source": "backlog.金銭条件3_計算式注記"
+    },
+    {
+      "name": "金銭条件3_補足条件",
+      "label": "金銭条件3 補足条件",
+      "required": false,
+      "source": "backlog.金銭条件3_補足条件"
+    },
+    {
+      "name": "金銭条件3_概要",
+      "label": "金銭条件3 概要",
+      "required": false,
+      "source": "backlog.金銭条件3_概要"
+    },
+    {
+      "name": "金銭条件3_通貨",
+      "label": "金銭条件3 通貨",
+      "required": false,
+      "source": "backlog.金銭条件3_通貨"
+    },
+    {
+      "name": "区分",
+      "label": "サブライセンス区分",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "相手先名",
+      "label": "サブライセンス相手先名",
+      "required": false,
+      "source": "partner.name",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "相手先コード",
+      "label": "サブライセンス取引先コード",
+      "required": false,
+      "source": "partner.code",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "地域",
+      "label": "サブライセンス地域",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "言語",
+      "label": "サブライセンス言語",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "適用金銭条件",
+      "label": "適用金銭条件",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "MG_AG",
+      "label": "MG/AG金額",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "個別料率",
+      "label": "個別料率（%）",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "契約締結日",
+      "label": "サブライセンス契約締結日",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "備考",
+      "label": "サブライセンス備考",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
     }
-  ]
+  ],
+  "sublicenseVars": [
+    {
+      "name": "区分",
+      "label": "サブライセンス区分",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "相手先名",
+      "label": "サブライセンス相手先名",
+      "required": false,
+      "source": "partner.name",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "相手先コード",
+      "label": "サブライセンス取引先コード",
+      "required": false,
+      "source": "partner.code",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "地域",
+      "label": "サブライセンス地域",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "言語",
+      "label": "サブライセンス言語",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "適用金銭条件",
+      "label": "適用金銭条件",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "MG_AG",
+      "label": "MG/AG金額",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "個別料率",
+      "label": "個別料率（%）",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "契約締結日",
+      "label": "サブライセンス契約締結日",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    },
+    {
+      "name": "備考",
+      "label": "サブライセンス備考",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "sublicenses"
+    }
+  ],
+  "itemVars": []
 }

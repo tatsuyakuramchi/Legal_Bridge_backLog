@@ -114,6 +114,13 @@
       "label": "相手方代表者",
       "required": true,
       "source": "partner.representative"
+    },
+    {
+      "name": "承継覚書日付",
+      "label": "承継覚書日付",
+      "required": false,
+      "source": "backlog.承継覚書日付",
+      "note": "著作権承継がある場合の覚書日付。例：2021年5月30日"
     }
   ],
   "variables": [
@@ -224,6 +231,13 @@
       "label": "相手方代表者",
       "required": true,
       "source": "partner.representative"
+    },
+    {
+      "name": "承継覚書日付",
+      "label": "承継覚書日付",
+      "required": false,
+      "source": "backlog.承継覚書日付",
+      "note": "著作権承継がある場合の覚書日付。例：2021年5月30日"
     }
   ]
 }

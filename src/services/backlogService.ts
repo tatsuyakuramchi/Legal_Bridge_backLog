@@ -19,6 +19,11 @@ type BacklogIssue = {
   customFields?: Array<{ name?: string; value?: unknown }>;
 };
 
+type BacklogStatus = {
+  id: number;
+  name: string;
+};
+
 export class BacklogService {
   isConfigured(config: AppConfig): boolean {
     return Boolean(this.resolveSpace(config) && this.resolveProjectId(config) && process.env.BACKLOG_API_KEY);
@@ -41,6 +46,31 @@ export class BacklogService {
     return issues.map((issue) => this.mapIssue(issue));
   }
 
+  async updateIssueStatus(
+    config: AppConfig,
+    issue: { issueKey?: string; backlogIssueId?: number | string },
+    targetStatusName: string
+  ): Promise<{ ok: true; statusName: string }> {
+    const issueRef = issue.issueKey || issue.backlogIssueId;
+    if (!issueRef) {
+      throw new Error("Backlog issue reference is missing.");
+    }
+    const project = await this.fetchProject(config);
+    const statuses = await this.request<BacklogStatus[]>(config, `/api/v2/projects/${project.id}/statuses`);
+    const target = statuses.find((status) => this.normalizeStatus(status.name) === this.normalizeStatus(targetStatusName));
+    if (!target) {
+      throw new Error(`Backlog status not found: ${targetStatusName}`);
+    }
+
+    await this.request(config, `/api/v2/issues/${encodeURIComponent(String(issueRef))}`, {
+      method: "PATCH",
+      body: new URLSearchParams({
+        statusId: String(target.id)
+      })
+    });
+    return { ok: true, statusName: target.name };
+  }
+
   private async fetchProject(config: AppConfig): Promise<BacklogProject> {
     const projectId = this.resolveProjectId(config);
     if (!projectId) {
@@ -49,7 +79,14 @@ export class BacklogService {
     return this.request<BacklogProject>(config, `/api/v2/projects/${encodeURIComponent(projectId)}`);
   }
 
-  private async request<T>(config: AppConfig, pathname: string): Promise<T> {
+  private async request<T>(
+    config: AppConfig,
+    pathname: string,
+    init?: {
+      method?: "GET" | "POST" | "PATCH";
+      body?: URLSearchParams;
+    }
+  ): Promise<T> {
     const apiKey = process.env.BACKLOG_API_KEY;
     const baseUrl = this.resolveBaseUrl(config);
     if (!apiKey || !baseUrl) {
@@ -57,8 +94,14 @@ export class BacklogService {
     }
 
     const separator = pathname.includes("?") ? "&" : "?";
-    const response = await fetch(`${baseUrl}${pathname}${separator}apiKey=${encodeURIComponent(apiKey)}`, {
-      headers: { Accept: "application/json" }
+    const url = `${baseUrl}${pathname}${separator}apiKey=${encodeURIComponent(apiKey)}`;
+    const response = await fetch(url, {
+      method: init?.method ?? "GET",
+      headers: {
+        Accept: "application/json",
+        ...(init?.body ? { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8" } : {})
+      },
+      body: init?.body?.toString()
     });
 
     if (!response.ok) {
@@ -149,5 +192,9 @@ export class BacklogService {
 
   private resolveProjectId(config: AppConfig): string {
     return (config.backlogProjectId || process.env.BACKLOG_PROJECT_ID || "").trim();
+  }
+
+  private normalizeStatus(name: string): string {
+    return name.toLowerCase().replace(/\s+/g, "");
   }
 }

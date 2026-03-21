@@ -148,6 +148,13 @@
       "required": true,
       "source": "partner.name",
       "arrayPrefix": "d"
+    },
+    {
+      "name": "is_final_delivery",
+      "label": "最終納品フラグ",
+      "required": false,
+      "source": "backlog.is_final_delivery",
+      "arrayPrefix": "d"
     }
   ],
   "itemVars": [
@@ -419,6 +426,13 @@
       "label": "相手方名称",
       "required": true,
       "source": "partner.name",
+      "arrayPrefix": "d"
+    },
+    {
+      "name": "is_final_delivery",
+      "label": "最終納品フラグ",
+      "required": false,
+      "source": "backlog.is_final_delivery",
       "arrayPrefix": "d"
     },
     {

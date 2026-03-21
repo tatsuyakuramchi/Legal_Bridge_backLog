@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LegalBridge Admin Console</title>
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <aside class="admin-sidebar">
+        <div class="admin-logo">
+          <div class="logo-badge">L</div>
+          <div>
+            <div class="logo-title">LegalBridge</div>
+            <div class="logo-sub">Admin Console</div>
+          </div>
+        </div>
+        <nav class="admin-nav">
+          <button class="nav-item is-active" data-view="dashboard">ダッシュボード</button>
+          <button class="nav-item" data-view="users">ユーザー管理</button>
+          <button class="nav-item" data-view="partners">取引先マスタ</button>
+        </nav>
+        <div class="admin-user-card">
+          <div class="admin-user-avatar">法</div>
+          <div>
+            <div class="admin-user-name">法務管理者</div>
+            <div class="admin-user-role">System Admin</div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="admin-topbar">
+          <div>
+            <h1 id="admin-title">ダッシュボード</h1>
+            <div id="admin-subtitle" class="admin-subtitle">管理画面</div>
+          </div>
+          <div id="admin-actions" class="admin-actions"></div>
+        </header>
+
+        <main class="admin-content">
+          <section id="admin-flash" class="admin-flash is-hidden"></section>
+
+          <section id="view-dashboard" class="admin-view is-active">
+            <div id="dashboard-stats" class="stats-grid"></div>
+            <div class="split-grid">
+              <section class="panel-card">
+                <h2>最近の処理ログ</h2>
+                <div id="dashboard-logs" class="stack-list"></div>
+              </section>
+              <section class="panel-card">
+                <h2>期限アラート</h2>
+                <div id="dashboard-alerts" class="stack-list"></div>
+              </section>
+            </div>
+          </section>
+
+          <section id="view-users" class="admin-view">
+            <div class="toolbar">
+              <input id="users-search" class="search-input" placeholder="名前・部署・Slack ID で検索" />
+              <button id="users-sync" class="ghost-button">Slack同期</button>
+            </div>
+            <div class="table-card">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>氏名 / 部署</th>
+                    <th>Slack ID</th>
+                    <th>権限</th>
+                    <th>通知</th>
+                    <th>状態</th>
+                  </tr>
+                </thead>
+                <tbody id="users-table"></tbody>
+              </table>
+            </div>
+            <section id="user-detail" class="detail-card is-hidden"></section>
+          </section>
+
+          <section id="view-partners" class="admin-view">
+            <div class="toolbar">
+              <input id="partners-search" class="search-input" placeholder="コード・名前で検索" />
+              <button id="partners-export" class="ghost-button">CSV出力</button>
+            </div>
+            <div class="split-grid">
+              <section class="table-card">
+                <table class="admin-table">
+                  <thead>
+                    <tr>
+                      <th>コード</th>
+                      <th>名称</th>
+                      <th>区分</th>
+                      <th>連絡先</th>
+                      <th>インボイス</th>
+                      <th>状態</th>
+                    </tr>
+                  </thead>
+                  <tbody id="partners-table"></tbody>
+                </table>
+              </section>
+              <section class="panel-card">
+                <h2>取引先登録 / 編集</h2>
+                <form id="partner-form" class="form-grid">
+                  <input type="hidden" name="id" />
+                  <label>取引先コード<input name="partner_code" required /></label>
+                  <label>正式名称<input name="name" required /></label>
+                  <label>読み仮名<input name="name_kana" /></label>
+                  <label>法人
+                    <select name="is_corporation">
+                      <option value="true">法人</option>
+                      <option value="false">個人</option>
+                    </select>
+                  </label>
+                  <label>代表者<input name="representative" /></label>
+                  <label>担当者<input name="contact_person" /></label>
+                  <label>メール<input name="contact_email" /></label>
+                  <label>電話<input name="contact_phone" /></label>
+                  <label>インボイス番号<input name="invoice_registration_number" /></label>
+                  <label>適格請求書発行事業者
+                    <select name="is_invoice_issuer">
+                      <option value="true">あり</option>
+                      <option value="false">なし</option>
+                    </select>
+                  </label>
+                  <label>銀行名<input name="bank_name" /></label>
+                  <label>支店名<input name="bank_branch" /></label>
+                  <label>口座種別<input name="bank_account_type" /></label>
+                  <label>口座番号<input name="bank_account_number" /></label>
+                  <label>口座名義<input name="bank_account_holder" /></label>
+                  <label>有効
+                    <select name="is_active">
+                      <option value="true">有効</option>
+                      <option value="false">無効</option>
+                    </select>
+                  </label>
+                  <label class="wide">備考<textarea name="notes" rows="4"></textarea></label>
+                  <div class="form-actions wide">
+                    <button type="button" id="partner-reset" class="ghost-button">クリア</button>
+                    <button type="submit" class="primary-button">保存</button>
+                  </div>
+                </form>
+                <div class="import-block">
+                  <h3>CSVインポート</h3>
+                  <input id="partners-import-file" type="file" accept=".csv,text/csv" />
+                  <textarea id="partners-import-text" rows="6" placeholder="partner_code,name,name_kana,is_corporation,..."></textarea>
+                  <button id="partners-import" class="ghost-button">CSV取込</button>
+                  <div id="partners-import-result" class="stack-list"></div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script type="module" src="/admin.js"></script>
+  </body>
+</html>

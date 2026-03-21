@@ -6,7 +6,82 @@
   ],
   "contractNoPrefix": "PO",
   "templateFile": "template_order.html",
-  "topLevelVars": [],
+  "topLevelVars": [
+    {
+      "name": "TRANSFER_FEE_PAYER",
+      "label": "振込手数料負担者",
+      "required": false,
+      "source": "backlog.transfer_fee_payer"
+    },
+    {
+      "name": "ACCEPT_BY_PERFORMANCE",
+      "label": "着手をもって承諾",
+      "required": false,
+      "source": "backlog.accept_by_performance",
+      "note": "\"1\"の場合に条項追加"
+    },
+    {
+      "name": "ACCEPT_REQUIRED",
+      "label": "承諾書面要否",
+      "required": false,
+      "source": "backlog.accept_required"
+    },
+    {
+      "name": "SHOW_SIGN_SECTION",
+      "label": "受領署名欄表示",
+      "required": false,
+      "source": "backlog.show_sign_section"
+    },
+    {
+      "name": "VENDOR_ACCEPT_TYPE",
+      "label": "受領方法",
+      "required": false,
+      "source": "backlog.vendor_accept_type"
+    },
+    {
+      "name": "IS_INVOICE_ISSUER",
+      "label": "インボイス発行事業者",
+      "required": true,
+      "source": "partner.is_invoice_issuer"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": false,
+      "source": "partner.bank_name"
+    },
+    {
+      "name": "BRANCH_NAME",
+      "label": "支店名",
+      "required": false,
+      "source": "partner.bank_branch"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "口座種別",
+      "required": false,
+      "source": "partner.bank_account_type"
+    },
+    {
+      "name": "ACCOUNT_NUMBER",
+      "label": "口座番号",
+      "required": false,
+      "source": "partner.bank_account_number"
+    },
+    {
+      "name": "ACCOUNT_HOLDER_KANA",
+      "label": "口座名義（カナ）",
+      "required": false,
+      "source": "partner.bank_account_holder"
+    },
+    {
+      "name": "ATTACH_SPOT_TERMS",
+      "label": "スポット条件書添付",
+      "required": false,
+      "source": "auto",
+      "note": "HAS_MASTER_CONTRACTから自動設定"
+    }
+  ],
   "deliveryVars": [
     {
       "name": "ACCEPT_METHOD",
@@ -285,9 +360,229 @@
       "source": "backlog.pay_method",
       "arrayPrefix": "items",
       "isArray": true
+    },
+    {
+      "name": "ip_owner",
+      "label": "知的財産権帰属",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "CLIENT=発注者帰属 / CONTRACTOR=受注者帰属 / 未設定=記載なし"
+    },
+    {
+      "name": "transfer_fee",
+      "label": "著作権譲渡代金",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "ip_owner=CLIENTの場合"
+    },
+    {
+      "name": "rights_label",
+      "label": "権利ラベル",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "品目一覧に表示する権利概要"
+    },
+    {
+      "name": "license_terms",
+      "label": "利用許諾条件",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "ip_owner=CONTRACTORの場合"
+    },
+    {
+      "name": "license_fee",
+      "label": "利用許諾料",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "ip_owner=CONTRACTORの場合"
+    },
+    {
+      "name": "linked_license_contract_title",
+      "label": "関連ライセンス契約",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "関連するライセンス契約の課題キー等"
+    },
+    {
+      "name": "first_rate",
+      "label": "初回料率(%)",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "pay_method=PERFORMANCE/FIXED_PLUS_ROYALTYの場合"
+    },
+    {
+      "name": "second_rate",
+      "label": "2回目以降料率(%)",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "base_price_type",
+      "label": "基準価格種別",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "例：MSRP"
+    },
+    {
+      "name": "trigger_event",
+      "label": "支払トリガー",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "first_payment_timing",
+      "label": "初回支払タイミング",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "second_payment_timing",
+      "label": "2回目以降支払タイミング",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "report_frequency",
+      "label": "報告頻度",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "MONTHLY/QUARTERLY/YEARLY"
+    },
+    {
+      "name": "sub_billing_cycle",
+      "label": "サブスク請求サイクル",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "sub_start_date",
+      "label": "サービス開始日",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "sub_auto_renew",
+      "label": "自動更新",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "milestones",
+      "label": "マイルストーン内容",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "改行区切りテキスト"
     }
   ],
   "variables": [
+    {
+      "name": "TRANSFER_FEE_PAYER",
+      "label": "振込手数料負担者",
+      "required": false,
+      "source": "backlog.transfer_fee_payer"
+    },
+    {
+      "name": "ACCEPT_BY_PERFORMANCE",
+      "label": "着手をもって承諾",
+      "required": false,
+      "source": "backlog.accept_by_performance",
+      "note": "\"1\"の場合に条項追加"
+    },
+    {
+      "name": "ACCEPT_REQUIRED",
+      "label": "承諾書面要否",
+      "required": false,
+      "source": "backlog.accept_required"
+    },
+    {
+      "name": "SHOW_SIGN_SECTION",
+      "label": "受領署名欄表示",
+      "required": false,
+      "source": "backlog.show_sign_section"
+    },
+    {
+      "name": "VENDOR_ACCEPT_TYPE",
+      "label": "受領方法",
+      "required": false,
+      "source": "backlog.vendor_accept_type"
+    },
+    {
+      "name": "IS_INVOICE_ISSUER",
+      "label": "インボイス発行事業者",
+      "required": true,
+      "source": "partner.is_invoice_issuer"
+    },
+    {
+      "name": "BANK_NAME",
+      "label": "銀行名",
+      "required": false,
+      "source": "partner.bank_name"
+    },
+    {
+      "name": "BRANCH_NAME",
+      "label": "支店名",
+      "required": false,
+      "source": "partner.bank_branch"
+    },
+    {
+      "name": "ACCOUNT_TYPE",
+      "label": "口座種別",
+      "required": false,
+      "source": "partner.bank_account_type"
+    },
+    {
+      "name": "ACCOUNT_NUMBER",
+      "label": "口座番号",
+      "required": false,
+      "source": "partner.bank_account_number"
+    },
+    {
+      "name": "ACCOUNT_HOLDER_KANA",
+      "label": "口座名義（カナ）",
+      "required": false,
+      "source": "partner.bank_account_holder"
+    },
+    {
+      "name": "ATTACH_SPOT_TERMS",
+      "label": "スポット条件書添付",
+      "required": false,
+      "source": "auto",
+      "note": "HAS_MASTER_CONTRACTから自動設定"
+    },
     {
       "name": "ACCEPT_METHOD",
       "label": "ACCEPT_METHOD",
@@ -563,6 +858,152 @@
       "source": "backlog.pay_method",
       "arrayPrefix": "items",
       "isArray": true
+    },
+    {
+      "name": "ip_owner",
+      "label": "知的財産権帰属",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "CLIENT=発注者帰属 / CONTRACTOR=受注者帰属 / 未設定=記載なし"
+    },
+    {
+      "name": "transfer_fee",
+      "label": "著作権譲渡代金",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "ip_owner=CLIENTの場合"
+    },
+    {
+      "name": "rights_label",
+      "label": "権利ラベル",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "品目一覧に表示する権利概要"
+    },
+    {
+      "name": "license_terms",
+      "label": "利用許諾条件",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "ip_owner=CONTRACTORの場合"
+    },
+    {
+      "name": "license_fee",
+      "label": "利用許諾料",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "ip_owner=CONTRACTORの場合"
+    },
+    {
+      "name": "linked_license_contract_title",
+      "label": "関連ライセンス契約",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "関連するライセンス契約の課題キー等"
+    },
+    {
+      "name": "first_rate",
+      "label": "初回料率(%)",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "pay_method=PERFORMANCE/FIXED_PLUS_ROYALTYの場合"
+    },
+    {
+      "name": "second_rate",
+      "label": "2回目以降料率(%)",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "base_price_type",
+      "label": "基準価格種別",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "例：MSRP"
+    },
+    {
+      "name": "trigger_event",
+      "label": "支払トリガー",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "first_payment_timing",
+      "label": "初回支払タイミング",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "second_payment_timing",
+      "label": "2回目以降支払タイミング",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "report_frequency",
+      "label": "報告頻度",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "MONTHLY/QUARTERLY/YEARLY"
+    },
+    {
+      "name": "sub_billing_cycle",
+      "label": "サブスク請求サイクル",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "sub_start_date",
+      "label": "サービス開始日",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "sub_auto_renew",
+      "label": "自動更新",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items"
+    },
+    {
+      "name": "milestones",
+      "label": "マイルストーン内容",
+      "required": false,
+      "source": "manual",
+      "isArray": true,
+      "arrayPrefix": "items",
+      "note": "改行区切りテキスト"
     }
   ]
 }
