@@ -29,6 +29,13 @@ export class PrismaWorkflowRepository {
     return rows.map((row) => row.data);
   }
 
+  async listContractSequences(): Promise<ContractSequenceRecord[]> {
+    const rows = await this.prisma.$queryRawUnsafe<Array<{ data: ContractSequenceRecord }>>(
+      `SELECT data FROM ${this.schema}.contract_sequences ORDER BY sort_index ASC, updated_at DESC`
+    );
+    return rows.map((row) => row.data);
+  }
+
   async saveConfig(config: AppConfig): Promise<void> {
     await this.prisma.$executeRawUnsafe(
       `

@@ -16,10 +16,13 @@ export class RegistryService {
     }
 
     const state = await this.store.load();
+    const sequences = this.prismaWorkflowRepository
+      ? await this.prismaWorkflowRepository.listContractSequences()
+      : state.contractSequences;
     const prefix = this.resolvePrefix(issue.templateKey);
     const year = new Date().getFullYear();
     const sequence =
-      state.contractSequences.find((item) => item.prefix === prefix && item.year === year) ?? {
+      sequences.find((item) => item.prefix === prefix && item.year === year) ?? {
         prefix,
         year,
         last_number: 0,
@@ -34,11 +37,12 @@ export class RegistryService {
       updated_at: new Date().toISOString()
     };
 
-    const otherSequences = state.contractSequences.filter((item) => !(item.prefix === prefix && item.year === year));
+    const otherSequences = sequences.filter((item) => !(item.prefix === prefix && item.year === year));
     const nextSequences = [nextSequence, ...otherSequences];
-    await this.store.saveContractSequences(nextSequences);
     if (this.prismaWorkflowRepository) {
       await this.prismaWorkflowRepository.saveContractSequences(nextSequences);
+    } else {
+      await this.store.saveContractSequences(nextSequences);
     }
     return {
       ...issue,
