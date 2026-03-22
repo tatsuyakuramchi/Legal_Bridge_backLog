@@ -1469,6 +1469,7 @@ export class WorkflowService {
   private async saveRuntimeConfig(config: AppConfig): Promise<void> {
     if (this.prismaWorkflowRepository) {
       await this.prismaWorkflowRepository.saveConfig(config);
+      return;
     }
     await this.store.saveConfig(config);
   }
@@ -1476,6 +1477,7 @@ export class WorkflowService {
   private async saveRuntimeIssues(issues: IssueRecord[]): Promise<void> {
     if (this.prismaWorkflowRepository) {
       await this.prismaWorkflowRepository.saveIssues(issues);
+      return;
     }
     await this.store.saveIssues(issues);
   }
@@ -1483,6 +1485,7 @@ export class WorkflowService {
   private async saveRuntimeEvents(events: WorkflowEvent[]): Promise<void> {
     if (this.prismaWorkflowRepository) {
       await this.prismaWorkflowRepository.saveEvents(events);
+      return;
     }
     await this.store.saveEvents(events);
   }
