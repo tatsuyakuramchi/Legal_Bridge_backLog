@@ -3,6 +3,11 @@ export type BacklogIssueTypeSpec = {
   color: string;
 };
 
+export type BacklogStatusSpec = {
+  name: string;
+  color: string;
+};
+
 export type BacklogFieldTypeName =
   | "string"
   | "text"
@@ -32,6 +37,17 @@ export const backlogIssueTypeSpecs: BacklogIssueTypeSpec[] = [
   { name: "売買契約（当社売手・標準）", color: "#EF4444" },
   { name: "売買契約（当社売手・保証金掛け売り）", color: "#DC2626" },
   { name: "納品リクエスト", color: "#10B981" }
+];
+
+export const backlogCustomStatusSpecs: BacklogStatusSpec[] = [
+  { name: "文書生成依頼", color: "#e87758" },
+  { name: "承認待ち", color: "#e07b9a" },
+  { name: "相手方OK（CloudSign準備）", color: "#868cb7" },
+  { name: "相手方OK（郵送等準備）", color: "#3b9dbd" },
+  { name: "相手方送信待ち", color: "#4caf93" },
+  { name: "電子署名依頼中", color: "#b0be3c" },
+  { name: "物理押印依頼中", color: "#eda62a" },
+  { name: "電子署名完了", color: "#f42858" }
 ];
 
 export const backlogCustomFieldSpecs: BacklogCustomFieldSpec[] = [

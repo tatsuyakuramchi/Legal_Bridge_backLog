@@ -3,6 +3,7 @@ import path from "node:path";
 import { JsonStore } from "../store.js";
 import { ManagedTemplateDefinition, TemplateValidationResult } from "../templateManagerTypes.js";
 import {
+  AdminUser,
   AppConfig,
   BulkOrderImportResult,
   BulkOrderOutputMode,
@@ -23,6 +24,39 @@ import { SlackService } from "./slackService.js";
 import { TemplateManagerService } from "./templateManagerService.js";
 
 const statusFlow: IssueStatus[] = ["Draft", "ReviewRequested", "Approved", "Fixed", "Completed"];
+
+const statusLabelMap: Record<IssueStatus, string> = {
+  Draft: "草案",
+  ReviewRequested: "レビュー中",
+  Approved: "承認待ち",
+  CounterpartyConfirmed: "相手方確認待ち",
+  SigningRequested: "押印依頼中",
+  Signed: "締結済",
+  Fixed: "差戻し",
+  Completed: "完了"
+};
+
+const legalStatusMessageMap: Record<IssueStatus, string> = {
+  Draft: "法務着手または草案化",
+  ReviewRequested: "レビュー開始",
+  Approved: "承認待ちへ移行",
+  CounterpartyConfirmed: "相手方確認フェーズへ移行",
+  SigningRequested: "押印依頼フェーズへ移行",
+  Signed: "締結完了",
+  Fixed: "差戻し",
+  Completed: "案件完了"
+};
+
+const requesterStatusMessageMap: Partial<Record<IssueStatus, string>> = {
+  Draft: "申請を受け付けました。",
+  ReviewRequested: "法務レビューを開始しました。",
+  Approved: "社内承認待ちです。",
+  CounterpartyConfirmed: "相手方確認フェーズに進みました。",
+  SigningRequested: "押印手続きに進みました。",
+  Signed: "締結が完了しました。",
+  Fixed: "申請内容の確認または修正が必要です。",
+  Completed: "案件対応が完了しました。"
+};
 
 export class WorkflowService {
   private readonly bulkOrderService = new BulkOrderService();
@@ -124,15 +158,21 @@ export class WorkflowService {
 
   async createIssue(input: Partial<IssueRecord>): Promise<IssueRecord> {
     const state = await this.store.load();
+    const payload = (input.payload ?? {}) as Record<string, unknown>;
+    const requester = input.requester ?? "local-user";
+    const requesterSlackId = this.resolveRequesterSlackIdFromPayload(requester, payload, state.users);
     const issue: IssueRecord = {
       id: `issue-${Date.now()}`,
       issueKey: input.issueKey ?? `LEGAL-${100 + state.issues.length + 1}`,
       title: input.title ?? "新規文書ドラフト",
-      requester: input.requester ?? "local-user",
+      requester,
       assignee: input.assignee ?? "local-app",
       templateKey: input.templateKey ?? "template_service_basic",
       status: input.status ?? "Draft",
-      payload: input.payload ?? {},
+      payload: {
+        ...payload,
+        ...(requesterSlackId ? { requester_slack_id: requesterSlackId } : {})
+      },
       contractNo: input.contractNo,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -166,7 +206,8 @@ export class WorkflowService {
 
     const remoteIssues = await this.backlogService.fetchIssues(state.config, 30);
     const merged = this.mergeIssues(state.issues, remoteIssues);
-    await this.store.saveIssues(merged.issues);
+    const normalizedIssues = merged.issues.map((issue) => this.withResolvedRequesterSlackId(issue, state.users));
+    await this.store.saveIssues(normalizedIssues);
 
     const message = [
       `Backlog fetched ${remoteIssues.length} issues.`,
@@ -188,7 +229,7 @@ export class WorkflowService {
     });
 
     await this.pushEvent("poller-run", message || "Backlog poller executed");
-    return merged.issues;
+    return normalizedIssues;
   }
 
   async generateDocument(issueId: string): Promise<DocumentRecord> {
@@ -1339,9 +1380,11 @@ export class WorkflowService {
 
   private async saveIssue(nextIssue: IssueRecord): Promise<void> {
     const state = await this.store.load();
+    const previousIssue = state.issues.find((item) => item.id === nextIssue.id);
     state.issues = state.issues.map((item) => (item.id === nextIssue.id ? nextIssue : item));
     await this.store.saveIssues(state.issues);
     await this.registryService.recordIssueState(nextIssue);
+    await this.notifyStatusChangeIfNeeded(state.config, state.users, previousIssue, nextIssue);
   }
 
   private async updateBacklogStatusIfPossible(
@@ -1379,5 +1422,145 @@ export class WorkflowService {
     };
     state.events.unshift(event);
     await this.store.saveEvents(state.events);
+  }
+
+  private async notifyStatusChangeIfNeeded(
+    config: AppConfig,
+    users: AdminUser[],
+    previousIssue: IssueRecord | undefined,
+    nextIssue: IssueRecord
+  ): Promise<void> {
+    if (!previousIssue || previousIssue.status === nextIssue.status || !this.slackService.isConfigured(config)) {
+      return;
+    }
+
+    const before = this.toStatusLabel(previousIssue.status);
+    const after = this.toStatusLabel(nextIssue.status);
+    const legalChannel = config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "";
+    const legalLines = this.buildLegalStatusNotificationLines(previousIssue, nextIssue, before, after);
+
+    if (legalChannel) {
+      await this.slackService.postMessage(config, legalLines.join("\n"), legalChannel);
+    }
+
+    const requesterSlackId = this.resolveRequesterSlackId(nextIssue, users);
+    if (!requesterSlackId) {
+      return;
+    }
+
+    const requesterLines = this.buildRequesterStatusNotificationLines(nextIssue, after);
+    await this.slackService.postMessage(config, requesterLines.join("\n"), requesterSlackId);
+  }
+
+  private resolveRequesterSlackId(issue: IssueRecord, users: AdminUser[]): string {
+    const direct =
+      this.getApprovalValue(issue, "requester_slack_id") ||
+      this.getApprovalValue(issue, "requesterSlackId") ||
+      this.getApprovalValue(issue, "slack_id") ||
+      this.getApprovalValue(issue, "requesterSlack");
+    if (direct) {
+      return direct;
+    }
+
+    const matchedUser = users.find(
+      (user) =>
+        user.name === issue.requester ||
+        user.google_email === issue.requester ||
+        user.slack_id === issue.requester ||
+        this.getApprovalValue(issue, "requester_email") === user.google_email ||
+        this.getApprovalValue(issue, "requesterEmail") === user.google_email ||
+        this.getApprovalValue(issue, "requester_name") === user.name ||
+        this.getApprovalValue(issue, "requesterName") === user.name
+    );
+    return matchedUser?.slack_id ?? "";
+  }
+
+  private withResolvedRequesterSlackId(issue: IssueRecord, users: AdminUser[]): IssueRecord {
+    const requesterSlackId = this.resolveRequesterSlackId(issue, users);
+    if (!requesterSlackId || this.getApprovalValue(issue, "requester_slack_id") === requesterSlackId) {
+      return issue;
+    }
+    return {
+      ...issue,
+      payload: {
+        ...issue.payload,
+        requester_slack_id: requesterSlackId
+      },
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  private resolveRequesterSlackIdFromPayload(
+    requester: string,
+    payload: Record<string, unknown>,
+    users: AdminUser[]
+  ): string {
+    const direct = [
+      payload.requester_slack_id,
+      payload.requesterSlackId,
+      payload.slack_id,
+      payload.requesterSlack
+    ]
+      .map((value) => (typeof value === "string" ? value.trim() : ""))
+      .find(Boolean);
+    if (direct) {
+      return direct;
+    }
+
+    const requesterName =
+      (typeof payload.requester_name === "string" && payload.requester_name.trim()) ||
+      (typeof payload.requesterName === "string" && payload.requesterName.trim()) ||
+      requester;
+    const requesterEmail =
+      (typeof payload.requester_email === "string" && payload.requester_email.trim()) ||
+      (typeof payload.requesterEmail === "string" && payload.requesterEmail.trim()) ||
+      "";
+
+    const matchedUser = users.find(
+      (user) =>
+        user.slack_id === requester ||
+        user.name === requester ||
+        user.google_email === requester ||
+        (requesterName ? user.name === requesterName : false) ||
+        (requesterEmail ? user.google_email === requesterEmail : false)
+    );
+    return matchedUser?.slack_id ?? "";
+  }
+
+  private toStatusLabel(status: IssueStatus): string {
+    return statusLabelMap[status] ?? status;
+  }
+
+  private buildLegalStatusNotificationLines(
+    previousIssue: IssueRecord,
+    nextIssue: IssueRecord,
+    before: string,
+    after: string
+  ): string[] {
+    return [
+      `状態変更: ${nextIssue.issueKey}`,
+      `件名: ${nextIssue.title}`,
+      `変更: ${before} -> ${after}`,
+      `内容: ${legalStatusMessageMap[nextIssue.status] ?? "状態が更新されました。"}`,
+      `テンプレート: ${nextIssue.templateKey}`,
+      `申請者: ${nextIssue.requester}`,
+      `担当者: ${nextIssue.assignee}`
+    ];
+  }
+
+  private buildRequesterStatusNotificationLines(nextIssue: IssueRecord, after: string): string[] {
+    const lines = [
+      `申請案件 ${nextIssue.issueKey} の状態が更新されました。`,
+      `件名: ${nextIssue.title}`,
+      `現在状態: ${after}`,
+      requesterStatusMessageMap[nextIssue.status] ?? "詳細は法務担当に確認してください。"
+    ];
+    if (nextIssue.status === "Fixed") {
+      const reason = this.getApprovalValue(nextIssue, "rejected_reason");
+      if (reason) {
+        lines.push(`差戻し理由: ${reason}`);
+      }
+    }
+    return lines;
   }
 }

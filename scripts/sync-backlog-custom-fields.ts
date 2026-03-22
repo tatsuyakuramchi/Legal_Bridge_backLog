@@ -1,5 +1,6 @@
 import "dotenv/config";
 import {
+  backlogCustomStatusSpecs,
   backlogCustomFieldSpecs,
   backlogIssueTypeSpecs,
   BacklogCustomFieldSpec,
@@ -20,6 +21,12 @@ type BacklogCustomField = {
   required?: boolean;
   applicableIssueTypes?: Array<{ id: number; name: string }>;
   items?: Array<{ id: number; name: string }>;
+};
+
+type BacklogStatus = {
+  id: number;
+  name: string;
+  color?: string;
 };
 
 const FIELD_TYPE_ID: Record<BacklogFieldTypeName, number> = {
@@ -124,6 +131,7 @@ function usage(): void {
   console.log("  tsx scripts/sync-backlog-custom-fields.ts --dry-run");
   console.log("  tsx scripts/sync-backlog-custom-fields.ts --apply");
   console.log("  tsx scripts/sync-backlog-custom-fields.ts --apply --custom-fields-only");
+  console.log("  tsx scripts/sync-backlog-custom-fields.ts --apply --statuses-only");
 }
 
 function getBaseUrl(): string {
@@ -186,8 +194,22 @@ async function getCustomFields(): Promise<BacklogCustomField[]> {
   return request<BacklogCustomField[]>(`/api/v2/projects/${encodeURIComponent(getProjectIdOrKey())}/customFields`);
 }
 
+async function getStatuses(): Promise<BacklogStatus[]> {
+  return request<BacklogStatus[]>(`/api/v2/projects/${encodeURIComponent(getProjectIdOrKey())}/statuses`);
+}
+
 async function addIssueType(name: string, color: string): Promise<BacklogIssueType> {
   return request<BacklogIssueType>(`/api/v2/projects/${encodeURIComponent(getProjectIdOrKey())}/issueTypes`, {
+    method: "POST",
+    body: new URLSearchParams({
+      name,
+      color
+    })
+  });
+}
+
+async function addStatus(name: string, color: string): Promise<BacklogStatus> {
+  return request<BacklogStatus>(`/api/v2/projects/${encodeURIComponent(getProjectIdOrKey())}/statuses`, {
     method: "POST",
     body: new URLSearchParams({
       name,
@@ -275,6 +297,27 @@ async function ensureIssueTypes(apply: boolean): Promise<Map<string, BacklogIssu
   return byName;
 }
 
+async function ensureStatuses(apply: boolean): Promise<void> {
+  const current = await getStatuses();
+  const byName = new Map(current.map((item) => [item.name, item]));
+
+  for (const spec of backlogCustomStatusSpecs) {
+    if (byName.has(spec.name)) {
+      console.log(`SKIP status exists: ${spec.name}`);
+      continue;
+    }
+
+    if (!apply) {
+      console.log(`PLAN add status: ${spec.name} (${spec.color})`);
+      continue;
+    }
+
+    const created = await addStatus(spec.name, spec.color);
+    byName.set(created.name, created);
+    console.log(`ADD status: ${created.name}`);
+  }
+}
+
 async function ensureCustomFields(apply: boolean, issueTypesByName: Map<string, BacklogIssueType>): Promise<void> {
   const current = await getCustomFields();
   const byName = new Map(current.map((item) => [item.name, item]));
@@ -350,6 +393,7 @@ async function main(): Promise<void> {
 
   const apply = args.has("--apply");
   const customFieldsOnly = args.has("--custom-fields-only");
+  const statusesOnly = args.has("--statuses-only");
 
   if (!apply && !args.has("--dry-run")) {
     usage();
@@ -359,8 +403,16 @@ async function main(): Promise<void> {
   console.log(`Mode: ${apply ? "apply" : "dry-run"}`);
   console.log(`Project: ${getProjectIdOrKey()}`);
 
-  const issueTypesByName = customFieldsOnly ? new Map((await getIssueTypes()).map((item) => [item.name, item])) : await ensureIssueTypes(apply);
-  await ensureCustomFields(apply, issueTypesByName);
+  if (!customFieldsOnly) {
+    await ensureStatuses(apply);
+  }
+
+  if (!statusesOnly) {
+    const issueTypesByName = customFieldsOnly
+      ? new Map((await getIssueTypes()).map((item) => [item.name, item]))
+      : await ensureIssueTypes(apply);
+    await ensureCustomFields(apply, issueTypesByName);
+  }
 }
 
 await main();
