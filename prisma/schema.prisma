@@ -1,0 +1,366 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["partialIndexes"]
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["lb_core"]
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model contract_alerts {
+  id            Int       @id @default(autoincrement())
+  contract_id   Int
+  alert_type    String    @db.VarChar(50)
+  alert_date    DateTime  @db.Date
+  sent_at       DateTime  @default(now()) @db.Timestamptz(6)
+  slack_channel String?   @db.VarChar(50)
+  message_ts    String?   @db.VarChar(50)
+  contracts     contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([contract_id, alert_type, alert_date])
+  @@index([contract_id], map: "idx_contract_alerts_contract")
+  @@index([alert_type, alert_date], map: "idx_contract_alerts_type_date")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model contracts {
+  id                          Int                 @id @default(autoincrement())
+  backlog_issue_id            Int                 @unique
+  backlog_issue_key           String              @db.VarChar(20)
+  backlog_project_id          Int?
+  contract_no                 String              @unique @db.VarChar(30)
+  parent_contract_id          Int?
+  child_order                 Int?
+  is_parent                   Boolean             @default(false)
+  child_count                 Int                 @default(0)
+  partner_id                  Int?
+  counterparty                String              @default("") @db.VarChar(200)
+  counterparty_person         String?             @db.VarChar(100)
+  contract_type               String              @db.VarChar(50)
+  status                      String              @default("草案") @db.VarChar(50)
+  status_id                   Int?
+  start_date                  DateTime?           @db.Date
+  end_date                    DateTime?           @db.Date
+  auto_renewal                Boolean             @default(false)
+  generation_count            Int                 @default(0)
+  last_fixed_at               DateTime?           @db.Timestamptz(6)
+  last_fixed_drive_url        String?
+  custom_draft_type           String?             @db.VarChar(50)
+  custom_draft_drive_url      String?
+  custom_draft_base_drive_url String?
+  custom_draft_sent_at        DateTime?           @db.Timestamptz(6)
+  signing_method              String?             @db.VarChar(20)
+  counterparty_ok_at          DateTime?           @db.Timestamptz(6)
+  esign_completed_at          DateTime?           @db.Timestamptz(6)
+  signed_at                   DateTime?           @db.Timestamptz(6)
+  drive_folder_url            String?
+  document_origin             String?             @default("internal") @db.VarChar(20)
+  external_doc_drive_url      String?
+  external_doc_received_at    DateTime?           @db.Date
+  is_approver_self            Boolean?            @default(false)
+  archived_at                 DateTime?           @db.Timestamptz(6)
+  canceled_at                 DateTime?           @db.Timestamptz(6)
+  bulk_job_id                 String?             @db.Uuid
+  bulk_row_number             Int?
+  created_at                  DateTime            @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime            @default(now()) @db.Timestamptz(6)
+  contract_alerts             contract_alerts[]
+  contracts                   contracts?          @relation("contractsTocontracts", fields: [parent_contract_id], references: [id], onUpdate: NoAction)
+  other_contracts             contracts[]         @relation("contractsTocontracts")
+  partners                    partners?           @relation(fields: [partner_id], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  deliveries                  deliveries[]
+  documents                   documents[]
+  royalties                   royalties[]
+  royalty_schedules           royalty_schedules[]
+  sublicenses                 sublicenses[]
+
+  @@index([archived_at], map: "idx_contracts_archived", where: raw("(archived_at IS NULL)"))
+  @@index([contract_no], map: "idx_contracts_contract_no")
+  @@index([end_date], map: "idx_contracts_end_date")
+  @@index([end_date], map: "idx_contracts_end_date_active", where: raw("((archived_at IS NULL) AND (end_date IS NOT NULL))"))
+  @@index([backlog_issue_id], map: "idx_contracts_issue_id")
+  @@index([backlog_issue_key], map: "idx_contracts_issue_key")
+  @@index([parent_contract_id], map: "idx_contracts_parent_id")
+  @@index([parent_contract_id, child_order], map: "idx_contracts_parent_order", where: raw("(parent_contract_id IS NOT NULL)"))
+  @@index([partner_id], map: "idx_contracts_partner_id")
+  @@index([partner_id, signed_at(sort: Desc)], map: "idx_contracts_partner_signed", where: raw("(partner_id IS NOT NULL)"))
+  @@index([status], map: "idx_contracts_status")
+  @@index([status, updated_at(sort: Desc)], map: "idx_contracts_status_updated", where: raw("(archived_at IS NULL)"))
+  @@index([contract_type], map: "idx_contracts_type")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model deliveries {
+  id                  Int              @id @default(autoincrement())
+  contract_id         Int
+  backlog_issue_id    Int?             @unique
+  backlog_issue_key   String?          @db.VarChar(20)
+  delivery_type       String           @db.VarChar(30)
+  delivery_date       DateTime?        @db.Date
+  amount_ex_tax       Decimal?         @db.Decimal(15, 2)
+  tax_rate            Decimal          @default(10.00) @db.Decimal(5, 2)
+  withholding_tax     Decimal?         @db.Decimal(15, 2)
+  payment_due_date    DateTime?        @db.Date
+  partial_number      Int?
+  total_partials      Int?
+  is_final_delivery   Boolean          @default(false)
+  drive_url           String?
+  inspection_doc_url  String?
+  payment_notice_url  String?
+  approver_name       String?          @db.VarChar(100)
+  approver_department String?          @db.VarChar(100)
+  reviewer_name       String?          @db.VarChar(100)
+  reviewer_department String?          @db.VarChar(100)
+  person_name         String?          @db.VarChar(100)
+  person_department   String?          @db.VarChar(100)
+  approval_comments   String?
+  approved_at         DateTime?        @db.Timestamptz(6)
+  notes               String?
+  created_at          DateTime         @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime         @default(now()) @db.Timestamptz(6)
+  contracts           contracts        @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  delivery_items      delivery_items[]
+  royalties           royalties[]
+
+  @@index([contract_id], map: "idx_deliveries_contract_id")
+  @@index([backlog_issue_id], map: "idx_deliveries_issue_id")
+  @@index([payment_due_date], map: "idx_deliveries_payment_due")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model delivery_items {
+  id                   Int        @id @default(autoincrement())
+  delivery_id          Int
+  item_order           Int        @default(1)
+  name                 String     @db.VarChar(300)
+  spec                 String?
+  item_no              String?    @db.VarChar(50)
+  quantity             Int        @default(1)
+  unit_price           Decimal?   @db.Decimal(15, 2)
+  amount               Decimal?   @db.Decimal(15, 2)
+  is_completed         Boolean    @default(true)
+  this_time_qty        Int?
+  total_qty            Int?
+  has_revision         Boolean    @default(false)
+  revision_detail      String?
+  has_amount_change    Boolean    @default(false)
+  original_amount      Decimal?   @db.Decimal(15, 2)
+  new_amount           Decimal?   @db.Decimal(15, 2)
+  amount_change_reason String?
+  milestone_name       String?    @db.VarChar(200)
+  completion_date      DateTime?  @db.Date
+  notes                String?
+  created_at           DateTime   @default(now()) @db.Timestamptz(6)
+  deliveries           deliveries @relation(fields: [delivery_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([delivery_id], map: "idx_delivery_items_delivery")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model documents {
+  id            Int       @id @default(autoincrement())
+  contract_id   Int
+  document_type String    @db.VarChar(50)
+  file_name     String    @db.VarChar(300)
+  drive_url     String
+  generated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  generated_by  String?   @db.VarChar(50)
+  template_ids  String[]
+  is_merged     Boolean   @default(false)
+  child_count   Int?
+  notes         String?
+  contracts     contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([contract_id], map: "idx_documents_contract_id")
+  @@index([generated_at(sort: Desc)], map: "idx_documents_generated_at")
+  @@index([document_type], map: "idx_documents_type")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model partners {
+  id                          Int           @id @default(autoincrement())
+  partner_code                String        @unique @db.VarChar(50)
+  name                        String        @db.VarChar(200)
+  is_corporation              Boolean       @default(true)
+  representative              String?       @db.VarChar(200)
+  contact_person              String?       @db.VarChar(100)
+  contact_email               String?       @db.VarChar(200)
+  contact_phone               String?       @db.VarChar(50)
+  address                     String?
+  is_invoice_issuer           Boolean       @default(false)
+  invoice_registration_number String?       @db.VarChar(20)
+  bank_name                   String?       @db.VarChar(100)
+  bank_branch                 String?       @db.VarChar(100)
+  bank_account_type           String?       @db.VarChar(20)
+  bank_account_number         String?       @db.VarChar(20)
+  bank_account_holder         String?       @db.VarChar(200)
+  is_active                   Boolean       @default(true)
+  notes                       String?
+  created_at                  DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at                  DateTime      @default(now()) @db.Timestamptz(6)
+  contracts                   contracts[]
+  sublicenses                 sublicenses[]
+
+  @@index([partner_code], map: "idx_partners_code")
+  @@index([is_corporation], map: "idx_partners_corporation")
+  @@index([is_active], map: "idx_partners_is_active")
+  @@index([name], map: "idx_partners_name")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model polling_logs {
+  id               Int      @id @default(autoincrement())
+  checked_at       DateTime @default(now()) @db.Timestamptz(6)
+  issues_fetched   Int      @default(0)
+  issues_processed Int      @default(0)
+  duration_ms      Int?
+  error_message    String?
+  status           String   @default("success") @db.VarChar(20)
+
+  @@index([checked_at(sort: Desc)], map: "idx_polling_logs_checked_at")
+  @@schema("lb_core")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model polling_state {
+  id               Int      @id @default(1)
+  last_checked_at  DateTime @default(dbgenerated("(now() - '01:00:00'::interval)")) @db.Timestamptz(6)
+  last_issue_count Int      @default(0)
+  updated_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model royalties {
+  id                Int         @id @default(autoincrement())
+  contract_id       Int
+  delivery_id       Int?
+  direction         String      @db.VarChar(10)
+  period_label      String?     @db.VarChar(50)
+  period_start      DateTime?   @db.Date
+  period_end        DateTime?   @db.Date
+  royalty_type      String      @db.VarChar(20)
+  sales_amount      Decimal?    @db.Decimal(15, 2)
+  royalty_rate      Decimal?    @db.Decimal(5, 2)
+  calculated_amount Decimal?    @db.Decimal(15, 2)
+  minimum_guarantee Decimal?    @db.Decimal(15, 2)
+  final_amount      Decimal     @db.Decimal(15, 2)
+  currency          String      @default("JPY") @db.VarChar(10)
+  reported_at       DateTime?   @db.Timestamptz(6)
+  paid_at           DateTime?   @db.Timestamptz(6)
+  notes             String?
+  created_at        DateTime    @default(now()) @db.Timestamptz(6)
+  contracts         contracts   @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  deliveries        deliveries? @relation(fields: [delivery_id], references: [id], onUpdate: NoAction)
+
+  @@index([contract_id], map: "idx_royalties_contract")
+  @@index([direction], map: "idx_royalties_direction")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model royalty_schedules {
+  id                    Int       @id @default(autoincrement())
+  contract_id           Int
+  direction             String    @db.VarChar(10)
+  schedule_type         String    @db.VarChar(20)
+  cycle                 String?   @db.VarChar(20)
+  report_due_day        Int?
+  fixed_due_date        DateTime? @db.Date
+  period_label          String?   @db.VarChar(50)
+  status                String    @default("pending") @db.VarChar(20)
+  received_at           DateTime? @db.Timestamptz(6)
+  paid_at               DateTime? @db.Timestamptz(6)
+  alert_7days_sent_at   DateTime? @db.Timestamptz(6)
+  alert_due_sent_at     DateTime? @db.Timestamptz(6)
+  alert_overdue_sent_at DateTime? @db.Timestamptz(6)
+  created_at            DateTime  @default(now()) @db.Timestamptz(6)
+  contracts             contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([contract_id], map: "idx_royalty_schedules_contract")
+  @@index([direction], map: "idx_royalty_schedules_direction")
+  @@index([fixed_due_date], map: "idx_royalty_schedules_due")
+  @@index([fixed_due_date, direction], map: "idx_royalty_schedules_pending", where: raw("((status)::text = ANY ((ARRAY['pending'::character varying, 'overdue'::character varying])::text[]))"))
+  @@index([status], map: "idx_royalty_schedules_status")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model schema_migrations {
+  version     String   @id @db.VarChar(20)
+  description String?  @db.VarChar(200)
+  applied_at  DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model sublicenses {
+  id          Int       @id @default(autoincrement())
+  contract_id Int
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 区分 String @map("区分") @db.VarChar(50)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 相手先名 String @map("相手先名") @db.VarChar(200)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 相手先コード String? @map("相手先コード") @db.VarChar(50)
+  partner_id  Int?      @map("相手先_partner_id")
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 地域 String? @map("地域") @db.VarChar(100)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 言語 String? @map("言語") @db.VarChar(100)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 適用金銭条件 String? @map("適用金銭条件") @db.VarChar(100)
+  mg_ag       Decimal?  @db.Decimal(15, 2)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 個別料率 Decimal? @map("個別料率") @db.Decimal(5, 2)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 契約締結日 DateTime? @map("契約締結日") @db.Date
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 備考 String? @map("備考")
+  is_active   Boolean   @default(true)
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  contracts   contracts @relation(fields: [contract_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  partners    partners? @relation(fields: [partner_id], references: [id], onUpdate: NoAction)
+
+  @@index([is_active], map: "idx_sublicenses_active")
+  @@index([contract_id], map: "idx_sublicenses_contract")
+  @@index([partner_id], map: "idx_sublicenses_partner")
+  @@schema("lb_core")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model users {
+  id                   Int      @id @default(autoincrement())
+  slack_id             String   @unique @db.VarChar(20)
+  name                 String   @db.VarChar(100)
+  department           String?  @db.VarChar(100)
+  title                String?  @db.VarChar(100)
+  google_email         String?  @db.VarChar(200)
+  is_legal_approver    Boolean  @default(false)
+  is_business_approver Boolean  @default(false)
+  is_legal_staff       Boolean  @default(false)
+  is_admin             Boolean  @default(false)
+  is_active            Boolean  @default(true)
+  notify_via_dm        Boolean  @default(true)
+  notes                String?
+  created_at           DateTime @default(now()) @db.Timestamptz(6)
+  updated_at           DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([is_active], map: "idx_users_is_active")
+  @@index([is_legal_approver], map: "idx_users_is_approver")
+  @@index([slack_id], map: "idx_users_slack_id")
+  @@schema("lb_core")
+}

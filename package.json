@@ -11,6 +11,10 @@
     "test:unit": "tsx scripts/run-unit-tests.ts",
     "sample:docs": "tsx scripts/generate-sample-docs.ts",
     "backlog:sync-fields": "tsx scripts/sync-backlog-custom-fields.ts",
+    "db:migrate:sql": "tsx scripts/run-sql-migrations.ts",
+    "prisma:pull": "prisma db pull",
+    "prisma:generate": "prisma generate",
+    "prisma:studio": "prisma studio",
     "templates:list": "node dist/scripts/template-manager.js list",
     "templates:validate": "node dist/scripts/template-manager.js validate",
     "templates:add": "node dist/scripts/template-manager.js add",
@@ -19,13 +23,16 @@
     "templates:manage": "node dist/scripts/template-manager.js"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "@slack/socket-mode": "^2.0.6",
     "@types/pg": "^8.20.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "handlebars": "^4.7.8",
     "pdf-lib": "^1.17.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "prisma": "^7.5.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.1",

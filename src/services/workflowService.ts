@@ -20,6 +20,7 @@ import { BacklogSetupService, BacklogSetupReport } from "./backlogSetupService.j
 import { BulkOrderService } from "./bulkOrderService.js";
 import { CloudSignDocument, CloudSignService } from "./cloudSignService.js";
 import { DocumentService } from "./documentService.js";
+import { PrismaRegistryRepository } from "./prismaRegistryRepository.js";
 import { RegistryService } from "./registryService.js";
 import { SlackService } from "./slackService.js";
 import { TemplateManagerService } from "./templateManagerService.js";
@@ -70,9 +71,10 @@ export class WorkflowService {
     private readonly cloudSignService: CloudSignService,
     private readonly slackService: SlackService,
     private readonly templateManagerService: TemplateManagerService,
-    private readonly backlogSetupService: BacklogSetupService
+    private readonly backlogSetupService: BacklogSetupService,
+    prismaRegistryRepository?: PrismaRegistryRepository
   ) {
-    this.registryService = new RegistryService(store);
+    this.registryService = new RegistryService(store, prismaRegistryRepository);
   }
 
   async snapshot(): Promise<DashboardSnapshot> {

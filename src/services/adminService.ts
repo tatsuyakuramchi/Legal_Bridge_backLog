@@ -7,6 +7,7 @@ import {
   PartnerRecord,
   PollingLogRecord
 } from "../types.js";
+import { PrismaAdminRepository } from "./prismaAdminRepository.js";
 import { SlackService } from "./slackService.js";
 
 type PartnerImportResult = {
@@ -19,10 +20,14 @@ type PartnerImportResult = {
 export class AdminService {
   constructor(
     private readonly store: AppStore,
-    private readonly slackService: SlackService
+    private readonly slackService: SlackService,
+    private readonly prismaRepository?: PrismaAdminRepository
   ) {}
 
   async getDashboard(): Promise<AdminDashboardSnapshot> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.getDashboard();
+    }
     const state = await this.store.load();
     const pendingApprovalCount = state.contracts.filter((contract) => contract.approval_status === "pending").length;
     const pendingStampCount = state.contracts.filter((contract) =>
@@ -82,21 +87,33 @@ export class AdminService {
   }
 
   async listContracts(): Promise<ContractRecord[]> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.listContracts();
+    }
     const state = await this.store.load();
     return [...state.contracts].sort((left, right) => right.updated_at.localeCompare(left.updated_at));
   }
 
   async listDeliveries(): Promise<DeliveryRecord[]> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.listDeliveries();
+    }
     const state = await this.store.load();
     return [...state.deliveries].sort((left, right) => right.requested_at.localeCompare(left.requested_at));
   }
 
   async listPollingLogs(): Promise<PollingLogRecord[]> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.listPollingLogs();
+    }
     const state = await this.store.load();
     return [...state.pollingLogs].sort((left, right) => right.finished_at.localeCompare(left.finished_at));
   }
 
   async listUsers(): Promise<AdminUser[]> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.listUsers();
+    }
     const state = await this.store.load();
     return [...state.users].sort((left, right) =>
       left.department === right.department
@@ -106,6 +123,9 @@ export class AdminService {
   }
 
   async getUser(id: number): Promise<AdminUser> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.getUser(id);
+    }
     const state = await this.store.load();
     const user = state.users.find((item) => item.id === id);
     if (!user) {
@@ -115,6 +135,9 @@ export class AdminService {
   }
 
   async updateUser(id: number, input: Partial<AdminUser>): Promise<AdminUser> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.updateUser(id, input);
+    }
     const state = await this.store.load();
     const index = state.users.findIndex((item) => item.id === id);
     if (index < 0) {
@@ -193,6 +216,9 @@ export class AdminService {
   }
 
   async listPartners(search?: string): Promise<PartnerRecord[]> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.listPartners(search);
+    }
     const state = await this.store.load();
     const keyword = (search || "").trim();
     const partners = [...state.partners].sort((left, right) => left.partner_code.localeCompare(right.partner_code, "ja"));
@@ -207,6 +233,9 @@ export class AdminService {
   }
 
   async getPartner(id: number): Promise<PartnerRecord> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.getPartner(id);
+    }
     const state = await this.store.load();
     const partner = state.partners.find((item) => item.id === id);
     if (!partner) {
@@ -216,6 +245,9 @@ export class AdminService {
   }
 
   async createPartner(input: Partial<PartnerRecord>): Promise<PartnerRecord> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.createPartner(input);
+    }
     const state = await this.store.load();
     const partnerCode = String(input.partner_code ?? "").trim();
     if (!partnerCode || !String(input.name ?? "").trim()) {
@@ -252,6 +284,9 @@ export class AdminService {
   }
 
   async updatePartner(id: number, input: Partial<PartnerRecord>): Promise<PartnerRecord> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.updatePartner(id, input);
+    }
     const state = await this.store.load();
     const index = state.partners.findIndex((item) => item.id === id);
     if (index < 0) {
@@ -278,6 +313,9 @@ export class AdminService {
   }
 
   async exportPartnersCsv(): Promise<string> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.exportPartnersCsv();
+    }
     const partners = await this.listPartners();
     const header = [
       "partner_code",
@@ -307,6 +345,9 @@ export class AdminService {
   }
 
   async importPartnersCsv(csvText: string): Promise<PartnerImportResult> {
+    if (this.prismaRepository) {
+      return this.prismaRepository.importPartnersCsv(csvText);
+    }
     const rows = this.parseCsv(csvText);
     if (rows.length < 2) {
       return { imported: 0, skipped: 0, errors: ["CSV must include header and rows"], partners: await this.listPartners() };

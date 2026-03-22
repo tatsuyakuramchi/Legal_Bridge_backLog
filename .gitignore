@@ -7,3 +7,7 @@ tmp/*
 docs_extract/
 backlog-initial-setup.md
 backlog-setup-*.md
+
+/generated/prisma
+/server-*.log
+/db-sql-migrations/

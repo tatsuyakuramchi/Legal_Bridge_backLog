@@ -1,8 +1,12 @@
 import { AppStore } from "../store.js";
 import { ContractRecord, DeliveryRecord, DocumentRecord, IssueRecord, PollingLogRecord } from "../types.js";
+import { PrismaRegistryRepository } from "./prismaRegistryRepository.js";
 
 export class RegistryService {
-  constructor(private readonly store: AppStore) {}
+  constructor(
+    private readonly store: AppStore,
+    private readonly prismaRepository?: PrismaRegistryRepository
+  ) {}
 
   async ensureContractNumber(issue: IssueRecord): Promise<IssueRecord> {
     if (issue.contractNo) {
@@ -93,6 +97,10 @@ export class RegistryService {
       const deliveries = this.upsertById(state.deliveries, delivery);
       await this.store.saveDeliveries(deliveries);
     }
+
+    if (this.prismaRepository) {
+      await this.prismaRepository.recordDocumentLifecycle(issue, document);
+    }
   }
 
   async recordIssueState(issue: IssueRecord): Promise<void> {
@@ -126,6 +134,10 @@ export class RegistryService {
       };
       await this.store.saveDeliveries(this.upsertById(state.deliveries, nextDelivery));
     }
+
+    if (this.prismaRepository) {
+      await this.prismaRepository.recordIssueState(issue);
+    }
   }
 
   async recordPollerRun(input: Omit<PollingLogRecord, "id">): Promise<void> {
@@ -136,6 +148,10 @@ export class RegistryService {
     };
     state.pollingLogs.unshift(log);
     await this.store.savePollingLogs(state.pollingLogs);
+
+    if (this.prismaRepository) {
+      await this.prismaRepository.recordPollerRun(input);
+    }
   }
 
   private resolvePrefix(templateKey: string): string {

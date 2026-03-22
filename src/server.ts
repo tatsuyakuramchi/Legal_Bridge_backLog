@@ -4,6 +4,10 @@ import path from "node:path";
 import { AdminService } from "./services/adminService.js";
 import { PostgresStore } from "./postgresStore.js";
 import { AppStore, JsonStore } from "./store.js";
+import { PrismaAdminRepository } from "./services/prismaAdminRepository.js";
+import { PrismaBootstrapService } from "./services/prismaBootstrapService.js";
+import { PrismaRegistryRepository } from "./services/prismaRegistryRepository.js";
+import { getPrismaClient } from "./services/prismaService.js";
 import { BacklogService } from "./services/backlogService.js";
 import { BacklogSetupService } from "./services/backlogSetupService.js";
 import { CloudSignService } from "./services/cloudSignService.js";
@@ -20,12 +24,16 @@ const dataDir = path.join(rootDir, "data");
 const store: AppStore = PostgresStore.isConfigured()
   ? new PostgresStore({ jsonFallbackDir: dataDir })
   : new JsonStore(dataDir);
+const prismaClient = getPrismaClient();
+const prismaAdminRepository = prismaClient ? new PrismaAdminRepository(prismaClient) : undefined;
+const prismaRegistryRepository = prismaClient ? new PrismaRegistryRepository(prismaClient) : undefined;
+const prismaBootstrapService = prismaClient ? new PrismaBootstrapService(store, prismaClient) : undefined;
 const documentService = new DocumentService(path.join(rootDir, "tmp"), path.join(rootDir, "templates"));
 const backlogService = new BacklogService();
 const backlogSetupService = new BacklogSetupService();
 const cloudSignService = new CloudSignService();
 const slackService = new SlackService();
-const adminService = new AdminService(store, slackService);
+const adminService = new AdminService(store, slackService, prismaAdminRepository);
 const templateManagerService = new TemplateManagerService(
   path.join(rootDir, "templates"),
   path.join(rootDir, "templates", "definitions")
@@ -37,7 +45,8 @@ const workflowService = new WorkflowService(
   cloudSignService,
   slackService,
   templateManagerService,
-  backlogSetupService
+  backlogSetupService,
+  prismaRegistryRepository
 );
 
 let pollerTimer: NodeJS.Timeout | null = null;
@@ -340,6 +349,9 @@ app.get("*", (_req, res) => {
 
 await store.ensure();
 await templateManagerService.ensure();
+if (prismaBootstrapService) {
+  await prismaBootstrapService.ensureSeeded();
+}
 
 const schedulePoller = async (): Promise<void> => {
   const snapshot = await workflowService.snapshot();
