@@ -1,7 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { AppStore } from "../store.js";
+import { AppStore, StoreShape } from "../store.js";
 import { ManagedTemplateDefinition, TemplateValidationResult } from "../templateManagerTypes.js";
 import {
   AdminUser,
@@ -20,7 +20,9 @@ import { BacklogSetupService, BacklogSetupReport } from "./backlogSetupService.j
 import { BulkOrderService } from "./bulkOrderService.js";
 import { CloudSignDocument, CloudSignService } from "./cloudSignService.js";
 import { DocumentService } from "./documentService.js";
+import { PrismaAdminRepository } from "./prismaAdminRepository.js";
 import { PrismaRegistryRepository } from "./prismaRegistryRepository.js";
+import { PrismaWorkflowRepository } from "./prismaWorkflowRepository.js";
 import { RegistryService } from "./registryService.js";
 import { SlackService } from "./slackService.js";
 import { TemplateManagerService } from "./templateManagerService.js";
@@ -72,21 +74,32 @@ export class WorkflowService {
     private readonly slackService: SlackService,
     private readonly templateManagerService: TemplateManagerService,
     private readonly backlogSetupService: BacklogSetupService,
-    prismaRegistryRepository?: PrismaRegistryRepository
+    prismaRegistryRepository?: PrismaRegistryRepository,
+    private readonly prismaReadRepository?: PrismaAdminRepository,
+    private readonly prismaWorkflowRepository?: PrismaWorkflowRepository
   ) {
-    this.registryService = new RegistryService(store, prismaRegistryRepository);
+    this.registryService = new RegistryService(store, prismaRegistryRepository, prismaWorkflowRepository);
   }
 
   async snapshot(): Promise<DashboardSnapshot> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const definitions = await this.templateManagerService.listDefinitions();
+    const [contracts, deliveries, pollingLogs, documents] = this.prismaReadRepository
+      ? await Promise.all([
+          this.prismaReadRepository.listContracts(),
+          this.prismaReadRepository.listDeliveries(),
+          this.prismaReadRepository.listPollingLogs(),
+          this.prismaReadRepository.listDocuments()
+        ])
+      : [state.contracts, state.deliveries, state.pollingLogs, state.documents];
     return {
       ...state,
+      documents,
       templates: templateCatalog,
       templateDefinitionsCount: definitions.length,
-      contracts: state.contracts,
-      pollingLogs: state.pollingLogs,
-      deliveries: state.deliveries,
+      contracts,
+      pollingLogs,
+      deliveries,
       health: {
         app: "ok",
         backlog: this.backlogService.isConfigured(state.config) ? "ok" : "warn",
@@ -147,20 +160,20 @@ export class WorkflowService {
   }
 
   async updateConfig(input: Partial<AppConfig>): Promise<AppConfig> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const next: AppConfig = {
       ...state.config,
       ...input,
       pollingIntervalSec: Number(input.pollingIntervalSec ?? state.config.pollingIntervalSec),
       lastSavedAt: new Date().toISOString()
     };
-    await this.store.saveConfig(next);
+    await this.saveRuntimeConfig(next);
     await this.pushEvent("poller-run", "Configuration updated");
     return next;
   }
 
   async createIssue(input: Partial<IssueRecord>): Promise<IssueRecord> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const payload = (input.payload ?? {}) as Record<string, unknown>;
     const requester = input.requester ?? "local-user";
     const requesterSlackId = this.resolveRequesterSlackIdFromPayload(requester, payload, state.users);
@@ -182,14 +195,14 @@ export class WorkflowService {
     };
 
     state.issues.unshift(issue);
-    await this.store.saveIssues(state.issues);
+    await this.saveRuntimeIssues(state.issues);
     await this.registryService.recordIssueState(issue);
     await this.pushEvent("issue-created", `${issue.issueKey} created`);
     return issue;
   }
 
   async runPoller(): Promise<IssueRecord[]> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const startedAt = new Date().toISOString();
     if (!this.backlogService.isConfigured(state.config)) {
       const fallback = await this.runMockPoller(state.issues);
@@ -210,7 +223,7 @@ export class WorkflowService {
     const remoteIssues = await this.backlogService.fetchIssues(state.config, 30);
     const merged = this.mergeIssues(state.issues, remoteIssues);
     const normalizedIssues = merged.issues.map((issue) => this.withResolvedRequesterSlackId(issue, state.users));
-    await this.store.saveIssues(normalizedIssues);
+    await this.saveRuntimeIssues(normalizedIssues);
 
     const message = [
       `Backlog fetched ${remoteIssues.length} issues.`,
@@ -236,7 +249,7 @@ export class WorkflowService {
   }
 
   async generateDocument(issueId: string): Promise<DocumentRecord> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const currentIssue = state.issues.find((item) => item.id === issueId);
     if (!currentIssue) {
       throw new Error("Issue not found");
@@ -292,7 +305,7 @@ export class WorkflowService {
     state.documents.unshift(...generatedDocuments);
     state.issues = Array.from(workingIssues.values()).sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
     await this.store.saveDocuments(state.documents);
-    await this.store.saveIssues(state.issues);
+    await this.saveRuntimeIssues(state.issues);
     await this.pushEvent(
       "document-generated",
       generatedDocuments.length > 1
@@ -303,7 +316,7 @@ export class WorkflowService {
   }
 
   async requestIssueApproval(issueId: string): Promise<{ ok: true; channel: string; ts?: string }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       throw new Error("Issue not found");
@@ -364,7 +377,7 @@ export class WorkflowService {
   }
 
   async sendApprovalReminders(): Promise<{ reminded: number }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const pending = state.issues.filter((issue) => this.getApprovalStatus(issue) === "pending");
     let reminded = 0;
 
@@ -386,7 +399,7 @@ export class WorkflowService {
   }
 
   async requestStamp(issueId: string): Promise<{ ok: true; channel: string; ts?: string }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       throw new Error("Issue not found");
@@ -447,7 +460,7 @@ export class WorkflowService {
   }
 
   async sendStampReminders(): Promise<{ reminded: number }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const requested = state.issues.filter((issue) =>
       ["requested", "physical_requested", "cloudsign_sent", "cloudsign_pending"].includes(
         this.getApprovalValue(issue, "stamp_status")
@@ -483,7 +496,7 @@ export class WorkflowService {
       return;
     }
 
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => {
       const approvalTs = this.getApprovalValue(item, "approval_slack_ts");
       const stampTs = this.getApprovalValue(item, "stamp_slack_ts");
@@ -581,7 +594,7 @@ export class WorkflowService {
     notifySlack?: boolean;
     previewOnly?: boolean;
   }): Promise<BulkOrderImportResult> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const outputMode = this.bulkOrderService.normalizeOutputMode(
       typeof input.outputMode === "string" ? input.outputMode : undefined
     );
@@ -665,7 +678,7 @@ export class WorkflowService {
         generatedDocs.map((document) => document.pdfPath),
         mergedFileName
       );
-      const latestState = await this.store.load();
+      const latestState = await this.loadRuntimeState();
       latestState.documents.unshift({
         id: `doc-bulk-${Date.now()}`,
         issueId: "bulk-order",
@@ -713,21 +726,21 @@ export class WorkflowService {
   }
 
   async testBacklogConnection(): Promise<{ ok: true; projectName: string }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const result = await this.backlogService.testConnection(state.config);
     await this.pushEvent("poller-run", `Backlog connection OK: ${result.project.name}`);
     return { ok: true, projectName: result.project.name };
   }
 
   async testSlackConnection(): Promise<{ ok: true; channel: string }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const result = await this.slackService.testConnection(state.config);
     await this.pushEvent("poller-run", `Slack connection OK: ${result.channel}`);
     return result;
   }
 
   async testCloudSignConnection(): Promise<{ ok: true; baseUrl: string }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const result = await this.cloudSignService.testConnection(state.config);
     await this.pushEvent("poller-run", `CloudSign connection OK: ${result.baseUrl}`);
     return result;
@@ -740,7 +753,7 @@ export class WorkflowService {
   }
 
   async sendIssueToCloudSign(issueId: string): Promise<{ ok: true; documentId: string }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       throw new Error("Issue not found");
@@ -810,7 +823,7 @@ export class WorkflowService {
   }
 
   async syncCloudSignStatuses(): Promise<{ checked: number; completed: number; updated: number }> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     if (!this.cloudSignService.isConfigured(state.config)) {
       return { checked: 0, completed: 0, updated: 0 };
     }
@@ -868,7 +881,7 @@ export class WorkflowService {
   }
 
   async sendIssueNotification(issueId: string): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       throw new Error("Issue not found");
@@ -895,7 +908,7 @@ export class WorkflowService {
 
     const generateMatch = normalized.match(/^generate\s+([A-Z]+-\d+)/i);
     if (generateMatch) {
-      const state = await this.store.load();
+      const state = await this.loadRuntimeState();
       const issueKey = generateMatch[1].toUpperCase();
       const issue = state.issues.find((item) => item.issueKey === issueKey);
       if (!issue) {
@@ -913,7 +926,7 @@ export class WorkflowService {
 
     const approvalMatch = normalized.match(/^approve\s+([A-Z]+-\d+)/i);
     if (approvalMatch) {
-      const state = await this.store.load();
+      const state = await this.loadRuntimeState();
       const issueKey = approvalMatch[1].toUpperCase();
       const issue = state.issues.find((item) => item.issueKey === issueKey);
       if (!issue) {
@@ -931,7 +944,7 @@ export class WorkflowService {
 
     const stampMatch = normalized.match(/^stamp\s+([A-Z]+-\d+)/i);
     if (stampMatch) {
-      const state = await this.store.load();
+      const state = await this.loadRuntimeState();
       const issueKey = stampMatch[1].toUpperCase();
       const issue = state.issues.find((item) => item.issueKey === issueKey);
       if (!issue) {
@@ -948,7 +961,7 @@ export class WorkflowService {
 
     const cloudSignMatch = normalized.match(/^cloudsign\s+([A-Z]+-\d+)/i);
     if (cloudSignMatch) {
-      const state = await this.store.load();
+      const state = await this.loadRuntimeState();
       const issueKey = cloudSignMatch[1].toUpperCase();
       const issue = state.issues.find((item) => item.issueKey === issueKey);
       if (!issue) {
@@ -981,7 +994,7 @@ export class WorkflowService {
       };
     });
 
-    await this.store.saveIssues(updated);
+    await this.saveRuntimeIssues(updated);
     return updated;
   }
 
@@ -1063,7 +1076,7 @@ export class WorkflowService {
   }
 
   private async approveIssueFromSlack(issueId: string, payload: Record<string, unknown>): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       return;
@@ -1103,7 +1116,7 @@ export class WorkflowService {
   }
 
   private async rejectIssueFromSlack(issueId: string, reason: string, payload: Record<string, unknown>): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       return;
@@ -1144,7 +1157,7 @@ export class WorkflowService {
   }
 
   private async completeStampFromSlack(issueId: string, payload: Record<string, unknown>): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       return;
@@ -1183,7 +1196,7 @@ export class WorkflowService {
   }
 
   private async markStampPhysical(issueId: string, payload: Record<string, unknown>): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       return;
@@ -1204,7 +1217,7 @@ export class WorkflowService {
   }
 
   private async markStampPending(issueId: string): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
     if (!issue) {
       return;
@@ -1291,7 +1304,7 @@ export class WorkflowService {
       updatedAt: signedAt
     };
 
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const signedDocument: DocumentRecord | undefined =
       signedPdf && signedPdfPath
         ? {
@@ -1388,10 +1401,10 @@ export class WorkflowService {
   }
 
   private async saveIssue(nextIssue: IssueRecord): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const previousIssue = state.issues.find((item) => item.id === nextIssue.id);
     state.issues = state.issues.map((item) => (item.id === nextIssue.id ? nextIssue : item));
-    await this.store.saveIssues(state.issues);
+    await this.saveRuntimeIssues(state.issues);
     await this.registryService.recordIssueState(nextIssue);
     await this.notifyStatusChangeIfNeeded(state.config, state.users, previousIssue, nextIssue);
   }
@@ -1422,7 +1435,7 @@ export class WorkflowService {
   }
 
   private async pushEvent(type: WorkflowEvent["type"], message: string): Promise<void> {
-    const state = await this.store.load();
+    const state = await this.loadRuntimeState();
     const event: WorkflowEvent = {
       id: `event-${randomUUID()}`,
       type,
@@ -1430,7 +1443,48 @@ export class WorkflowService {
       createdAt: new Date().toISOString()
     };
     state.events.unshift(event);
-    await this.store.saveEvents(state.events);
+    await this.saveRuntimeEvents(state.events);
+  }
+
+  private async loadRuntimeState(): Promise<StoreShape> {
+    const state = await this.store.load();
+    if (!this.prismaWorkflowRepository) {
+      return state;
+    }
+
+    const [config, issues, events] = await Promise.all([
+      this.prismaWorkflowRepository.getConfig(),
+      this.prismaWorkflowRepository.listIssues(),
+      this.prismaWorkflowRepository.listEvents()
+    ]);
+
+    return {
+      ...state,
+      config: config ?? state.config,
+      issues,
+      events
+    };
+  }
+
+  private async saveRuntimeConfig(config: AppConfig): Promise<void> {
+    if (this.prismaWorkflowRepository) {
+      await this.prismaWorkflowRepository.saveConfig(config);
+    }
+    await this.store.saveConfig(config);
+  }
+
+  private async saveRuntimeIssues(issues: IssueRecord[]): Promise<void> {
+    if (this.prismaWorkflowRepository) {
+      await this.prismaWorkflowRepository.saveIssues(issues);
+    }
+    await this.store.saveIssues(issues);
+  }
+
+  private async saveRuntimeEvents(events: WorkflowEvent[]): Promise<void> {
+    if (this.prismaWorkflowRepository) {
+      await this.prismaWorkflowRepository.saveEvents(events);
+    }
+    await this.store.saveEvents(events);
   }
 
   private async notifyStatusChangeIfNeeded(

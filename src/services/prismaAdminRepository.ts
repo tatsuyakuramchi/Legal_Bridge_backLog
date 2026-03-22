@@ -4,6 +4,7 @@ import {
   AdminUser,
   ContractRecord,
   DeliveryRecord,
+  DocumentRecord,
   PartnerRecord,
   PollingLogRecord
 } from "../types.js";
@@ -96,6 +97,14 @@ export class PrismaAdminRepository {
       success: row.status === "success",
       message: row.error_message || `duration=${row.duration_ms ?? 0}ms`
     }));
+  }
+
+  async listDocuments(): Promise<DocumentRecord[]> {
+    const rows = await this.prisma.documents.findMany({
+      include: { contracts: true },
+      orderBy: { generated_at: "desc" }
+    });
+    return rows.map((row) => this.mapDocument(row));
   }
 
   async listUsers(): Promise<AdminUser[]> {
@@ -404,6 +413,23 @@ export class PrismaAdminRepository {
       document_id: undefined,
       drive_folder_name: undefined,
       remarks: this.optionalString(row.notes)
+    };
+  }
+
+  private mapDocument(row: Record<string, unknown>): DocumentRecord {
+    const contract = (row.contracts as Record<string, unknown> | undefined) ?? {};
+    return {
+      id: `doc-${row.id}`,
+      issueId: String(contract.backlog_issue_id ?? ""),
+      issueKey: String(contract.backlog_issue_key ?? ""),
+      templateKey: String(row.document_type ?? contract.contract_type ?? ""),
+      fileName: String(row.file_name ?? ""),
+      htmlPath: String(row.drive_url ?? ""),
+      pdfPath: String(row.drive_url ?? ""),
+      driveFolderName: String(contract.contract_no ?? contract.backlog_issue_key ?? ""),
+      driveStatus: "uploaded",
+      contractNo: this.optionalString(contract.contract_no),
+      createdAt: new Date((row.generated_at as string | Date) ?? new Date()).toISOString()
     };
   }
 

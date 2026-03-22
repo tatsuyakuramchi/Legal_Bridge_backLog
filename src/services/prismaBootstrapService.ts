@@ -1,26 +1,34 @@
 import { PrismaClient } from "../../generated/prisma/client.js";
 import { AppStore } from "../store.js";
+import { PrismaWorkflowRepository } from "./prismaWorkflowRepository.js";
 
 export class PrismaBootstrapService {
+  private readonly workflowRepository: PrismaWorkflowRepository;
+
   constructor(
     private readonly store: AppStore,
     private readonly prisma: PrismaClient
-  ) {}
+  ) {
+    this.workflowRepository = new PrismaWorkflowRepository(prisma);
+  }
 
   async ensureSeeded(): Promise<void> {
-    const [usersCount, partnersCount, contractsCount] = await Promise.all([
+    const [usersCount, partnersCount, contractsCount, deliveriesCount, pollingLogsCount] = await Promise.all([
       this.prisma.users.count(),
       this.prisma.partners.count(),
-      this.prisma.contracts.count()
+      this.prisma.contracts.count(),
+      this.prisma.deliveries.count(),
+      this.prisma.polling_logs.count()
     ]);
 
-    if (usersCount > 0 || partnersCount > 0 || contractsCount > 0) {
+    const state = await this.store.load();
+    await this.workflowRepository.seedWorkflowRuntime(state);
+
+    if (usersCount > 0 && partnersCount > 0 && contractsCount > 0 && deliveriesCount > 0 && pollingLogsCount > 0) {
       return;
     }
 
-    const state = await this.store.load();
-
-    if (state.users.length > 0) {
+    if (usersCount === 0 && state.users.length > 0) {
       await this.prisma.users.createMany({
         data: state.users.map((user) => ({
           id: user.id,
@@ -41,7 +49,7 @@ export class PrismaBootstrapService {
       });
     }
 
-    if (state.partners.length > 0) {
+    if (partnersCount === 0 && state.partners.length > 0) {
       await this.prisma.partners.createMany({
         data: state.partners.map((partner) => ({
           id: partner.id,
@@ -66,7 +74,7 @@ export class PrismaBootstrapService {
       });
     }
 
-    if (state.contracts.length > 0) {
+    if (contractsCount === 0 && state.contracts.length > 0) {
       for (const contract of state.contracts) {
         const existingPartner = contract.partner_code
           ? await this.prisma.partners.findUnique({ where: { partner_code: contract.partner_code } })
@@ -90,7 +98,7 @@ export class PrismaBootstrapService {
       }
     }
 
-    if (state.deliveries.length > 0) {
+    if (deliveriesCount === 0 && state.deliveries.length > 0) {
       const contracts = await this.prisma.contracts.findMany();
       const byIssueKey = new Map(contracts.map((contract) => [contract.backlog_issue_key, contract]));
       for (const delivery of state.deliveries) {
@@ -113,7 +121,7 @@ export class PrismaBootstrapService {
       }
     }
 
-    if (state.pollingLogs.length > 0) {
+    if (pollingLogsCount === 0 && state.pollingLogs.length > 0) {
       await this.prisma.polling_logs.createMany({
         data: state.pollingLogs.map((log) => ({
           checked_at: new Date(log.finished_at),

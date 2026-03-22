@@ -7,6 +7,7 @@ import { AppStore, JsonStore } from "./store.js";
 import { PrismaAdminRepository } from "./services/prismaAdminRepository.js";
 import { PrismaBootstrapService } from "./services/prismaBootstrapService.js";
 import { PrismaRegistryRepository } from "./services/prismaRegistryRepository.js";
+import { PrismaWorkflowRepository } from "./services/prismaWorkflowRepository.js";
 import { getPrismaClient } from "./services/prismaService.js";
 import { BacklogService } from "./services/backlogService.js";
 import { BacklogSetupService } from "./services/backlogSetupService.js";
@@ -27,6 +28,7 @@ const store: AppStore = PostgresStore.isConfigured()
 const prismaClient = getPrismaClient();
 const prismaAdminRepository = prismaClient ? new PrismaAdminRepository(prismaClient) : undefined;
 const prismaRegistryRepository = prismaClient ? new PrismaRegistryRepository(prismaClient) : undefined;
+const prismaWorkflowRepository = prismaClient ? new PrismaWorkflowRepository(prismaClient) : undefined;
 const prismaBootstrapService = prismaClient ? new PrismaBootstrapService(store, prismaClient) : undefined;
 const documentService = new DocumentService(path.join(rootDir, "tmp"), path.join(rootDir, "templates"));
 const backlogService = new BacklogService();
@@ -46,7 +48,9 @@ const workflowService = new WorkflowService(
   slackService,
   templateManagerService,
   backlogSetupService,
-  prismaRegistryRepository
+  prismaRegistryRepository,
+  prismaAdminRepository,
+  prismaWorkflowRepository
 );
 
 let pollerTimer: NodeJS.Timeout | null = null;

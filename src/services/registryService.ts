@@ -1,11 +1,13 @@
 import { AppStore } from "../store.js";
 import { ContractRecord, DeliveryRecord, DocumentRecord, IssueRecord, PollingLogRecord } from "../types.js";
 import { PrismaRegistryRepository } from "./prismaRegistryRepository.js";
+import { PrismaWorkflowRepository } from "./prismaWorkflowRepository.js";
 
 export class RegistryService {
   constructor(
     private readonly store: AppStore,
-    private readonly prismaRepository?: PrismaRegistryRepository
+    private readonly prismaRepository?: PrismaRegistryRepository,
+    private readonly prismaWorkflowRepository?: PrismaWorkflowRepository
   ) {}
 
   async ensureContractNumber(issue: IssueRecord): Promise<IssueRecord> {
@@ -33,7 +35,11 @@ export class RegistryService {
     };
 
     const otherSequences = state.contractSequences.filter((item) => !(item.prefix === prefix && item.year === year));
-    await this.store.saveContractSequences([nextSequence, ...otherSequences]);
+    const nextSequences = [nextSequence, ...otherSequences];
+    await this.store.saveContractSequences(nextSequences);
+    if (this.prismaWorkflowRepository) {
+      await this.prismaWorkflowRepository.saveContractSequences(nextSequences);
+    }
     return {
       ...issue,
       contractNo: nextContractNo,

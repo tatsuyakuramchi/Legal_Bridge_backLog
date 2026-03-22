@@ -9,6 +9,14 @@ datasource db {
   schemas  = ["lb_core"]
 }
 
+model app_config {
+  id         Int      @id @db.SmallInt
+  data       Json
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@schema("lb_core")
+}
+
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 model contract_alerts {
   id            Int       @id @default(autoincrement())
@@ -23,6 +31,18 @@ model contract_alerts {
   @@unique([contract_id, alert_type, alert_date])
   @@index([contract_id], map: "idx_contract_alerts_contract")
   @@index([alert_type, alert_date], map: "idx_contract_alerts_type_date")
+  @@schema("lb_core")
+}
+
+model contract_sequences {
+  entity_key String   @id @db.VarChar(100)
+  sort_index Int      @default(0)
+  prefix     String   @db.VarChar(20)
+  year       Int
+  data       Json
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([prefix, year], map: "idx_contract_sequences_prefix_year")
   @@schema("lb_core")
 }
 
@@ -181,6 +201,33 @@ model documents {
   @@index([contract_id], map: "idx_documents_contract_id")
   @@index([generated_at(sort: Desc)], map: "idx_documents_generated_at")
   @@index([document_type], map: "idx_documents_type")
+  @@schema("lb_core")
+}
+
+model events {
+  entity_key String   @id @db.VarChar(100)
+  sort_index Int      @default(0)
+  event_type String?  @db.VarChar(50)
+  data       Json
+  updated_at DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([event_type], map: "idx_events_event_type")
+  @@index([updated_at(sort: Desc)], map: "idx_events_updated_at")
+  @@schema("lb_core")
+}
+
+model issues {
+  entity_key   String   @id @db.VarChar(100)
+  sort_index   Int      @default(0)
+  issue_key    String   @db.VarChar(50)
+  template_key String?  @db.VarChar(100)
+  status       String?  @db.VarChar(50)
+  data         Json
+  updated_at   DateTime @default(now()) @db.Timestamptz(6)
+
+  @@index([issue_key], map: "idx_issues_issue_key")
+  @@index([status], map: "idx_issues_status")
+  @@index([template_key], map: "idx_issues_template_key")
   @@schema("lb_core")
 }
 
