@@ -25,7 +25,7 @@ import {
   WorkflowEvent
 } from "./types.js";
 
-type StoreShape = {
+export type StoreShape = {
   config: AppConfig;
   issues: IssueRecord[];
   documents: DocumentRecord[];
@@ -38,6 +38,23 @@ type StoreShape = {
   contractSequences: ContractSequenceRecord[];
 };
 
+export interface AppStore {
+  readonly kind: "json" | "postgres";
+  ensure(): Promise<void>;
+  load(): Promise<StoreShape>;
+  saveConfig(config: AppConfig): Promise<void>;
+  saveIssues(issues: IssueRecord[]): Promise<void>;
+  saveDocuments(documents: DocumentRecord[]): Promise<void>;
+  saveEvents(events: WorkflowEvent[]): Promise<void>;
+  saveUsers(users: AdminUser[]): Promise<void>;
+  savePartners(partners: PartnerRecord[]): Promise<void>;
+  saveContracts(contracts: ContractRecord[]): Promise<void>;
+  saveDeliveries(deliveries: DeliveryRecord[]): Promise<void>;
+  savePollingLogs(pollingLogs: PollingLogRecord[]): Promise<void>;
+  saveContractSequences(sequences: ContractSequenceRecord[]): Promise<void>;
+  testConnection(): Promise<{ ok: boolean; kind: "json" | "postgres"; message: string }>;
+}
+
 const templateAliases: Record<string, string> = {
   contract: "template_service_basic",
   purchase_order: "template_order",
@@ -46,7 +63,22 @@ const templateAliases: Record<string, string> = {
   royalty_report: "template_royalty_report"
 };
 
-export class JsonStore {
+export function normalizeStoreState(state: StoreShape): StoreShape {
+  return {
+    ...state,
+    issues: state.issues.map((issue) => ({
+      ...issue,
+      templateKey: templateAliases[issue.templateKey] ?? issue.templateKey
+    })),
+    documents: state.documents.map((document) => ({
+      ...document,
+      templateKey: templateAliases[document.templateKey] ?? document.templateKey
+    }))
+  };
+}
+
+export class JsonStore implements AppStore {
+  readonly kind = "json" as const;
   private readonly baseDir: string;
 
   constructor(baseDir: string) {
@@ -69,7 +101,7 @@ export class JsonStore {
 
   async load(): Promise<StoreShape> {
     await this.ensure();
-    const state = {
+    return normalizeStoreState({
       config: await this.readJson<AppConfig>("config.json"),
       issues: await this.readJson<IssueRecord[]>("issues.json"),
       documents: await this.readJson<DocumentRecord[]>("documents.json"),
@@ -80,24 +112,7 @@ export class JsonStore {
       deliveries: await this.readJson<DeliveryRecord[]>("deliveries.json"),
       pollingLogs: await this.readJson<PollingLogRecord[]>("polling-logs.json"),
       contractSequences: await this.readJson<ContractSequenceRecord[]>("contract-sequences.json")
-    };
-    return {
-      ...state,
-      issues: state.issues.map((issue) => ({
-        ...issue,
-        templateKey: templateAliases[issue.templateKey] ?? issue.templateKey
-      })),
-      documents: state.documents.map((document) => ({
-        ...document,
-        templateKey: templateAliases[document.templateKey] ?? document.templateKey
-      })),
-      users: state.users,
-      partners: state.partners,
-      contracts: state.contracts,
-      deliveries: state.deliveries,
-      pollingLogs: state.pollingLogs,
-      contractSequences: state.contractSequences
-    };
+    });
   }
 
   async saveConfig(config: AppConfig): Promise<void> {
@@ -138,6 +153,15 @@ export class JsonStore {
 
   async saveContractSequences(sequences: ContractSequenceRecord[]): Promise<void> {
     await this.writeJson("contract-sequences.json", sequences);
+  }
+
+  async testConnection(): Promise<{ ok: boolean; kind: "json"; message: string }> {
+    await this.ensure();
+    return {
+      ok: true,
+      kind: "json",
+      message: "Local JSON store is available"
+    };
   }
 
   private filePath(name: string): string {

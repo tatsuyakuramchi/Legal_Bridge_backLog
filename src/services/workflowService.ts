@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
-import { JsonStore } from "../store.js";
+import { randomUUID } from "node:crypto";
+import { AppStore } from "../store.js";
 import { ManagedTemplateDefinition, TemplateValidationResult } from "../templateManagerTypes.js";
 import {
   AdminUser,
@@ -63,7 +64,7 @@ export class WorkflowService {
   private readonly registryService: RegistryService;
 
   constructor(
-    private readonly store: JsonStore,
+    private readonly store: AppStore,
     private readonly documentService: DocumentService,
     private readonly backlogService: BacklogService,
     private readonly cloudSignService: CloudSignService,
@@ -89,7 +90,7 @@ export class WorkflowService {
         backlog: this.backlogService.isConfigured(state.config) ? "ok" : "warn",
         slack: this.slackService.isConfigured(state.config) ? "ok" : "warn",
         drive: state.config.driveRootFolderId ? "ok" : "warn",
-        rds: "warn"
+        rds: this.store.kind === "postgres" ? "ok" : "warn"
       }
     };
   }
@@ -727,6 +728,12 @@ export class WorkflowService {
     const state = await this.store.load();
     const result = await this.cloudSignService.testConnection(state.config);
     await this.pushEvent("poller-run", `CloudSign connection OK: ${result.baseUrl}`);
+    return result;
+  }
+
+  async testRdsConnection(): Promise<{ ok: boolean; kind: "json" | "postgres"; message: string }> {
+    const result = await this.store.testConnection();
+    await this.pushEvent("poller-run", `RDS connection ${result.ok ? "OK" : "warn"}: ${result.message}`);
     return result;
   }
 
@@ -1415,7 +1422,7 @@ export class WorkflowService {
   private async pushEvent(type: WorkflowEvent["type"], message: string): Promise<void> {
     const state = await this.store.load();
     const event: WorkflowEvent = {
-      id: `event-${Date.now()}`,
+      id: `event-${randomUUID()}`,
       type,
       message,
       createdAt: new Date().toISOString()

@@ -2,7 +2,8 @@ import "dotenv/config";
 import express from "express";
 import path from "node:path";
 import { AdminService } from "./services/adminService.js";
-import { JsonStore } from "./store.js";
+import { PostgresStore } from "./postgresStore.js";
+import { AppStore, JsonStore } from "./store.js";
 import { BacklogService } from "./services/backlogService.js";
 import { BacklogSetupService } from "./services/backlogSetupService.js";
 import { CloudSignService } from "./services/cloudSignService.js";
@@ -15,7 +16,10 @@ const rootDir = process.cwd();
 const app = express();
 const port = Number(process.env.PORT ?? 3005);
 
-const store = new JsonStore(path.join(rootDir, "data"));
+const dataDir = path.join(rootDir, "data");
+const store: AppStore = PostgresStore.isConfigured()
+  ? new PostgresStore({ jsonFallbackDir: dataDir })
+  : new JsonStore(dataDir);
 const documentService = new DocumentService(path.join(rootDir, "tmp"), path.join(rootDir, "templates"));
 const backlogService = new BacklogService();
 const backlogSetupService = new BacklogSetupService();
@@ -237,6 +241,14 @@ app.post("/api/integrations/cloudsign/test", async (_req, res) => {
   }
 });
 
+app.post("/api/integrations/rds/test", async (_req, res) => {
+  try {
+    res.json(await workflowService.testRdsConnection());
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
 app.post("/api/issues/:id/generate", async (req, res) => {
   try {
     res.json(await workflowService.generateDocument(req.params.id));
@@ -380,6 +392,7 @@ await scheduleReminders();
 
 app.listen(port, async () => {
   console.log(`Legal Bridge Local App listening on http://localhost:${port}`);
+  console.log(`Persistence: ${store.kind}`);
 
   try {
     const initialSnapshot = await workflowService.snapshot();

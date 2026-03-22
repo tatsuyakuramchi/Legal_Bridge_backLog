@@ -1,8 +1,8 @@
-import { JsonStore } from "../store.js";
+import { AppStore } from "../store.js";
 import { ContractRecord, DeliveryRecord, DocumentRecord, IssueRecord, PollingLogRecord } from "../types.js";
 
 export class RegistryService {
-  constructor(private readonly store: JsonStore) {}
+  constructor(private readonly store: AppStore) {}
 
   async ensureContractNumber(issue: IssueRecord): Promise<IssueRecord> {
     if (issue.contractNo) {

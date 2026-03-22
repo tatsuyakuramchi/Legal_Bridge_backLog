@@ -17,9 +17,12 @@ SLACK_APP_TOKEN=xapp-your-app-token
 LEGAL_SLACK_CHANNEL=CXXXXXXXXXX
 APPROVER_SLACK_ID=UXXXXXXXXXX
 RDS_HOST=your-rds-endpoint
+RDS_PORT=5432
 RDS_DB=arclight_legal
 RDS_USER=legal_app
 RDS_PASSWORD=your_password
+RDS_SSL=true
+RDS_BOOTSTRAP_FROM_JSON=true
 GOOGLE_APPLICATION_CREDENTIALS=C:\secrets\gws-key.json
 DRIVE_ROOT_FOLDER_ID=your_drive_folder_id
 ```
@@ -342,6 +345,9 @@ API から取得する場合:
 
 - RDS は PostgreSQL 15 想定
 - ローカルアプリから RDS へはアウトバウンド接続のみ
+- `RDS_HOST / RDS_DB / RDS_USER / RDS_PASSWORD` が入るとアプリは PostgreSQL を使用
+- RDS が未設定なら従来どおり `data/*.json` を使用
+- `RDS_BOOTSTRAP_FROM_JSON=true` の場合、初回起動時に JSON データを RDS へ移行
 - 文書は `tmp/` で一時生成してから Drive に保存する想定
 - Google Drive はサービスアカウントでアクセスする想定
 

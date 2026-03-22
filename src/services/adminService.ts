@@ -1,4 +1,4 @@
-import { JsonStore } from "../store.js";
+import { AppStore } from "../store.js";
 import {
   AdminDashboardSnapshot,
   AdminUser,
@@ -18,7 +18,7 @@ type PartnerImportResult = {
 
 export class AdminService {
   constructor(
-    private readonly store: JsonStore,
+    private readonly store: AppStore,
     private readonly slackService: SlackService
   ) {}
 
