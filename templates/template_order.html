@@ -348,6 +348,7 @@
       {{PARTY_A_REP}}
       {{#if STAFF_NAME}}
       <div style="margin-top:8px; padding-top:6px; border-top:1px dashed var(--line); font-size:9pt;">
+        {{#if STAFF_DEPARTMENT}}<strong>部署:</strong> {{STAFF_DEPARTMENT}}<br>{{/if}}
         <strong>担当:</strong> {{STAFF_NAME}}<br>
         {{#if STAFF_PHONE}}TEL: {{STAFF_PHONE}}<br>{{/if}}
         {{#if STAFF_EMAIL}}E-mail: {{STAFF_EMAIL}}{{/if}}

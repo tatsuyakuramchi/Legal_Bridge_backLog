@@ -110,6 +110,7 @@ const variableAliases: Record<string, string[]> = {
   VENDOR_PHONE: ["vendorPhone", "counterpartyPhone", "partnerPhone"],
   VENDOR_CONTACT_NAME: ["vendorContactName", "contactName", "person_name"],
   VENDOR_CONTACT_DEPARTMENT: ["vendorContactDepartment", "contactDepartment"],
+  STAFF_DEPARTMENT: ["staffDepartment", "staff_department"],
   VENDOR_REP: ["vendorRepresentative", "partnerRepresentative", "representative"],
   VENDOR_SUFFIX: ["vendorSuffix"],
   PARTY_B_NAME: ["vendorName", "counterpartyName", "partnerName"],
@@ -599,6 +600,7 @@ export class DocumentService {
       PARTY_A_NAME: payload.partyAName ?? payload.companyName ?? "\u682a\u5f0f\u4f1a\u793e\u30a2\u30fc\u30af\u30e9\u30a4\u30c8",
       PARTY_A_ADDRESS: payload.partyAAddress ?? payload.companyAddress ?? "\u6771\u4eac\u90fd\u5343\u4ee3\u7530\u533a\u795e\u7530\u5c0f\u5ddd\u753a1-1-1",
       PARTY_A_REP: payload.partyARepresentative ?? payload.companyRepresentative ?? "\u4ee3\u8868\u53d6\u7de0\u5f79 \u4f50\u85e4\u4e00\u90ce",
+      STAFF_DEPARTMENT: payload.staffDepartment ?? payload.staff_department ?? "",
       STAFF_NAME: payload.staffName ?? issue.requester,
       STAFF_EMAIL: payload.staffEmail ?? "",
       STAFF_PHONE: payload.staffPhone ?? "",
@@ -853,6 +855,21 @@ export class DocumentService {
       output[key] = Array.isArray(value)
         ? value.map((item) => (typeof item === "object" ? this.normalizeObject(item) : item))
         : value;
+    }
+
+    const customFields = Array.isArray(output.customFields) ? output.customFields : [];
+    for (const item of customFields) {
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        continue;
+      }
+      const field = item as { name?: unknown; value?: unknown };
+      const name = typeof field.name === "string" ? field.name.trim() : "";
+      if (!name) {
+        continue;
+      }
+      output[name] = field.value;
+      output[this.toCamel(name)] = field.value;
+      output[this.toSnakeUpper(name)] = field.value;
     }
     return output;
   }
