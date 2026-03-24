@@ -24,6 +24,23 @@ type BacklogStatus = {
   name: string;
 };
 
+type BacklogIssueType = {
+  id: number;
+  name: string;
+};
+
+type BacklogPriority = {
+  id: number;
+  name: string;
+};
+
+type BacklogCreatedIssue = {
+  id: number;
+  issueKey: string;
+  summary: string;
+  description?: string;
+};
+
 export class BacklogService {
   isConfigured(config: AppConfig): boolean {
     return Boolean(this.resolveSpace(config) && this.resolveProjectId(config) && process.env.BACKLOG_API_KEY);
@@ -71,12 +88,81 @@ export class BacklogService {
     return { ok: true, statusName: target.name };
   }
 
+  async createIssue(
+    config: AppConfig,
+    input: {
+      summary: string;
+      description: string;
+      issueTypeName?: string;
+      priorityName?: string;
+    }
+  ): Promise<{ ok: true; issue: BacklogCreatedIssue }> {
+    const project = await this.fetchProject(config);
+    const [issueTypes, priorities] = await Promise.all([
+      this.request<BacklogIssueType[]>(config, `/api/v2/projects/${project.id}/issueTypes`),
+      this.request<BacklogPriority[]>(config, "/api/v2/priorities")
+    ]);
+
+    const targetIssueType = this.resolveIssueType(issueTypes, input.issueTypeName);
+    if (!targetIssueType) {
+      throw new Error(`Backlog issue type not found: ${input.issueTypeName ?? "(empty)"}`);
+    }
+
+    const targetPriority = this.resolvePriority(priorities, input.priorityName ?? "中");
+    if (!targetPriority) {
+      throw new Error(`Backlog priority not found: ${input.priorityName ?? "中"}`);
+    }
+
+    const body = new URLSearchParams({
+      projectId: String(project.id),
+      summary: input.summary,
+      description: input.description,
+      issueTypeId: String(targetIssueType.id),
+      priorityId: String(targetPriority.id)
+    });
+
+    const issue = await this.request<BacklogCreatedIssue>(config, "/api/v2/issues", {
+      method: "POST",
+      body
+    });
+    return { ok: true, issue };
+  }
+
   private async fetchProject(config: AppConfig): Promise<BacklogProject> {
     const projectId = this.resolveProjectId(config);
     if (!projectId) {
       throw new Error("Backlog project is not configured.");
     }
     return this.request<BacklogProject>(config, `/api/v2/projects/${encodeURIComponent(projectId)}`);
+  }
+
+  private resolveIssueType(issueTypes: BacklogIssueType[], requestedName?: string): BacklogIssueType | undefined {
+    const normalizedRequested = this.normalizeStatus(requestedName ?? "");
+    if (normalizedRequested) {
+      const exact = issueTypes.find((item) => this.normalizeStatus(item.name) === normalizedRequested);
+      if (exact) {
+        return exact;
+      }
+    }
+
+    const fallbackNames = ["未分類", "タスク", "課題"];
+    for (const name of fallbackNames) {
+      const matched = issueTypes.find((item) => this.normalizeStatus(item.name) === this.normalizeStatus(name));
+      if (matched) {
+        return matched;
+      }
+    }
+
+    return issueTypes[0];
+  }
+
+  private resolvePriority(priorities: BacklogPriority[], requestedName: string): BacklogPriority | undefined {
+    const normalizedRequested = this.normalizeStatus(requestedName);
+    return (
+      priorities.find((item) => this.normalizeStatus(item.name) === normalizedRequested) ??
+      priorities.find((item) => this.normalizeStatus(item.name) === this.normalizeStatus("中")) ??
+      priorities[0]
+    );
   }
 
   private async request<T>(

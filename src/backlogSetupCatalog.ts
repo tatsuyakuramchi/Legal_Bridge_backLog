@@ -28,29 +28,109 @@ export type BacklogCustomFieldSpec = {
 };
 
 export const backlogIssueTypeSpecs: BacklogIssueTypeSpec[] = [
-  { name: "業務委託基本契約", color: "#3B82F6" },
-  { name: "ライセンス契約", color: "#8B5CF6" },
-  { name: "NDA", color: "#64748B" },
-  { name: "発注書", color: "#059669" },
-  { name: "企画発注書", color: "#0EA5E9" },
-  { name: "売買契約（当社買手）", color: "#F59E0B" },
-  { name: "売買契約（当社売手・標準）", color: "#EF4444" },
-  { name: "売買契約（当社売手・保証金掛け売り）", color: "#DC2626" },
-  { name: "納品リクエスト", color: "#10B981" }
+  { name: "未分類", color: "#666665" },
+  { name: "法律相談", color: "#814fbc" },
+  { name: "カスタムドラフト", color: "#934981" },
+  { name: "相手方文書レビュー", color: "#ff9200" },
+  { name: "押印リクエスト", color: "#007e9a" },
+  { name: "業務委託基本契約", color: "#2779ca" },
+  { name: "ライセンス契約", color: "#814fbc" },
+  { name: "NDA", color: "#666665" },
+  { name: "発注書", color: "#007e9a" },
+  { name: "企画発注書", color: "#2779ca" },
+  { name: "売買契約（当社買手）", color: "#ff9200" },
+  { name: "売買契約（当社売手・標準）", color: "#e30000" },
+  { name: "売買契約（当社売手・保証金掛け売り）", color: "#990000" },
+  { name: "納品リクエスト", color: "#7ea800" }
 ];
 
 export const backlogCustomStatusSpecs: BacklogStatusSpec[] = [
-  { name: "文書生成依頼", color: "#e87758" },
-  { name: "承認待ち", color: "#e07b9a" },
-  { name: "相手方OK（CloudSign準備）", color: "#868cb7" },
-  { name: "相手方OK（郵送等準備）", color: "#3b9dbd" },
-  { name: "相手方送信待ち", color: "#4caf93" },
-  { name: "電子署名依頼中", color: "#b0be3c" },
-  { name: "物理押印依頼中", color: "#eda62a" },
-  { name: "電子署名完了", color: "#f42858" }
+  { name: "事業部承認待ち", color: "#e07b9a" },
+  { name: "差戻し", color: "#ea2c00" }
 ];
 
 export const backlogCustomFieldSpecs: BacklogCustomFieldSpec[] = [
+  {
+    name: "requester_name",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "requester_department",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "partner_code",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "counterparty_name",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "counterparty_contact_name",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "counterparty_email",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "カスタムドラフト", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "related_backlog_issue_key",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "requested_due_date",
+    type: "date",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト"]
+  },
+  {
+    name: "attachment_url",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "business_approver_slack_id",
+    type: "string",
+    required: false,
+    issueTypes: ["押印リクエスト", "納品リクエスト"]
+  },
+  {
+    name: "business_approval_status",
+    type: "single_list",
+    required: false,
+    issueTypes: ["押印リクエスト", "納品リクエスト"],
+    items: ["pending", "approved", "rejected"],
+    allowInput: false,
+    allowAddItem: false
+  },
+  {
+    name: "stamp_target_url",
+    type: "string",
+    required: false,
+    issueTypes: ["押印リクエスト"]
+  },
+  {
+    name: "workflow_label",
+    type: "string",
+    required: false,
+    issueTypes: ["未分類", "法律相談", "カスタムドラフト", "相手方文書レビュー", "押印リクエスト", "納品リクエスト"]
+  },
   {
     name: "contract_date_year",
     type: "number",

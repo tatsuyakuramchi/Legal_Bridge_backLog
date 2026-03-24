@@ -12,6 +12,7 @@ import {
   DocumentRecord,
   IssueRecord,
   IssueStatus,
+  PartnerRecord,
   WorkflowEvent
 } from "../types.js";
 import { templateCatalog } from "../templateCatalog.js";
@@ -61,6 +62,61 @@ const requesterStatusMessageMap: Partial<Record<IssueStatus, string>> = {
   Fixed: "申請内容の確認または修正が必要です。",
   Completed: "案件対応が完了しました。"
 };
+
+type WorkflowRequestType =
+  | "document_request"
+  | "legal_consultation"
+  | "custom_draft"
+  | "counterparty_review"
+  | "stamp_request"
+  | "delivery_request"
+  | "bulk_order";
+
+type WorkflowSubmission = {
+  workflowType: WorkflowRequestType;
+  workflowLabel: string;
+  title: string;
+  templateKey: string;
+  payload: Record<string, unknown>;
+};
+
+const workflowAliases: Array<{ type: WorkflowRequestType; label: string; aliases: string[] }> = [
+  {
+    type: "document_request",
+    label: "文書作成依頼",
+    aliases: ["文書作成依頼", "契約申請", "契約作成依頼", "通常契約作成リクエスト", "document_request"]
+  },
+  {
+    type: "legal_consultation",
+    label: "法律相談依頼",
+    aliases: ["法律相談依頼", "法律相談", "法務相談", "legal_consultation"]
+  },
+  {
+    type: "custom_draft",
+    label: "カスタムドラフト依頼",
+    aliases: ["カスタムドラフト依頼", "カスタムドラフト", "custom_draft"]
+  },
+  {
+    type: "counterparty_review",
+    label: "相手方文書レビュー依頼",
+    aliases: ["相手方文書レビュー依頼", "相手方文書レビュー", "counterparty_review"]
+  },
+  {
+    type: "stamp_request",
+    label: "押印リクエスト",
+    aliases: ["押印リクエスト", "押印依頼", "stamp_request"]
+  },
+  {
+    type: "delivery_request",
+    label: "納品リクエスト",
+    aliases: ["納品リクエスト", "delivery_request"]
+  },
+  {
+    type: "bulk_order",
+    label: "企画発注書一括作成",
+    aliases: ["企画発注書一括作成", "一括発注書申請", "bulk_order"]
+  }
+];
 
 export class WorkflowService {
   private readonly bulkOrderService = new BulkOrderService();
@@ -485,6 +541,11 @@ export class WorkflowService {
     event: Record<string, unknown>;
     envelope: Record<string, unknown>;
   }): Promise<void> {
+    if (input.type === "message") {
+      await this.handleSlackWorkflowMessage(input.event);
+      return;
+    }
+
     if (input.type !== "file_shared") {
       return;
     }
@@ -542,10 +603,21 @@ export class WorkflowService {
         await this.approveIssueFromSlack(issueId, payload);
         return;
       }
+      if (actionId === "approve_business_request") {
+        await this.approveBusinessRequestFromSlack(issueId, payload);
+        return;
+      }
       if (actionId === "reject_issue") {
         const triggerId = String(payload.trigger_id ?? "");
         if (triggerId) {
           await this.openRejectModal(issueId, triggerId);
+        }
+        return;
+      }
+      if (actionId === "reject_business_request") {
+        const triggerId = String(payload.trigger_id ?? "");
+        if (triggerId) {
+          await this.openRejectModal(issueId, triggerId, "reject_business_request_modal");
         }
         return;
       }
@@ -563,13 +635,30 @@ export class WorkflowService {
       }
       if (actionId === "stamp_pending") {
         await this.markStampPending(issueId);
+        return;
+      }
+      if (actionId === "delivery_generate_inspection") {
+        await this.generateDeliveryDocumentFromSlack(issueId, "template_inspection_report", "inspection", payload);
+        return;
+      }
+      if (actionId === "delivery_generate_payment_notice") {
+        await this.generateDeliveryDocumentFromSlack(issueId, "template_payment_notice", "payment_notice", payload);
+        return;
+      }
+      if (actionId === "delivery_generate_revenue") {
+        await this.generateDeliveryDocumentFromSlack(issueId, "template_revenue_share_report", "revenue_share", payload);
+        return;
+      }
+      if (actionId === "delivery_pending") {
+        await this.markDeliveryPending(issueId);
       }
       return;
     }
 
     if (type === "view_submission") {
       const view = (payload.view as Record<string, unknown> | undefined) ?? {};
-      if (String(view.callback_id ?? "") !== "reject_issue_modal") {
+      const callbackId = String(view.callback_id ?? "");
+      if (!["reject_issue_modal", "reject_business_request_modal"].includes(callbackId)) {
         return;
       }
 
@@ -583,6 +672,10 @@ export class WorkflowService {
           .flatMap((group) => Object.values(group))
           .map((field) => field?.value ?? "")
           .find(Boolean) ?? "";
+      if (callbackId === "reject_business_request_modal") {
+        await this.rejectBusinessRequestFromSlack(issueId, reason, payload);
+        return;
+      }
       await this.rejectIssueFromSlack(issueId, reason, payload);
     }
   }
@@ -998,6 +1091,455 @@ export class WorkflowService {
     return updated;
   }
 
+  private async handleSlackWorkflowMessage(event: Record<string, unknown>): Promise<void> {
+    const subtype = String(event.subtype ?? "").trim();
+    if (subtype && subtype !== "bot_message") {
+      return;
+    }
+
+    const text = String(event.text ?? "").trim();
+    const channel = String(event.channel ?? "").trim();
+    const userId = String(event.user ?? event.bot_id ?? "").trim();
+    const messageTs = String(event.ts ?? event.event_ts ?? "").trim();
+    if (!text || !channel || !userId || !messageTs) {
+      return;
+    }
+
+    console.log("[SlackWorkflow] message received", {
+      subtype,
+      channel,
+      userId,
+      messageTs,
+      textPreview: text.slice(0, 200)
+    });
+
+    const parsed = this.parseWorkflowSubmission(text);
+    if (!parsed) {
+      console.log("[SlackWorkflow] message ignored: workflow header not matched");
+      return;
+    }
+
+    const state = await this.loadRuntimeState();
+    const duplicated = state.issues.some(
+      (issue) =>
+        this.getApprovalValue(issue, "source_slack_message_ts") === messageTs &&
+        this.getApprovalValue(issue, "source_slack_channel") === channel
+    );
+    if (duplicated) {
+      console.log("[SlackWorkflow] duplicate message ignored", { channel, messageTs });
+      return;
+    }
+
+    const enrichedPayload = this.enrichWorkflowPayload(parsed.payload, state.partners, userId, channel, messageTs);
+    const backlogIssue = await this.createBacklogIssueFromWorkflow(state.config, parsed, enrichedPayload);
+    const issue = await this.createIssue({
+      issueKey: backlogIssue?.issue.issueKey,
+      title: backlogIssue?.issue.summary || parsed.title,
+      requester: userId,
+      assignee: parsed.workflowType === "stamp_request" ? "business-approval" : "legal-app",
+      templateKey: parsed.templateKey,
+      payload: {
+        workflow_type: parsed.workflowType,
+        workflow_label: parsed.workflowLabel,
+        backlog_issue_id: backlogIssue?.issue.id,
+        backlogIssueId: backlogIssue?.issue.id,
+        source_slack_message_ts: messageTs,
+        source_slack_channel: channel,
+        requester_slack_id: userId,
+        ...enrichedPayload
+      }
+    });
+
+    if (parsed.workflowType === "stamp_request" || parsed.workflowType === "delivery_request") {
+      await this.requestBusinessApproval(issue.id);
+    }
+
+    const ackLines = [
+      `${parsed.workflowLabel}を受け付けました。`,
+      `受付ID: ${issue.issueKey}`,
+      `件名: ${issue.title}`
+    ];
+    await this.slackService.postMessage(state.config, ackLines.join("\n"), channel);
+
+    const legalChannel = state.config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "";
+    if (legalChannel && legalChannel !== channel) {
+      const notifyLines = [
+        `新規 ${parsed.workflowLabel}`,
+        `受付ID: ${issue.issueKey}`,
+        `件名: ${issue.title}`,
+        `申請者: <@${userId}>`,
+        ...this.buildWorkflowSummaryLines(enrichedPayload)
+      ];
+      await this.slackService.postMessage(state.config, notifyLines.join("\n"), legalChannel);
+    }
+
+    await this.pushEvent("issue-created", `${issue.issueKey} created from Slack workflow: ${parsed.workflowLabel}`);
+  }
+
+  private parseWorkflowSubmission(text: string): WorkflowSubmission | null {
+    const lines = text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+    if (lines.length === 0) {
+      return null;
+    }
+
+    const header = lines[0]
+      .replace(/^[\[\]【】\s]+|[\[\]【】\s]+$/g, "")
+      .replace(/\s*ワークフロー$/i, "")
+      .trim();
+    const workflow = workflowAliases.find((item) =>
+      item.aliases.some((alias) => {
+        const normalizedAlias = alias.toLowerCase();
+        const normalizedHeader = header.toLowerCase();
+        return normalizedHeader === normalizedAlias || normalizedHeader.includes(normalizedAlias);
+      })
+    );
+    if (!workflow) {
+      return null;
+    }
+
+    const rawFields: Record<string, string> = {};
+    const bodyLines = lines.slice(1).filter((line) => !/^以下の内容で受付しました。?$/i.test(line));
+
+    for (const line of bodyLines) {
+      const match = line.match(/^([^:：]+)\s*[:：]\s*(.+)$/);
+      if (!match) {
+        continue;
+      }
+      rawFields[match[1].trim()] = match[2].trim();
+    }
+
+    if (Object.keys(rawFields).length === 0) {
+      for (let index = 0; index < bodyLines.length; index += 2) {
+        const key = bodyLines[index];
+        const value = bodyLines[index + 1];
+        if (!key || !value) {
+          continue;
+        }
+        rawFields[key] = value;
+      }
+    }
+
+    const payload = this.normalizeWorkflowFields(workflow.type, rawFields);
+    return {
+      workflowType: workflow.type,
+      workflowLabel: workflow.label,
+      title: this.buildWorkflowIssueTitle(workflow.label, workflow.type, payload),
+      templateKey: this.resolveWorkflowTemplateKey(workflow.type, payload),
+      payload
+    };
+  }
+
+  private normalizeWorkflowFields(
+    workflowType: WorkflowRequestType,
+    fields: Record<string, string>
+  ): Record<string, unknown> {
+    const payload: Record<string, unknown> = {
+      form_fields: fields
+    };
+
+    for (const [label, value] of Object.entries(fields)) {
+      const key = this.toPayloadKey(label);
+      payload[key] = value;
+    }
+
+    const partnerCode =
+      this.pickField(fields, ["取引先コード", "取引先CD", "partner_code"]) || this.stringValue(payload.partner_code);
+    const counterpartyName =
+      this.pickField(fields, ["相手方名", "取引先名"]) || this.stringValue(payload.counterparty_name);
+    const counterpartyContact =
+      this.pickField(fields, ["相手方担当者", "相手方窓口担当者"]) || this.stringValue(payload.counterparty_contact_name);
+    const counterpartyEmail =
+      this.pickField(fields, ["相手方メールアドレス", "相手方メール", "相手方担当者メールアドレス"]) ||
+      this.stringValue(payload.counterparty_email);
+    const backlogIssueKey =
+      this.pickField(fields, ["関連Backlog課題キー", "Backlog課題キー", "課題キー"]) || this.stringValue(payload.related_backlog_issue_key);
+    const dueDate = this.pickField(fields, ["希望期日", "希望納期"]);
+    const businessApproverSlackId =
+      this.pickField(fields, ["事業部承認者SlackID", "事業部承認者SlackId", "事業部承認者"]) ||
+      this.stringValue(payload.business_approver_slack_id);
+
+    if (partnerCode) {
+      payload.partner_code = partnerCode;
+    }
+    if (counterpartyName) {
+      payload.counterparty_name = counterpartyName;
+      payload.vendor_name = counterpartyName;
+    }
+    if (counterpartyContact) {
+      payload.counterparty_contact_name = counterpartyContact;
+      payload.vendor_contact_name = counterpartyContact;
+    }
+    if (counterpartyEmail) {
+      payload.counterparty_email = counterpartyEmail;
+      payload.vendor_email = counterpartyEmail;
+    }
+    if (backlogIssueKey) {
+      payload.related_backlog_issue_key = backlogIssueKey.toUpperCase();
+    }
+    if (dueDate) {
+      payload.requested_due_date = dueDate;
+    }
+    if (businessApproverSlackId) {
+      payload.business_approver_slack_id = businessApproverSlackId.replace(/[<@>]/g, "");
+    }
+
+    if (workflowType === "delivery_request") {
+      const deliveryKind = this.pickField(fields, ["納品種別"]);
+      const deliveryDate = this.pickField(fields, ["納品日"]);
+      if (deliveryKind) {
+        payload.delivery_type = deliveryKind;
+      }
+      if (deliveryDate) {
+        payload.delivery_date = deliveryDate;
+      }
+    }
+
+    return payload;
+  }
+
+  private enrichWorkflowPayload(
+    payload: Record<string, unknown>,
+    partners: PartnerRecord[],
+    userId: string,
+    channel: string,
+    messageTs: string
+  ): Record<string, unknown> {
+    const nextPayload: Record<string, unknown> = {
+      ...payload,
+      requester_slack_id: userId,
+      source_slack_channel: channel,
+      source_slack_message_ts: messageTs
+    };
+
+    const partnerCode = this.stringValue(nextPayload.partner_code);
+    if (!partnerCode) {
+      return nextPayload;
+    }
+
+    const partner = partners.find((item) => item.partner_code.toLowerCase() === partnerCode.toLowerCase());
+    if (!partner) {
+      nextPayload.partner_lookup_status = "not_found";
+      return nextPayload;
+    }
+
+    nextPayload.partner_lookup_status = "matched";
+    nextPayload.partner_id = partner.id;
+    nextPayload.partner_name = partner.name;
+    nextPayload.counterparty_name = this.stringValue(nextPayload.counterparty_name) || partner.name;
+    nextPayload.vendor_name = this.stringValue(nextPayload.vendor_name) || partner.name;
+    nextPayload.counterparty_contact_name =
+      this.stringValue(nextPayload.counterparty_contact_name) || partner.contact_person || "";
+    nextPayload.counterparty_email =
+      this.stringValue(nextPayload.counterparty_email) || partner.contact_email || "";
+    nextPayload.counterparty_representative =
+      this.stringValue(nextPayload.counterparty_representative) || partner.representative || "";
+    nextPayload.invoice_registration_number =
+      this.stringValue(nextPayload.invoice_registration_number) || partner.invoice_registration_number || "";
+    nextPayload.bank_name = this.stringValue(nextPayload.bank_name) || partner.bank_name || "";
+    nextPayload.bank_branch = this.stringValue(nextPayload.bank_branch) || partner.bank_branch || "";
+    nextPayload.bank_account_type = this.stringValue(nextPayload.bank_account_type) || partner.bank_account_type || "";
+    nextPayload.bank_account_number =
+      this.stringValue(nextPayload.bank_account_number) || partner.bank_account_number || "";
+    nextPayload.bank_account_holder =
+      this.stringValue(nextPayload.bank_account_holder) || partner.bank_account_holder || "";
+    return nextPayload;
+  }
+
+  private async createBacklogIssueFromWorkflow(
+    config: AppConfig,
+    parsed: WorkflowSubmission,
+    payload: Record<string, unknown>
+  ): Promise<{ ok: true; issue: { id: number; issueKey: string; summary: string; description?: string } } | null> {
+    if (!this.backlogService.isConfigured(config)) {
+      return null;
+    }
+
+    const relatedBacklogIssueKey = this.stringValue(payload.related_backlog_issue_key);
+    if (parsed.workflowType === "stamp_request" && relatedBacklogIssueKey) {
+      return null;
+    }
+
+    const description = this.buildBacklogDescription(parsed, payload);
+    return this.backlogService.createIssue(config, {
+      summary: parsed.title,
+      description,
+      issueTypeName: this.resolveBacklogIssueTypeName(parsed.workflowType),
+      priorityName: "中"
+    });
+  }
+
+  private buildBacklogDescription(parsed: WorkflowSubmission, payload: Record<string, unknown>): string {
+    const lines = [
+      `Slackワークフロー: ${parsed.workflowLabel}`,
+      `テンプレート: ${parsed.templateKey}`,
+      ""
+    ];
+
+    const fields = (payload.form_fields as Record<string, string> | undefined) ?? {};
+    for (const [key, value] of Object.entries(fields)) {
+      lines.push(`${key}: ${value}`);
+    }
+
+    const partnerLookupStatus = this.stringValue(payload.partner_lookup_status);
+    if (partnerLookupStatus) {
+      lines.push("");
+      lines.push(`partner_lookup_status: ${partnerLookupStatus}`);
+    }
+    const partnerName = this.stringValue(payload.partner_name);
+    if (partnerName) {
+      lines.push(`partner_name: ${partnerName}`);
+    }
+
+    return lines.join("\n").trim();
+  }
+
+  private resolveBacklogIssueTypeName(workflowType: WorkflowRequestType): string {
+    switch (workflowType) {
+      case "legal_consultation":
+        return "法律相談";
+      case "custom_draft":
+        return "カスタムドラフト";
+      case "counterparty_review":
+        return "相手方文書レビュー";
+      case "delivery_request":
+        return "納品リクエスト";
+      default:
+        return "未分類";
+    }
+  }
+
+  private buildWorkflowIssueTitle(
+    workflowLabel: string,
+    workflowType: WorkflowRequestType,
+    payload: Record<string, unknown>
+  ): string {
+    const counterparty = this.stringValue(payload.counterparty_name) || this.stringValue(payload.vendor_name);
+    const backlogIssueKey = this.stringValue(payload.related_backlog_issue_key);
+    const summaryCandidate =
+      this.stringValue(payload.request_details_background) ||
+      this.stringValue(payload.consultation_details) ||
+      this.stringValue(payload.request_details_agreed_terms) ||
+      this.stringValue(payload.review_points_concerns);
+
+    if (workflowType === "stamp_request" && backlogIssueKey) {
+      return `押印リクエスト ${backlogIssueKey}`;
+    }
+    if (workflowType === "delivery_request" && backlogIssueKey) {
+      const deliveryType = this.stringValue(payload.delivery_type);
+      return `納品リクエスト ${backlogIssueKey}${deliveryType ? ` ${deliveryType}` : ""}`;
+    }
+    if (workflowType === "bulk_order") {
+      return "企画発注書一括作成";
+    }
+    if (counterparty) {
+      return `${workflowLabel}: ${counterparty}`;
+    }
+    if (summaryCandidate) {
+      return `${workflowLabel}: ${summaryCandidate.slice(0, 40)}`;
+    }
+    return workflowLabel;
+  }
+
+  private resolveWorkflowTemplateKey(workflowType: WorkflowRequestType, payload: Record<string, unknown>): string {
+    if (workflowType === "delivery_request") {
+      const deliveryType = this.stringValue(payload.delivery_type);
+      if (deliveryType.includes("検収")) {
+        return "template_inspection_report";
+      }
+      if (deliveryType.includes("利用許諾")) {
+        return "template_royalty_report";
+      }
+      if (deliveryType.includes("レベニュー")) {
+        return "template_revenue_share_report";
+      }
+      return "template_payment_notice";
+    }
+    if (workflowType === "bulk_order") {
+      return "template_order_planning";
+    }
+    if (workflowType === "stamp_request") {
+      return "template_service_basic";
+    }
+    if (workflowType === "counterparty_review") {
+      return "template_service_basic";
+    }
+    if (workflowType === "custom_draft") {
+      return "template_service_basic";
+    }
+    if (workflowType === "legal_consultation") {
+      return "template_service_basic";
+    }
+    return "template_service_basic";
+  }
+
+  private buildWorkflowSummaryLines(payload: Record<string, unknown>): string[] {
+    const labels: Array<[string, string]> = [
+      ["取引先コード", this.stringValue(payload.partner_code)],
+      ["相手方", this.stringValue(payload.counterparty_name) || this.stringValue(payload.vendor_name)],
+      ["関連Backlog課題", this.stringValue(payload.related_backlog_issue_key)],
+      ["納品種別", this.stringValue(payload.delivery_type)],
+      ["希望期日", this.stringValue(payload.requested_due_date)],
+      ["納品日", this.stringValue(payload.delivery_date)]
+    ];
+
+    return labels.filter(([, value]) => value).map(([label, value]) => `${label}: ${value}`);
+  }
+
+  private pickField(fields: Record<string, string>, candidates: string[]): string {
+    for (const candidate of candidates) {
+      const value = fields[candidate];
+      if (value && value.trim()) {
+        return value.trim();
+      }
+    }
+    return "";
+  }
+
+  private toPayloadKey(label: string): string {
+    return label
+      .normalize("NFKC")
+      .replace(/[()（）[\]【】]/g, " ")
+      .replace(/[\/・]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9\u3040-\u30ff\u4e00-\u9faf ]/g, "")
+      .replace(/ /g, "_")
+      .replace(/[ぁ-ん]/g, (char) => {
+        const code = char.charCodeAt(0) - 0x3041 + 0x30a1;
+        return String.fromCharCode(code);
+      })
+      .replace(/[ァ-ヶ]/g, (char) => {
+        const kanaMap: Record<string, string> = {
+          ア: "a", イ: "i", ウ: "u", エ: "e", オ: "o",
+          カ: "ka", キ: "ki", ク: "ku", ケ: "ke", コ: "ko",
+          サ: "sa", シ: "shi", ス: "su", セ: "se", ソ: "so",
+          タ: "ta", チ: "chi", ツ: "tsu", テ: "te", ト: "to",
+          ナ: "na", ニ: "ni", ヌ: "nu", ネ: "ne", ノ: "no",
+          ハ: "ha", ヒ: "hi", フ: "fu", ヘ: "he", ホ: "ho",
+          マ: "ma", ミ: "mi", ム: "mu", メ: "me", モ: "mo",
+          ヤ: "ya", ユ: "yu", ヨ: "yo",
+          ラ: "ra", リ: "ri", ル: "ru", レ: "re", ロ: "ro",
+          ワ: "wa", ヲ: "wo", ン: "n",
+          ガ: "ga", ギ: "gi", グ: "gu", ゲ: "ge", ゴ: "go",
+          ザ: "za", ジ: "ji", ズ: "zu", ゼ: "ze", ゾ: "zo",
+          ダ: "da", ヂ: "ji", ヅ: "zu", デ: "de", ド: "do",
+          バ: "ba", ビ: "bi", ブ: "bu", ベ: "be", ボ: "bo",
+          パ: "pa", ピ: "pi", プ: "pu", ペ: "pe", ポ: "po"
+        };
+        return kanaMap[char] ?? "";
+      })
+      .replace(/_{2,}/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  private stringValue(value: unknown): string {
+    return typeof value === "string" ? value.trim() : value == null ? "" : String(value).trim();
+  }
+
   private mergeIssues(existingIssues: IssueRecord[], remoteIssues: IssueRecord[]) {
     const existingByKey = new Map(existingIssues.map((issue) => [issue.issueKey, issue]));
     let createdCount = 0;
@@ -1115,6 +1657,165 @@ export class WorkflowService {
     await this.pushEvent("status-changed", `${issue.issueKey} approved from Slack`);
   }
 
+  private async requestBusinessApproval(issueId: string): Promise<{ ok: true; channel: string; ts?: string }> {
+    const state = await this.loadRuntimeState();
+    const issue = state.issues.find((item) => item.id === issueId);
+    if (!issue) {
+      throw new Error("Issue not found");
+    }
+
+    const approverSlackId = this.resolveBusinessApproverSlackId(issue, state.users, state.config);
+    if (!approverSlackId) {
+      throw new Error("Business approver Slack ID is not configured.");
+    }
+
+    const workflowLabel = this.getApprovalValue(issue, "workflow_label") || "事業部承認";
+    const channel = state.config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "";
+    const blocks = [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*${workflowLabel} 事業部承認依頼* <@${approverSlackId}>\n*${issue.issueKey}* ${issue.title}\n承認後に次工程へ進みます。`
+        }
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            style: "primary",
+            text: { type: "plain_text", text: "承認" },
+            action_id: "approve_business_request",
+            value: issue.id
+          },
+          {
+            type: "button",
+            style: "danger",
+            text: { type: "plain_text", text: "否認" },
+            action_id: "reject_business_request",
+            value: issue.id
+          }
+        ]
+      }
+    ];
+    const response = await this.slackService.postBlocks(state.config, {
+      channel,
+      text: `事業部承認依頼 ${issue.issueKey}`,
+      blocks
+    });
+
+    const nextIssue = this.withApprovalPayload(issue, {
+      business_approval_requested_at: new Date().toISOString(),
+      business_approver_slack_id: approverSlackId,
+      business_approval_status: "pending",
+      business_approval_slack_ts: response.ts,
+      business_approval_channel: response.channel ?? channel
+    });
+    await this.saveIssue(nextIssue);
+    await this.updateBacklogStatusIfPossible(state.config, nextIssue, "事業部承認待ち");
+    await this.pushEvent("status-changed", `${issue.issueKey} business approval requested`);
+    return { ok: true, channel: response.channel ?? channel, ts: response.ts };
+  }
+
+  private async approveBusinessRequestFromSlack(issueId: string, payload: Record<string, unknown>): Promise<void> {
+    const state = await this.loadRuntimeState();
+    const issue = state.issues.find((item) => item.id === issueId);
+    if (!issue) {
+      return;
+    }
+
+    const user = (payload.user as Record<string, unknown> | undefined) ?? {};
+    const container = (payload.container as Record<string, unknown> | undefined) ?? {};
+    const nextIssue: IssueRecord = {
+      ...this.withApprovalPayload(issue, {
+        business_approval_status: "approved",
+        business_approved_at: new Date().toISOString(),
+        business_approved_by_slack_id: String(user.id ?? "")
+      }),
+      previousStatus: issue.status,
+      status: "Approved",
+      updatedAt: new Date().toISOString()
+    };
+    await this.saveIssue(nextIssue);
+
+    if (container.channel_id && container.message_ts) {
+      await this.slackService.updateMessage(state.config, {
+        channel: String(container.channel_id),
+        ts: String(container.message_ts),
+        text: `${issue.issueKey} 事業部承認済み`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*事業部承認済み* ${issue.issueKey}\n${issue.title}\n承認者: <@${String(user.id ?? "")}>`
+            }
+          }
+        ]
+      });
+    }
+
+    if (this.getApprovalValue(issue, "workflow_type") === "delivery_request") {
+      await this.requestDeliveryAction(nextIssue.id);
+      await this.updateBacklogStatusIfPossible(state.config, nextIssue, "Resolved");
+      await this.pushEvent("status-changed", `${issue.issueKey} delivery approved from Slack`);
+      return;
+    }
+
+    await this.updateBacklogStatusIfPossible(state.config, nextIssue, "Resolved");
+    await this.requestStamp(nextIssue.id);
+    await this.pushEvent("status-changed", `${issue.issueKey} business approval approved from Slack`);
+  }
+
+  private async rejectBusinessRequestFromSlack(
+    issueId: string,
+    reason: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    const state = await this.loadRuntimeState();
+    const issue = state.issues.find((item) => item.id === issueId);
+    if (!issue) {
+      return;
+    }
+
+    const user = (payload.user as Record<string, unknown> | undefined) ?? {};
+    const nextIssue: IssueRecord = {
+      ...this.withApprovalPayload(issue, {
+        business_approval_status: "rejected",
+        business_rejected_at: new Date().toISOString(),
+        business_rejected_by_slack_id: String(user.id ?? ""),
+        business_rejected_reason: reason
+      }),
+      previousStatus: issue.status,
+      status: "Fixed",
+      updatedAt: new Date().toISOString()
+    };
+    await this.saveIssue(nextIssue);
+
+    const channel = this.getApprovalValue(issue, "business_approval_channel");
+    const ts = this.getApprovalValue(issue, "business_approval_slack_ts");
+    if (channel && ts) {
+      await this.slackService.updateMessage(state.config, {
+        channel,
+        ts,
+        text: `${issue.issueKey} 事業部否認`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*事業部否認* ${issue.issueKey}\n${issue.title}\n理由: ${reason || "(未入力)"}`
+            }
+          }
+        ]
+      });
+    }
+
+    await this.updateBacklogStatusIfPossible(state.config, nextIssue, "In Progress");
+    await this.pushEvent("status-changed", `${issue.issueKey} business approval rejected from Slack`);
+  }
+
   private async rejectIssueFromSlack(issueId: string, reason: string, payload: Record<string, unknown>): Promise<void> {
     const state = await this.loadRuntimeState();
     const issue = state.issues.find((item) => item.id === issueId);
@@ -1212,7 +1913,7 @@ export class WorkflowService {
       updatedAt: new Date().toISOString()
     };
     await this.saveIssue(nextIssue);
-    await this.updateBacklogStatusIfPossible(state.config, nextIssue, "物理押印依頼中");
+    await this.updateBacklogStatusIfPossible(state.config, nextIssue, "Resolved");
     await this.pushEvent("status-changed", `${issue.issueKey} physical stamp selected`);
   }
 
@@ -1228,6 +1929,148 @@ export class WorkflowService {
     });
     await this.saveIssue(nextIssue);
     await this.pushEvent("status-changed", `${issue.issueKey} stamp kept pending`);
+  }
+
+  private async requestDeliveryAction(issueId: string): Promise<{ ok: true; channel: string; ts?: string }> {
+    const state = await this.loadRuntimeState();
+    const issue = state.issues.find((item) => item.id === issueId);
+    if (!issue) {
+      throw new Error("Issue not found");
+    }
+
+    const deliveryType = this.getApprovalValue(issue, "delivery_type") || "未設定";
+    const channel =
+      this.getApprovalValue(issue, "business_approval_channel") || state.config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "";
+    const blocks = [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*納品書類作成* ${issue.issueKey}\n${issue.title}\n納品種別: ${deliveryType}\n作成する書類を選択してください。`
+        }
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            style: "primary",
+            text: { type: "plain_text", text: "検収書作成" },
+            action_id: "delivery_generate_inspection",
+            value: issue.id
+          },
+          {
+            type: "button",
+            text: { type: "plain_text", text: "支払通知書作成" },
+            action_id: "delivery_generate_payment_notice",
+            value: issue.id
+          },
+          {
+            type: "button",
+            text: { type: "plain_text", text: "レベニュー作成" },
+            action_id: "delivery_generate_revenue",
+            value: issue.id
+          },
+          {
+            type: "button",
+            text: { type: "plain_text", text: "保留" },
+            action_id: "delivery_pending",
+            value: issue.id
+          }
+        ]
+      }
+    ];
+
+    const response = await this.slackService.postBlocks(state.config, {
+      channel,
+      text: `納品書類作成 ${issue.issueKey}`,
+      blocks
+    });
+
+    const nextIssue = this.withApprovalPayload(issue, {
+      delivery_status: "generation_pending",
+      delivery_action_slack_ts: response.ts,
+      delivery_action_channel: response.channel ?? channel
+    });
+    await this.saveIssue(nextIssue);
+    await this.updateBacklogStatusIfPossible(state.config, nextIssue, "文書生成依頼");
+    await this.pushEvent("status-changed", `${issue.issueKey} delivery action requested`);
+    return { ok: true, channel: response.channel ?? channel, ts: response.ts };
+  }
+
+  private async generateDeliveryDocumentFromSlack(
+    issueId: string,
+    templateKey: string,
+    deliveryStatus: string,
+    payload: Record<string, unknown>
+  ): Promise<void> {
+    const state = await this.loadRuntimeState();
+    const issue = state.issues.find((item) => item.id === issueId);
+    if (!issue) {
+      return;
+    }
+
+    const container = (payload.container as Record<string, unknown> | undefined) ?? {};
+    const user = (payload.user as Record<string, unknown> | undefined) ?? {};
+    const preparedIssue: IssueRecord = {
+      ...this.withApprovalPayload(issue, {
+        delivery_status: `${deliveryStatus}_generating`,
+        delivery_generated_by_slack_id: String(user.id ?? ""),
+        delivery_generation_requested_at: new Date().toISOString()
+      }),
+      templateKey,
+      updatedAt: new Date().toISOString()
+    };
+    await this.saveIssue(preparedIssue);
+
+    const document = await this.generateDocument(issueId);
+    const finalizedIssue: IssueRecord = {
+      ...this.withApprovalPayload(preparedIssue, {
+        delivery_status: `${deliveryStatus}_generated`,
+        delivery_generated_document_id: document.id,
+        delivery_generated_document_name: document.fileName,
+        delivery_generated_at: new Date().toISOString()
+      }),
+      previousStatus: issue.status,
+      status: "Completed",
+      updatedAt: new Date().toISOString()
+    };
+    await this.saveIssue(finalizedIssue);
+
+    if (container.channel_id && container.message_ts) {
+      await this.slackService.updateMessage(state.config, {
+        channel: String(container.channel_id),
+        ts: String(container.message_ts),
+        text: `${issue.issueKey} 納品書類作成完了`,
+        blocks: [
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*納品書類作成完了* ${issue.issueKey}\n${issue.title}\n生成書類: ${document.fileName}`
+            }
+          }
+        ]
+      });
+    }
+
+    await this.updateBacklogStatusIfPossible(state.config, finalizedIssue, "Resolved");
+    await this.pushEvent("document-generated", `${issue.issueKey} delivery document generated: ${document.fileName}`);
+  }
+
+  private async markDeliveryPending(issueId: string): Promise<void> {
+    const state = await this.loadRuntimeState();
+    const issue = state.issues.find((item) => item.id === issueId);
+    if (!issue) {
+      return;
+    }
+
+    const nextIssue = this.withApprovalPayload(issue, {
+      delivery_status: "pending",
+      delivery_reminded_at: new Date().toISOString()
+    });
+    await this.saveIssue(nextIssue);
+    await this.pushEvent("status-changed", `${issue.issueKey} delivery kept pending`);
   }
 
   private findLatestDocumentForIssue(documents: DocumentRecord[], issueId: string): DocumentRecord | undefined {
@@ -1357,10 +2200,10 @@ export class WorkflowService {
     return nextIssue;
   }
 
-  private async openRejectModal(issueId: string, triggerId: string): Promise<void> {
+  private async openRejectModal(issueId: string, triggerId: string, callbackId = "reject_issue_modal"): Promise<void> {
     await this.slackService.openModal(triggerId, {
       type: "modal",
-      callback_id: "reject_issue_modal",
+      callback_id: callbackId,
       private_metadata: issueId,
       title: { type: "plain_text", text: "否認理由" },
       submit: { type: "plain_text", text: "送信" },
@@ -1398,6 +2241,25 @@ export class WorkflowService {
   private getApprovalValue(issue: IssueRecord, key: string): string {
     const value = issue.payload[key];
     return typeof value === "string" ? value : value == null ? "" : String(value);
+  }
+
+  private resolveBusinessApproverSlackId(issue: IssueRecord, users: AdminUser[], config: AppConfig): string {
+    const direct = (
+      this.getApprovalValue(issue, "business_approver_slack_id") ||
+      this.getApprovalValue(issue, "businessApproverSlackId")
+    )
+      .replace(/[<@>]/g, "")
+      .trim();
+    if (direct) {
+      return direct;
+    }
+
+    const fallback = (config.approverSlackId || process.env.APPROVER_SLACK_ID || "").trim();
+    if (fallback) {
+      return fallback;
+    }
+
+    return users.find((user) => user.is_business_approver && user.is_active)?.slack_id ?? "";
   }
 
   private async saveIssue(nextIssue: IssueRecord): Promise<void> {

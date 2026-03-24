@@ -39,6 +39,19 @@ const FIELD_TYPE_ID: Record<BacklogFieldTypeName, number> = {
 };
 
 const JAPANESE_LABELS: Record<string, string> = {
+  requester_name: "申請者名",
+  requester_department: "所属部署名",
+  partner_code: "取引先コード",
+  counterparty_name: "相手方名",
+  counterparty_contact_name: "相手方担当者",
+  counterparty_email: "相手方メールアドレス",
+  related_backlog_issue_key: "関連Backlog課題キー",
+  requested_due_date: "希望期日",
+  attachment_url: "添付ファイルURL",
+  business_approver_slack_id: "事業部承認者SlackID",
+  business_approval_status: "事業部承認状態",
+  stamp_target_url: "押印対象URL",
+  workflow_label: "ワークフロー種別",
   contract_date_year: "契約年",
   contract_date_month: "契約月",
   contract_date_day: "契約日",
@@ -300,6 +313,7 @@ async function ensureIssueTypes(apply: boolean): Promise<Map<string, BacklogIssu
 async function ensureStatuses(apply: boolean): Promise<void> {
   const current = await getStatuses();
   const byName = new Map(current.map((item) => [item.name, item]));
+  const maxStatuses = 12;
 
   for (const spec of backlogCustomStatusSpecs) {
     if (byName.has(spec.name)) {
@@ -312,9 +326,23 @@ async function ensureStatuses(apply: boolean): Promise<void> {
       continue;
     }
 
-    const created = await addStatus(spec.name, spec.color);
-    byName.set(created.name, created);
-    console.log(`ADD status: ${created.name}`);
+     if (byName.size >= maxStatuses) {
+      console.log(`WARN status limit reached (${byName.size}/${maxStatuses}). Skip add status: ${spec.name}`);
+      continue;
+    }
+
+    try {
+      const created = await addStatus(spec.name, spec.color);
+      byName.set(created.name, created);
+      console.log(`ADD status: ${created.name}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("maximum number of status")) {
+        console.log(`WARN status limit reached (${byName.size}/${maxStatuses}). Skip remaining new statuses.`);
+        return;
+      }
+      throw error;
+    }
   }
 }
 

@@ -120,9 +120,19 @@ export class SlackService {
     client.on("events_api", async ({ body, ack }) => {
       await ack();
       const event = body.event;
-      if (!event || "bot_id" in event) {
+      if (!event) {
+        console.log("[SlackSocket] events_api received without event body");
         return;
       }
+
+      console.log("[SlackSocket] events_api received", {
+        envelopeType: body.type ?? "",
+        eventType: String(event.type ?? ""),
+        subtype: "subtype" in event ? String(event.subtype ?? "") : "",
+        channel: "channel" in event ? String(event.channel ?? "") : "",
+        user: "user" in event ? String(event.user ?? "") : "",
+        botId: "bot_id" in event ? String(event.bot_id ?? "") : ""
+      });
 
       if (onEvent) {
         await onEvent({
@@ -132,7 +142,21 @@ export class SlackService {
         });
       }
 
+      if ("bot_id" in event) {
+        console.log("[SlackSocket] events_api ignored bot event", {
+          eventType: String(event.type ?? ""),
+          subtype: "subtype" in event ? String(event.subtype ?? "") : "",
+          channel: "channel" in event ? String(event.channel ?? "") : ""
+        });
+        return;
+      }
+
       if (event.type !== "app_mention") {
+        console.log("[SlackSocket] events_api ignored non-app_mention", {
+          eventType: String(event.type ?? ""),
+          subtype: "subtype" in event ? String(event.subtype ?? "") : "",
+          channel: "channel" in event ? String(event.channel ?? "") : ""
+        });
         return;
       }
 
