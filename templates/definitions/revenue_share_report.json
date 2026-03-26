@@ -23,7 +23,7 @@
       "name": "ISSUE_DATE",
       "label": "発行日",
       "required": true,
-      "source": "backlog.issue_date"
+      "source": "auto"
     },
     {
       "name": "MINIMUM_GUARANTEE",
@@ -94,6 +94,22 @@
       "isArray": true
     },
     {
+      "name": "deduction",
+      "label": "deduction",
+      "required": false,
+      "source": "backlog.deduction",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction_note",
+      "label": "deduction_note",
+      "required": false,
+      "source": "backlog.deduction_note",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
       "name": "detail",
       "label": "detail",
       "required": true,
@@ -151,7 +167,7 @@
       "name": "ISSUE_DATE",
       "label": "発行日",
       "required": true,
-      "source": "backlog.issue_date"
+      "source": "auto"
     },
     {
       "name": "MINIMUM_GUARANTEE",
@@ -216,6 +232,22 @@
       "label": "calculation",
       "required": true,
       "source": "backlog.calculation",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction",
+      "label": "deduction",
+      "required": false,
+      "source": "backlog.deduction",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction_note",
+      "label": "deduction_note",
+      "required": false,
+      "source": "backlog.deduction_note",
       "arrayPrefix": "items",
       "isArray": true
     },

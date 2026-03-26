@@ -124,6 +124,23 @@ class FakeCloudSignService {
   }
 }
 
+class FakeGoogleDriveService {
+  isConfigured(): boolean {
+    return false;
+  }
+
+  async testConnection() {
+    return { ok: true as const, rootFolderId: "root-folder" };
+  }
+
+  async uploadDocument(_config: AppConfig, document: DocumentRecord) {
+    return {
+      fileUrl: `https://drive.google.com/file/d/${document.id}/view`,
+      folderUrl: "https://drive.google.com/drive/folders/root-folder"
+    };
+  }
+}
+
 class FakeDocumentService {
   async generate(issue: IssueRecord): Promise<DocumentRecord> {
     return {
@@ -336,6 +353,7 @@ tests.push(() =>
     const workflow = new WorkflowService(
       store,
       new FakeDocumentService() as never,
+      new FakeGoogleDriveService() as never,
       new FakeBacklogService() as never,
       new FakeCloudSignService() as never,
       slack as never,
@@ -362,6 +380,7 @@ tests.push(() =>
     const workflow = new WorkflowService(
       store,
       new FakeDocumentService() as never,
+      new FakeGoogleDriveService() as never,
       new FakeBacklogService() as never,
       new FakeCloudSignService() as never,
       slack as never,
@@ -395,6 +414,7 @@ tests.push(() =>
     const workflow = new WorkflowService(
       store,
       new FakeDocumentService() as never,
+      new FakeGoogleDriveService() as never,
       new FakeBacklogService() as never,
       new FakeCloudSignService() as never,
       slack as never,

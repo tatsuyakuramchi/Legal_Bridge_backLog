@@ -12,12 +12,14 @@ export class PrismaRegistryRepository {
       return;
     }
 
+    await this.syncLicenseLedgerTerms(contract.id, issue);
+
     await this.prisma.documents.create({
       data: {
         contract_id: contract.id,
         document_type: issue.templateKey,
         file_name: document.fileName,
-        drive_url: document.pdfPath,
+        drive_url: document.driveFileUrl ?? document.pdfPath,
         generated_at: new Date(document.createdAt),
         generated_by: issue.assignee || null,
         template_ids: [issue.templateKey],
@@ -49,7 +51,7 @@ export class PrismaRegistryRepository {
       partial_number: this.parseInteger(issue.payload.partial_number),
       total_partials: this.parseInteger(issue.payload.total_partials),
       is_final_delivery: this.parseBoolean(issue.payload.is_final_delivery),
-      drive_url: document.pdfPath,
+      drive_url: document.driveFileUrl ?? document.pdfPath,
       approver_name: this.readString(issue.payload.approver_name),
       approver_department: this.readString(issue.payload.approver_department),
       reviewer_name: this.readString(issue.payload.reviewer_name),
@@ -155,12 +157,12 @@ export class PrismaRegistryRepository {
       status: this.readString(issue.payload.workflow_status) ?? issue.status,
       generation_count: this.resolveRevision(issue),
       last_fixed_at: document ? new Date(document.createdAt) : null,
-      last_fixed_drive_url: document?.pdfPath ?? null,
+      last_fixed_drive_url: document?.driveFileUrl ?? document?.pdfPath ?? null,
       signing_method: this.readString(issue.payload.stamp_method),
       counterparty_ok_at: this.parseDateTime(issue.payload.counterparty_ok_at),
       esign_completed_at: this.parseDateTime(issue.payload.cloudsign_completed_at),
       signed_at: this.parseDateTime(issue.payload.signed_at ?? issue.payload.stamp_completed_at),
-      drive_folder_url: document?.pdfPath ?? this.readString(issue.payload.drive_file_url) ?? null,
+      drive_folder_url: document?.driveFolderUrl ?? this.readString(issue.payload.drive_file_url) ?? null,
       archived_at: null,
       canceled_at: null,
       updated_at: new Date(issue.updatedAt)
@@ -326,5 +328,83 @@ export class PrismaRegistryRepository {
   private readString(value: unknown): string | undefined {
     const normalized = String(value ?? "").trim();
     return normalized ? normalized : undefined;
+  }
+
+  private async syncLicenseLedgerTerms(contractId: number, issue: IssueRecord): Promise<void> {
+    const prisma = this.prisma as PrismaClient & {
+      license_ledger_terms: {
+        deleteMany(args: Record<string, unknown>): Promise<unknown>;
+        createMany(args: Record<string, unknown>): Promise<unknown>;
+      };
+    };
+    if (!this.isLicenseLedgerIssue(issue)) {
+      return;
+    }
+
+    const terms = [1, 2, 3]
+      .map((termOrder) => this.extractLicenseLedgerTerm(issue.payload, termOrder))
+      .filter((term): term is Record<string, unknown> => term !== null);
+
+    await prisma.license_ledger_terms.deleteMany({
+      where: { contract_id: contractId }
+    });
+
+    if (!terms.length) {
+      return;
+    }
+
+    await prisma.license_ledger_terms.createMany({
+      data: terms.map((term) => ({
+        contract_id: contractId,
+        term_order: term.term_order as number,
+        heading: (term.heading as string | null) ?? null,
+        region: (term.region as string | null) ?? null,
+        language: (term.language as string | null) ?? null,
+        region_language_label: (term.region_language_label as string | null) ?? null,
+        base_price_label: (term.base_price_label as string | null) ?? null,
+        calc_method: (term.calc_method as string | null) ?? null,
+        rate: (term.rate as string | null) ?? null,
+        share_rate: (term.share_rate as string | null) ?? null,
+        calc_period: (term.calc_period as string | null) ?? null,
+        mg_ag: (term.mg_ag as string | null) ?? null,
+        payment_terms: (term.payment_terms as string | null) ?? null,
+        formula: (term.formula as string | null) ?? null,
+        formula_note: (term.formula_note as string | null) ?? null,
+        summary: (term.summary as string | null) ?? null,
+        note: (term.note as string | null) ?? null,
+        currency: (term.currency as string | null) ?? null,
+        created_at: new Date(),
+        updated_at: new Date()
+      }))
+    });
+  }
+
+  private isLicenseLedgerIssue(issue: IssueRecord): boolean {
+    return issue.templateKey === "template_ledger_v5__1_" || issue.templateKey === "template_license_basic";
+  }
+
+  private extractLicenseLedgerTerm(payload: Record<string, unknown>, termOrder: number): Record<string, unknown> | null {
+    const values = {
+      term_order: termOrder,
+      heading: this.readString(payload[`金銭条件${termOrder}_見出し`]),
+      region: this.readString(payload[`金銭条件${termOrder}_地域`]),
+      language: this.readString(payload[`金銭条件${termOrder}_言語`]),
+      region_language_label: this.readString(payload[`金銭条件${termOrder}_地域言語ラベル`]),
+      base_price_label: this.readString(payload[`金銭条件${termOrder}_基準価格ラベル`]),
+      calc_method: this.readString(payload[`金銭条件${termOrder}_計算方式`]),
+      rate: this.parseDecimal(payload[`金銭条件${termOrder}_料率`]),
+      share_rate: this.parseDecimal(payload[`金銭条件${termOrder}_分配率`]),
+      calc_period: this.readString(payload[`金銭条件${termOrder}_計算期間`]),
+      mg_ag: this.parseDecimal(payload[`金銭条件${termOrder}_MG_AG`]),
+      payment_terms: this.readString(payload[`金銭条件${termOrder}_支払条件`]),
+      formula: this.readString(payload[`金銭条件${termOrder}_計算式`]),
+      formula_note: this.readString(payload[`金銭条件${termOrder}_計算式注記`]),
+      summary: this.readString(payload[`金銭条件${termOrder}_概要`]),
+      note: this.readString(payload[`金銭条件${termOrder}_補足条件`]),
+      currency: this.readString(payload[`金銭条件${termOrder}_通貨`])
+    };
+
+    const hasValues = Object.entries(values).some(([key, value]) => key !== "term_order" && value !== null && value !== undefined);
+    return hasValues ? values : null;
   }
 }

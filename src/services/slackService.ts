@@ -8,6 +8,22 @@ type SlackPostMessageResponse = {
   ts?: string;
 };
 
+type SlackHistoryMessage = Record<string, unknown> & {
+  ts?: string;
+  text?: string;
+  user?: string;
+  bot_id?: string;
+  subtype?: string;
+  thread_ts?: string;
+};
+
+type SlackConversationHistoryResponse = {
+  ok: true;
+  has_more?: boolean;
+  response_metadata?: { next_cursor?: string };
+  messages?: SlackHistoryMessage[];
+};
+
 type SlackCommandHandler = (payload: { text: string; channel: string; user?: string }) => Promise<string | void>;
 type SlackInteractiveHandler = (payload: Record<string, unknown>) => Promise<void>;
 type SlackEventHandler = (payload: { type: string; event: Record<string, unknown>; envelope: Record<string, unknown> }) => Promise<void>;
@@ -86,6 +102,44 @@ export class SlackService {
       file: fileId
     });
     return response.file;
+  }
+
+  async fetchChannelHistory(
+    channel: string,
+    input?: {
+      oldest?: string;
+      latest?: string;
+      limit?: number;
+    }
+  ): Promise<Array<Record<string, unknown>>> {
+    const token = this.resolveBotToken();
+    if (!token) {
+      throw new Error("Slack credentials are not configured.");
+    }
+
+    const messages: SlackHistoryMessage[] = [];
+    const requestedLimit = Math.max(Math.min(input?.limit ?? 100, 200), 1);
+    let cursor = "";
+
+    while (messages.length < requestedLimit) {
+      const remaining = requestedLimit - messages.length;
+      const response = await this.callApi<SlackConversationHistoryResponse>(token, "conversations.history", {
+        channel,
+        limit: Math.min(remaining, 100),
+        oldest: input?.oldest,
+        latest: input?.latest,
+        cursor: cursor || undefined,
+        inclusive: true
+      });
+
+      messages.push(...(response.messages ?? []));
+      cursor = String(response.response_metadata?.next_cursor ?? "").trim();
+      if (!response.has_more || !cursor) {
+        break;
+      }
+    }
+
+    return messages;
   }
 
   async startSocketMode(

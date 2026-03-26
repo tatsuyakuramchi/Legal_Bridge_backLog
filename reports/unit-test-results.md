@@ -1,6 +1,6 @@
 # Unit Test Results
 
-- Date: 2026/3/22 2:44:15
+- Date: 2026/3/26 17:42:09
 - Total: 8
 - Passed: 8
 - Failed: 0
@@ -17,24 +17,24 @@
 
 ### PASS: BacklogSetupService checklist includes issue types and new attributes
 
-- Duration: 0 ms
+- Duration: 1 ms
 
 ### PASS: RegistryService assigns sequential contract numbers
 
-- Duration: 100 ms
+- Duration: 172 ms
 
 ### PASS: RegistryService records contracts and deliveries after document generation
 
-- Duration: 82 ms
+- Duration: 143 ms
 
 ### PASS: WorkflowService requests approval and persists Slack metadata
 
-- Duration: 137 ms
+- Duration: 209 ms
 
 ### PASS: WorkflowService approve interaction updates status and triggers stamp request
 
-- Duration: 345 ms
+- Duration: 403 ms
 
 ### PASS: WorkflowService file_shared event stores uploaded stamp file info
 
-- Duration: 251 ms
+- Duration: 224 ms

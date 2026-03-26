@@ -59,9 +59,12 @@ export class PostgresStore implements AppStore {
   readonly kind = "postgres" as const;
   private readonly pool: Pool;
   private readonly jsonFallbackDir?: string;
+  private readonly schema: string;
+  private readonly legacySchema = "public";
 
   constructor(options: PostgresStoreOptions = {}) {
     this.jsonFallbackDir = options.jsonFallbackDir;
+    this.schema = String(process.env.RDS_APP_SCHEMA ?? "lb_app").trim() || "lb_app";
     this.pool = new Pool({
       host: process.env.RDS_HOST,
       port: Number(process.env.RDS_PORT ?? 5432),
@@ -77,61 +80,73 @@ export class PostgresStore implements AppStore {
   }
 
   async ensure(): Promise<void> {
+    const appConfigTable = this.tableName("app_config");
+    const issuesTable = this.tableName("issues");
+    const documentsTable = this.tableName("documents");
+    const eventsTable = this.tableName("events");
+    const usersTable = this.tableName("users");
+    const partnersTable = this.tableName("partners");
+    const contractsTable = this.tableName("contracts");
+    const deliveriesTable = this.tableName("deliveries");
+    const pollingLogsTable = this.tableName("polling_logs");
+    const contractSequencesTable = this.tableName("contract_sequences");
+
     await this.pool.query(`
-      CREATE TABLE IF NOT EXISTS app_config (
+      CREATE SCHEMA IF NOT EXISTS ${this.quotedSchema()};
+      CREATE TABLE IF NOT EXISTS ${appConfigTable} (
         id SMALLINT PRIMARY KEY,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS issues (
+      CREATE TABLE IF NOT EXISTS ${issuesTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS documents (
+      CREATE TABLE IF NOT EXISTS ${documentsTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS events (
+      CREATE TABLE IF NOT EXISTS ${eventsTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS users (
+      CREATE TABLE IF NOT EXISTS ${usersTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS partners (
+      CREATE TABLE IF NOT EXISTS ${partnersTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS contracts (
+      CREATE TABLE IF NOT EXISTS ${contractsTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS deliveries (
+      CREATE TABLE IF NOT EXISTS ${deliveriesTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS polling_logs (
+      CREATE TABLE IF NOT EXISTS ${pollingLogsTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
-      CREATE TABLE IF NOT EXISTS contract_sequences (
+      CREATE TABLE IF NOT EXISTS ${contractSequencesTable} (
         entity_key TEXT PRIMARY KEY,
         sort_index INTEGER NOT NULL DEFAULT 0,
         data JSONB NOT NULL,
@@ -139,6 +154,7 @@ export class PostgresStore implements AppStore {
       );
     `);
 
+    await this.migrateLegacySchemaIfNeeded();
     await this.seedDefaultsIfEmpty();
     await this.bootstrapFromJsonIfNeeded();
   }
@@ -176,7 +192,7 @@ export class PostgresStore implements AppStore {
   async saveConfig(config: AppConfig): Promise<void> {
     await this.pool.query(
       `
-        INSERT INTO app_config (id, data, updated_at)
+        INSERT INTO ${this.tableName("app_config")} (id, data, updated_at)
         VALUES (1, $1::jsonb, NOW())
         ON CONFLICT (id)
         DO UPDATE SET data = EXCLUDED.data, updated_at = NOW()
@@ -235,13 +251,15 @@ export class PostgresStore implements AppStore {
   }
 
   private async loadConfig(): Promise<AppConfig> {
-    const result = await this.pool.query<{ data: AppConfig }>("SELECT data FROM app_config WHERE id = 1");
+    const result = await this.pool.query<{ data: AppConfig }>(
+      `SELECT data FROM ${this.tableName("app_config")} WHERE id = 1`
+    );
     return result.rows[0]?.data ?? defaultConfig;
   }
 
   private async loadCollection<T>(table: CollectionName): Promise<T[]> {
     const result = await this.pool.query<{ data: T }>(
-      `SELECT data FROM ${table} ORDER BY sort_index ASC, updated_at DESC, entity_key ASC`
+      `SELECT data FROM ${this.tableName(table)} ORDER BY sort_index ASC, updated_at DESC, entity_key ASC`
     );
     return result.rows.map((row) => row.data);
   }
@@ -252,13 +270,14 @@ export class PostgresStore implements AppStore {
     keyOf: (item: T) => string
   ): Promise<void> {
     const client = await this.pool.connect();
+    const tableName = this.tableName(table);
     try {
       await client.query("BEGIN");
-      await client.query(`DELETE FROM ${table}`);
+      await client.query(`DELETE FROM ${tableName}`);
       for (const [index, item] of items.entries()) {
         await client.query(
           `
-            INSERT INTO ${table} (entity_key, sort_index, data, updated_at)
+            INSERT INTO ${tableName} (entity_key, sort_index, data, updated_at)
             VALUES ($1, $2, $3::jsonb, NOW())
           `,
           [keyOf(item), index, JSON.stringify(item)]
@@ -274,7 +293,9 @@ export class PostgresStore implements AppStore {
   }
 
   private async seedDefaultsIfEmpty(): Promise<void> {
-    const configCount = await this.pool.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM app_config");
+    const configCount = await this.pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM ${this.tableName("app_config")}`
+    );
     if (Number(configCount.rows[0]?.count ?? 0) === 0) {
       await this.saveConfig(defaultConfig);
     }
@@ -294,12 +315,99 @@ export class PostgresStore implements AppStore {
     );
   }
 
+  private async migrateLegacySchemaIfNeeded(): Promise<void> {
+    if (this.schema === this.legacySchema) {
+      return;
+    }
+
+    const targetCounts = await Promise.all([
+      this.countRows(this.tableName("app_config")),
+      this.countRows(this.tableName("issues")),
+      this.countRows(this.tableName("documents")),
+      this.countRows(this.tableName("users"))
+    ]);
+    if (targetCounts.some((count) => count > 0)) {
+      return;
+    }
+
+    const legacyTables = ["app_config", "issues", "documents", "events", "users", "partners", "contracts", "deliveries", "polling_logs", "contract_sequences"] as const;
+    const legacyChecks = await Promise.all(
+      legacyTables.map(async (table) => ({
+        table,
+        exists: await this.tableExists(this.tableNameForSchema(this.legacySchema, table))
+      }))
+    );
+    if (!legacyChecks.some((entry) => entry.exists)) {
+      return;
+    }
+
+    const legacyConfig = await this.pool.query<{ data: AppConfig }>(
+      `SELECT data FROM ${this.tableNameForSchema(this.legacySchema, "app_config")} WHERE id = 1`
+    );
+    if (legacyConfig.rows[0]?.data) {
+      await this.saveConfig(legacyConfig.rows[0].data);
+    }
+
+    await this.migrateLegacyCollection<IssueRecord>("issues");
+    await this.migrateLegacyCollection<DocumentRecord>("documents");
+    await this.migrateLegacyCollection<WorkflowEvent>("events");
+    await this.migrateLegacyCollection<AdminUser>("users");
+    await this.migrateLegacyCollection<PartnerRecord>("partners");
+    await this.migrateLegacyCollection<ContractRecord>("contracts");
+    await this.migrateLegacyCollection<DeliveryRecord>("deliveries");
+    await this.migrateLegacyCollection<PollingLogRecord>("polling_logs");
+    await this.migrateLegacyCollection<ContractSequenceRecord>("contract_sequences");
+  }
+
+  private async migrateLegacyCollection<T>(table: CollectionName): Promise<void> {
+    const legacyTable = this.tableNameForSchema(this.legacySchema, table);
+    if (!(await this.tableExists(legacyTable))) {
+      return;
+    }
+    const result = await this.pool.query<{ data: T }>(
+      `SELECT data FROM ${legacyTable} ORDER BY sort_index ASC, updated_at DESC, entity_key ASC`
+    );
+    if (result.rows.length === 0) {
+      return;
+    }
+    await this.replaceCollection(
+      table,
+      result.rows.map((row) => row.data),
+      (item) => {
+        if (table === "users" || table === "partners") {
+          return String((item as { id: number | string }).id);
+        }
+        if (table === "contract_sequences") {
+          const sequence = item as ContractSequenceRecord;
+          return `${sequence.prefix}-${sequence.year}`;
+        }
+        return String((item as { id?: string; entity_key?: string }).id ?? (item as { entity_key: string }).entity_key);
+      }
+    );
+  }
+
+  private async countRows(tableName: string): Promise<number> {
+    const result = await this.pool.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM ${tableName}`);
+    return Number(result.rows[0]?.count ?? 0);
+  }
+
+  private async tableExists(tableName: string): Promise<boolean> {
+    try {
+      await this.pool.query(`SELECT 1 FROM ${tableName} LIMIT 1`);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   private async seedCollectionIfEmpty<T>(
     table: CollectionName,
     items: T[],
     keyOf: (item: T) => string
   ): Promise<void> {
-    const result = await this.pool.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM ${table}`);
+    const result = await this.pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM ${this.tableName(table)}`
+    );
     if (Number(result.rows[0]?.count ?? 0) === 0 && items.length > 0) {
       await this.replaceCollection(table, items, keyOf);
     }
@@ -310,9 +418,15 @@ export class PostgresStore implements AppStore {
       return;
     }
 
-    const issuesCount = await this.pool.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM issues");
-    const docsCount = await this.pool.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM documents");
-    const usersCount = await this.pool.query<{ count: string }>("SELECT COUNT(*)::text AS count FROM users");
+    const issuesCount = await this.pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM ${this.tableName("issues")}`
+    );
+    const docsCount = await this.pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM ${this.tableName("documents")}`
+    );
+    const usersCount = await this.pool.query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM ${this.tableName("users")}`
+    );
 
     if (
       Number(issuesCount.rows[0]?.count ?? 0) > defaultState.issues.length ||
@@ -360,5 +474,21 @@ export class PostgresStore implements AppStore {
       return false;
     }
     return { rejectUnauthorized: false };
+  }
+
+  private tableName(table: CollectionName | "app_config"): string {
+    return this.tableNameForSchema(this.schema, table);
+  }
+
+  private tableNameForSchema(schema: string, table: CollectionName | "app_config"): string {
+    return `${this.quoteIdentifier(schema)}.${this.quoteIdentifier(table)}`;
+  }
+
+  private quotedSchema(): string {
+    return this.quoteIdentifier(this.schema);
+  }
+
+  private quoteIdentifier(value: string): string {
+    return `"${value.replaceAll(`"`, `""`)}"`;
   }
 }

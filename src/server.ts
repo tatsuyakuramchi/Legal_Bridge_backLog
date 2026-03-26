@@ -13,6 +13,7 @@ import { BacklogService } from "./services/backlogService.js";
 import { BacklogSetupService } from "./services/backlogSetupService.js";
 import { CloudSignService } from "./services/cloudSignService.js";
 import { DocumentService } from "./services/documentService.js";
+import { GoogleDriveService } from "./services/googleDriveService.js";
 import { SlackService } from "./services/slackService.js";
 import { TemplateManagerService } from "./services/templateManagerService.js";
 import { WorkflowService } from "./services/workflowService.js";
@@ -31,6 +32,7 @@ const prismaRegistryRepository = prismaClient ? new PrismaRegistryRepository(pri
 const prismaWorkflowRepository = prismaClient ? new PrismaWorkflowRepository(prismaClient) : undefined;
 const prismaBootstrapService = prismaClient ? new PrismaBootstrapService(store, prismaClient) : undefined;
 const documentService = new DocumentService(path.join(rootDir, "tmp"), path.join(rootDir, "templates"));
+const googleDriveService = new GoogleDriveService();
 const backlogService = new BacklogService();
 const backlogSetupService = new BacklogSetupService();
 const cloudSignService = new CloudSignService();
@@ -43,6 +45,7 @@ const templateManagerService = new TemplateManagerService(
 const workflowService = new WorkflowService(
   store,
   documentService,
+  googleDriveService,
   backlogService,
   cloudSignService,
   slackService,
@@ -166,6 +169,26 @@ app.get("/api/admin/partners/export", async (_req, res) => {
   res.send(await adminService.exportPartnersCsv());
 });
 
+app.get("/api/admin/license-ledger-terms", async (req, res) => {
+  try {
+    res.json({
+      terms: await adminService.listLicenseLedgerTerms(String(req.query.contractNo ?? "").trim() || undefined)
+    });
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
+app.put("/api/admin/license-ledger-terms/:contractNo", async (req, res) => {
+  try {
+    res.json({
+      terms: await adminService.saveLicenseLedgerTerms(req.params.contractNo, req.body.terms ?? [])
+    });
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
 app.get("/api/template-definitions", async (_req, res) => {
   res.json(await workflowService.listTemplateDefinitions());
 });
@@ -246,6 +269,22 @@ app.post("/api/integrations/slack/test", async (_req, res) => {
   }
 });
 
+app.post("/api/integrations/slack/recover", async (req, res) => {
+  try {
+    res.json(await workflowService.recoverSlackEvents(req.body));
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
+app.post("/api/integrations/slack/test-interactive", async (req, res) => {
+  try {
+    res.json(await workflowService.sendInteractiveTestMessage(req.body));
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
 app.post("/api/integrations/cloudsign/test", async (_req, res) => {
   try {
     res.json(await workflowService.testCloudSignConnection());
@@ -257,6 +296,14 @@ app.post("/api/integrations/cloudsign/test", async (_req, res) => {
 app.post("/api/integrations/rds/test", async (_req, res) => {
   try {
     res.json(await workflowService.testRdsConnection());
+  } catch (error) {
+    res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
+  }
+});
+
+app.post("/api/integrations/drive/test", async (_req, res) => {
+  try {
+    res.json(await workflowService.testGoogleDriveConnection());
   } catch (error) {
     res.status(400).json({ message: error instanceof Error ? error.message : "Unknown error" });
   }

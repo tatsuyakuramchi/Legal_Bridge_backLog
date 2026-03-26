@@ -37,6 +37,7 @@ export class PrismaBootstrapService {
           department: user.department || null,
           title: user.title || null,
           google_email: user.google_email || null,
+          phone: user.phone || null,
           is_legal_approver: user.is_legal_approver,
           is_business_approver: user.is_business_approver,
           is_legal_staff: user.is_legal_staff,

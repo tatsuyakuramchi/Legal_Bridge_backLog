@@ -4,6 +4,7 @@ import {
   AdminUser,
   ContractRecord,
   DeliveryRecord,
+  LicenseLedgerTermRecord,
   PartnerRecord,
   PollingLogRecord
 } from "../types.js";
@@ -147,6 +148,12 @@ export class AdminService {
     const current = state.users[index];
     const next: AdminUser = {
       ...current,
+      name: input.name ?? current.name,
+      department: input.department ?? current.department,
+      title: input.title ?? current.title,
+      slack_id: input.slack_id ?? current.slack_id,
+      google_email: input.google_email ?? current.google_email,
+      phone: input.phone ?? current.phone,
       is_legal_approver: input.is_legal_approver ?? current.is_legal_approver,
       is_business_approver: input.is_business_approver ?? current.is_business_approver,
       is_legal_staff: input.is_legal_staff ?? current.is_legal_staff,
@@ -195,6 +202,7 @@ export class AdminService {
           title: current?.title ?? String(profile.title ?? ""),
           slack_id: slackId,
           google_email: String(profile.email ?? current?.google_email ?? ""),
+          phone: current?.phone ?? "",
           is_legal_approver: current?.is_legal_approver ?? false,
           is_business_approver: current?.is_business_approver ?? false,
           is_legal_staff: current?.is_legal_staff ?? false,
@@ -407,6 +415,20 @@ export class AdminService {
 
     await this.store.savePartners(partners);
     return { imported, skipped, errors, partners };
+  }
+
+  async listLicenseLedgerTerms(contractNo?: string): Promise<LicenseLedgerTermRecord[]> {
+    if (!this.prismaRepository) {
+      return [];
+    }
+    return this.prismaRepository.listLicenseLedgerTerms(contractNo);
+  }
+
+  async saveLicenseLedgerTerms(contractNo: string, terms: LicenseLedgerTermRecord[]): Promise<LicenseLedgerTermRecord[]> {
+    if (!this.prismaRepository) {
+      throw new Error("RDS is not configured");
+    }
+    return this.prismaRepository.saveLicenseLedgerTerms(contractNo, terms);
   }
 
   private optionalString(value: unknown): string | undefined {

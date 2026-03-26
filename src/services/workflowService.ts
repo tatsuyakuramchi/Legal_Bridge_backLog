@@ -21,6 +21,7 @@ import { BacklogSetupService, BacklogSetupReport } from "./backlogSetupService.j
 import { BulkOrderService } from "./bulkOrderService.js";
 import { CloudSignDocument, CloudSignService } from "./cloudSignService.js";
 import { DocumentService } from "./documentService.js";
+import { GoogleDriveService } from "./googleDriveService.js";
 import { PrismaAdminRepository } from "./prismaAdminRepository.js";
 import { PrismaRegistryRepository } from "./prismaRegistryRepository.js";
 import { PrismaWorkflowRepository } from "./prismaWorkflowRepository.js";
@@ -125,6 +126,7 @@ export class WorkflowService {
   constructor(
     private readonly store: AppStore,
     private readonly documentService: DocumentService,
+    private readonly googleDriveService: GoogleDriveService,
     private readonly backlogService: BacklogService,
     private readonly cloudSignService: CloudSignService,
     private readonly slackService: SlackService,
@@ -160,7 +162,7 @@ export class WorkflowService {
         app: "ok",
         backlog: this.backlogService.isConfigured(state.config) ? "ok" : "warn",
         slack: this.slackService.isConfigured(state.config) ? "ok" : "warn",
-        drive: state.config.driveRootFolderId ? "ok" : "warn",
+        drive: this.googleDriveService.isConfigured(state.config) ? "ok" : "warn",
         rds: this.store.kind === "postgres" ? "ok" : "warn"
       }
     };
@@ -311,7 +313,10 @@ export class WorkflowService {
       throw new Error("Issue not found");
     }
 
-    const issue = await this.registryService.ensureContractNumber(currentIssue);
+    const issue = await this.enrichIssueForDocumentGeneration(
+      this.withResolvedStaffProfile(await this.registryService.ensureContractNumber(currentIssue), state.users),
+      state.users
+    );
     const childIssues = this.resolveChildIssues(issue, state.issues);
     const workingIssues = new Map(state.issues.map((item) => [item.id, item]));
     workingIssues.set(issue.id, issue);
@@ -326,8 +331,15 @@ export class WorkflowService {
     });
 
     for (const target of allTargets) {
-      const ensured = target.contractNo ? target : { ...target, contractNo: issue.contractNo, updatedAt: new Date().toISOString() };
-      const document = await this.documentService.generate(ensured);
+      const ensuredBase = target.contractNo
+        ? target
+        : { ...target, contractNo: issue.contractNo, updatedAt: new Date().toISOString() };
+      const ensured = await this.enrichIssueForDocumentGeneration(
+        this.withResolvedStaffProfile(ensuredBase, state.users),
+        state.users
+      );
+      const generated = await this.documentService.generate(ensured);
+      const document = await this.uploadDocumentToDriveIfPossible(state.config, ensured, generated);
       const nextIssue = {
         ...ensured,
         contractNo: document.contractNo,
@@ -354,6 +366,7 @@ export class WorkflowService {
         htmlPath: generatedDocuments[0].htmlPath,
         driveFolderName: `${issue.contractNo ?? issue.issueKey}_bundle`
       };
+      resultDocument = await this.uploadDocumentToDriveIfPossible(state.config, normalizedIssues[0], resultDocument);
       generatedDocuments.unshift(resultDocument);
       await this.registryService.recordDocumentLifecycle(normalizedIssues[0], resultDocument);
     }
@@ -369,6 +382,11 @@ export class WorkflowService {
         : `${issue.issueKey} generated ${resultDocument.fileName}`
     );
     return resultDocument;
+  }
+
+  async testGoogleDriveConnection(): Promise<{ ok: true; rootFolderId: string }> {
+    const state = await this.loadRuntimeState();
+    return this.googleDriveService.testConnection(state.config);
   }
 
   async requestIssueApproval(issueId: string): Promise<{ ok: true; channel: string; ts?: string }> {
@@ -599,6 +617,18 @@ export class WorkflowService {
 
       const actionId = String(action.action_id ?? "");
       const issueId = String(action.value ?? "");
+      if (actionId === "test_interactive_ok" || actionId === "test_interactive_pending") {
+        const user = (payload.user as Record<string, unknown> | undefined) ?? {};
+        const container = (payload.container as Record<string, unknown> | undefined) ?? {};
+        console.log("[SlackInteractiveTest] action received", {
+          actionId,
+          value: issueId,
+          userId: String(user.id ?? ""),
+          channel: String(container.channel_id ?? ""),
+          messageTs: String(container.message_ts ?? "")
+        });
+        return;
+      }
       if (actionId === "approve_issue") {
         await this.approveIssueFromSlack(issueId, payload);
         return;
@@ -746,7 +776,7 @@ export class WorkflowService {
           issueId: issue.id,
           issueKey: issue.issueKey,
           fileName: document.fileName,
-          pdfPath: document.pdfPath,
+        pdfPath: document.driveFileUrl ?? document.pdfPath,
           vendorName: row.vendorName,
           projectTitle: row.projectTitle,
           status: "generated"
@@ -784,6 +814,22 @@ export class WorkflowService {
         driveStatus: "pending",
         createdAt: new Date().toISOString()
       });
+      latestState.documents[0] = await this.uploadDocumentToDriveIfPossible(
+        latestState.config,
+        {
+          id: "bulk-order",
+          issueKey: "BULK-ORDER",
+          title: "Bulk Order Merge",
+          requester: "bulk-order",
+          assignee: "local-app",
+          templateKey: "template_order_planning",
+          status: "Completed",
+          payload: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        latestState.documents[0]
+      );
       await this.store.saveDocuments(latestState.documents);
     }
 
@@ -830,6 +876,90 @@ export class WorkflowService {
     const result = await this.slackService.testConnection(state.config);
     await this.pushEvent("poller-run", `Slack connection OK: ${result.channel}`);
     return result;
+  }
+
+  async sendInteractiveTestMessage(input?: { channel?: string }): Promise<{ ok: true; channel: string; ts?: string }> {
+    const state = await this.loadRuntimeState();
+    const channel = String(input?.channel ?? "").trim() || state.config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "";
+    if (!channel) {
+      throw new Error("Slack channel is not configured.");
+    }
+
+    const response = await this.slackService.postBlocks(state.config, {
+      channel,
+      text: "Interactive test message",
+      blocks: [
+        {
+          type: "section",
+          text: {
+            type: "mrkdwn",
+            text: "*Interactive テスト*\n下のボタンを押して、interactive payload が届くか確認してください。"
+          }
+        },
+        {
+          type: "actions",
+          elements: [
+            {
+              type: "button",
+              style: "primary",
+              text: { type: "plain_text", text: "テスト承認" },
+              action_id: "test_interactive_ok",
+              value: "interactive-test"
+            },
+            {
+              type: "button",
+              text: { type: "plain_text", text: "テスト保留" },
+              action_id: "test_interactive_pending",
+              value: "interactive-test"
+            }
+          ]
+        }
+      ]
+    });
+
+    await this.pushEvent("poller-run", `Slack interactive test message sent: ${response.channel ?? channel}`);
+    return { ok: true, channel: response.channel ?? channel, ts: response.ts };
+  }
+
+  async recoverSlackEvents(input?: {
+    channel?: string;
+    oldest?: string;
+    latest?: string;
+    limit?: number;
+  }): Promise<{ recovered: number; scanned: number; channel: string }> {
+    const state = await this.loadRuntimeState();
+    const channel =
+      String(input?.channel ?? "").trim() || state.config.legalSlackChannel || process.env.LEGAL_SLACK_CHANNEL || "";
+    if (!channel) {
+      throw new Error("Slack recovery channel is not configured.");
+    }
+
+    const messages = await this.slackService.fetchChannelHistory(channel, {
+      oldest: input?.oldest,
+      latest: input?.latest,
+      limit: input?.limit ?? 100
+    });
+
+    const ordered = [...messages]
+      .filter((message) => String(message.ts ?? "").trim())
+      .sort((left, right) => String(left.ts ?? "").localeCompare(String(right.ts ?? "")));
+
+    let recovered = 0;
+    for (const message of ordered) {
+      const before = await this.countIssuesBySlackSource(channel, String(message.ts ?? ""));
+      await this.handleSlackEvent({
+        type: "message",
+        event: message,
+        envelope: { recovery: true, channel }
+      });
+      const after = await this.countIssuesBySlackSource(channel, String(message.ts ?? ""));
+      if (after > before) {
+        recovered += 1;
+      }
+    }
+
+    await this.pushEvent("poller-run", `Slack recovery scanned=${ordered.length} recovered=${recovered} channel=${channel}`);
+    return { recovered, scanned: ordered.length, channel };
   }
 
   async testCloudSignConnection(): Promise<{ ok: true; baseUrl: string }> {
@@ -1069,7 +1199,14 @@ export class WorkflowService {
       return `CloudSign sync checked=${result.checked} completed=${result.completed} updated=${result.updated}`;
     }
 
-    return "Commands: health, poll, generate LEGAL-101, approve LEGAL-101, remind-approvals, stamp LEGAL-101, remind-stamps, cloudsign LEGAL-101, sync-cloudsign";
+    const recoverMatch = normalized.match(/^recover-slack(?:\s+(\d+))?$/i);
+    if (recoverMatch) {
+      const limit = Number(recoverMatch[1] ?? 50);
+      const result = await this.recoverSlackEvents({ limit });
+      return `Slack recovery scanned=${result.scanned} recovered=${result.recovered} channel=${result.channel}`;
+    }
+
+    return "Commands: health, poll, generate LEGAL-101, approve LEGAL-101, remind-approvals, stamp LEGAL-101, remind-stamps, cloudsign LEGAL-101, sync-cloudsign, recover-slack [limit]";
   }
 
   private async runMockPoller(issues: IssueRecord[]): Promise<IssueRecord[]> {
@@ -1201,9 +1338,55 @@ export class WorkflowService {
     }
 
     const rawFields: Record<string, string> = {};
-    const bodyLines = lines.slice(1).filter((line) => !/^以下の内容で受付しました。?$/i.test(line));
+    const knownFieldLabels = new Set(
+      [
+        "申請者名",
+        "所属部署名",
+        "取引先コード",
+        "取引先CD",
+        "相手方名",
+        "相手方担当者",
+        "相手方メールアドレス",
+        "相談内容",
+        "背景・経緯",
+        "レビュー対象文書名",
+        "レビューのポイント・懸念点",
+        "ドラフト種別",
+        "依頼内容・背景",
+        "依頼内容・合意したい事項",
+        "関連Backlog課題キー",
+        "関連Backlogキー",
+        "Backlog課題キー",
+        "課題キー",
+        "希望期日",
+        "希望納期",
+        "添付ファイルURL",
+        "相手方文書URL",
+        "相手方ひな型URL",
+        "押印対象URL",
+        "事業部承認者SlackID",
+        "納品種別",
+        "納品日",
+        "特記事項",
+        "備考",
+        "CSVファイルURL",
+        "出力形式",
+        "Backlog課題自動作成",
+        "確認用プレビュー送信"
+      ].map((label) => label.normalize("NFKC"))
+    );
+    const bodyLines = lines
+      .slice(1)
+      .filter(
+        (line) =>
+          !/^以下の内容で受付しました。?$/i.test(line) &&
+          !/^以下の通りリクエストを受付しました。?$/i.test(line) &&
+          !/^\S+\s+\S+\s+さん$/.test(line)
+      );
+    const firstFieldIndex = bodyLines.findIndex((line) => knownFieldLabels.has(line.normalize("NFKC")));
+    const relevantLines = firstFieldIndex >= 0 ? bodyLines.slice(firstFieldIndex) : bodyLines;
 
-    for (const line of bodyLines) {
+    for (const line of relevantLines) {
       const match = line.match(/^([^:：]+)\s*[:：]\s*(.+)$/);
       if (!match) {
         continue;
@@ -1212,13 +1395,17 @@ export class WorkflowService {
     }
 
     if (Object.keys(rawFields).length === 0) {
-      for (let index = 0; index < bodyLines.length; index += 2) {
-        const key = bodyLines[index];
-        const value = bodyLines[index + 1];
+      for (let index = 0; index < relevantLines.length; index += 1) {
+        const key = relevantLines[index];
+        if (!knownFieldLabels.has(key.normalize("NFKC"))) {
+          continue;
+        }
+        const value = relevantLines[index + 1];
         if (!key || !value) {
           continue;
         }
         rawFields[key] = value;
+        index += 1;
       }
     }
 
@@ -1255,7 +1442,8 @@ export class WorkflowService {
       this.pickField(fields, ["相手方メールアドレス", "相手方メール", "相手方担当者メールアドレス"]) ||
       this.stringValue(payload.counterparty_email);
     const backlogIssueKey =
-      this.pickField(fields, ["関連Backlog課題キー", "Backlog課題キー", "課題キー"]) || this.stringValue(payload.related_backlog_issue_key);
+      this.pickField(fields, ["関連Backlog課題キー", "関連Backlogキー", "Backlog課題キー", "課題キー"]) ||
+      this.stringValue(payload.related_backlog_issue_key);
     const dueDate = this.pickField(fields, ["希望期日", "希望納期"]);
     const businessApproverSlackId =
       this.pickField(fields, ["事業部承認者SlackID", "事業部承認者SlackId", "事業部承認者"]) ||
@@ -1284,6 +1472,7 @@ export class WorkflowService {
     }
     if (businessApproverSlackId) {
       payload.business_approver_slack_id = businessApproverSlackId.replace(/[<@>]/g, "");
+      payload.business_approver_display = businessApproverSlackId;
     }
 
     if (workflowType === "delivery_request") {
@@ -2150,7 +2339,7 @@ export class WorkflowService {
     const state = await this.loadRuntimeState();
     const signedDocument: DocumentRecord | undefined =
       signedPdf && signedPdfPath
-        ? {
+        ? await this.uploadDocumentToDriveIfPossible(state.config, nextIssue, {
             id: `doc-signed-${Date.now()}`,
             issueId: issue.id,
             issueKey: issue.issueKey,
@@ -2162,9 +2351,9 @@ export class WorkflowService {
             driveStatus: "pending",
             contractNo: issue.contractNo,
             createdAt: signedAt
-          }
+          })
         : undefined;
-    const certificateDocument: DocumentRecord = {
+    const certificateDocument: DocumentRecord = await this.uploadDocumentToDriveIfPossible(state.config, nextIssue, {
       id: `doc-cert-${Date.now()}`,
       issueId: issue.id,
       issueKey: issue.issueKey,
@@ -2176,7 +2365,7 @@ export class WorkflowService {
       driveStatus: "pending",
       contractNo: issue.contractNo,
       createdAt: signedAt
-    };
+    });
 
     if (signedDocument) {
       state.documents.unshift(signedDocument);
@@ -2221,6 +2410,32 @@ export class WorkflowService {
         }
       ]
     });
+  }
+
+  private async uploadDocumentToDriveIfPossible(
+    config: AppConfig,
+    issue: IssueRecord,
+    document: DocumentRecord
+  ): Promise<DocumentRecord> {
+    if (!this.googleDriveService.isConfigured(config)) {
+      return document;
+    }
+
+    try {
+      const uploaded = await this.googleDriveService.uploadDocument(config, document);
+      return {
+        ...document,
+        driveStatus: "uploaded",
+        driveFileUrl: uploaded.fileUrl,
+        driveFolderUrl: uploaded.folderUrl
+      };
+    } catch (error) {
+      await this.pushEvent(
+        "document-generated",
+        `${issue.issueKey} Google Drive upload skipped: ${error instanceof Error ? error.message : "unknown"}`
+      );
+      return document;
+    }
   }
 
   private withApprovalPayload(issue: IssueRecord, patch: Record<string, unknown>): IssueRecord {
@@ -2352,6 +2567,15 @@ export class WorkflowService {
     await this.store.saveEvents(events);
   }
 
+  private async countIssuesBySlackSource(channel: string, messageTs: string): Promise<number> {
+    const state = await this.loadRuntimeState();
+    return state.issues.filter(
+      (issue) =>
+        this.getApprovalValue(issue, "source_slack_channel") === channel &&
+        this.getApprovalValue(issue, "source_slack_message_ts") === messageTs
+    ).length;
+  }
+
   private async notifyStatusChangeIfNeeded(
     config: AppConfig,
     users: AdminUser[],
@@ -2416,6 +2640,87 @@ export class WorkflowService {
       },
       updatedAt: new Date().toISOString()
     };
+  }
+
+  private withResolvedStaffProfile(issue: IssueRecord, users: AdminUser[]): IssueRecord {
+    const explicitStaffSlackId = this.getApprovalValue(issue, "staff_slack_id").replace(/[<@>]/g, "").trim();
+    const requesterSlackId = this.resolveRequesterSlackId(issue, users).replace(/[<@>]/g, "").trim();
+    const slackId = explicitStaffSlackId || requesterSlackId;
+    if (!slackId) {
+      return issue;
+    }
+
+    const matchedUser = users.find((user) => user.slack_id === slackId && user.is_active);
+    if (!matchedUser) {
+      return issue;
+    }
+
+    return {
+      ...issue,
+      payload: {
+        ...issue.payload,
+        staff_slack_id: slackId,
+        requester_slack_id: requesterSlackId || slackId,
+        staffName: matchedUser.name,
+        staff_name: matchedUser.name,
+        staffDepartment: matchedUser.department,
+        staff_department: matchedUser.department,
+        staffEmail: matchedUser.google_email,
+        staff_email: matchedUser.google_email,
+        staffPhone: matchedUser.phone,
+        staff_phone: matchedUser.phone,
+        name: matchedUser.name,
+        department: matchedUser.department,
+        google_email: matchedUser.google_email,
+        phone: matchedUser.phone
+      },
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  private async enrichIssueForDocumentGeneration(issue: IssueRecord, users: AdminUser[]): Promise<IssueRecord> {
+    const withStaff = this.withResolvedStaffProfile(issue, users);
+    if (!this.prismaReadRepository) {
+      return withStaff;
+    }
+    if (withStaff.templateKey !== "template_license_basic" && withStaff.templateKey !== "template_ledger_v5__1_") {
+      return withStaff;
+    }
+
+    const dbPayload = await this.prismaReadRepository.getLicenseLedgerPayload(withStaff);
+    if (!Object.keys(dbPayload).length) {
+      this.assertLicenseLedgerTermsAvailable(withStaff.payload);
+      return withStaff;
+    }
+
+    this.assertLicenseLedgerTermsAvailable({ ...withStaff.payload, ...dbPayload });
+
+    return {
+      ...withStaff,
+      payload: {
+        ...withStaff.payload,
+        ...dbPayload
+      },
+      updatedAt: new Date().toISOString()
+    };
+  }
+
+  private assertLicenseLedgerTermsAvailable(payload: Record<string, unknown>): void {
+    const requiredKeys = [
+      "金銭条件1_地域言語ラベル",
+      "金銭条件1_計算方式",
+      "金銭条件1_料率",
+      "金銭条件1_計算期間",
+      "金銭条件1_支払条件",
+      "金銭条件1_通貨"
+    ];
+    const missing = requiredKeys.filter((key) => {
+      const value = payload[key];
+      return !(typeof value === "string" ? value.trim() : value);
+    });
+    if (missing.length) {
+      throw new Error(`ライセンス台帳の金銭条件1が不足しています: ${missing.join(" / ")}`);
+    }
   }
 
   private resolveRequesterSlackIdFromPayload(

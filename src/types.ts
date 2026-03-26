@@ -30,6 +30,7 @@ export interface AdminUser {
   title: string;
   slack_id: string;
   google_email: string;
+  phone: string;
   is_legal_approver: boolean;
   is_business_approver: boolean;
   is_legal_staff: boolean;
@@ -59,6 +60,28 @@ export interface PartnerRecord {
   bank_account_holder?: string;
   is_active: boolean;
   notes?: string;
+}
+
+export interface LicenseLedgerTermRecord {
+  contract_no: string;
+  issue_key?: string;
+  term_order: number;
+  heading?: string;
+  region?: string;
+  language?: string;
+  region_language_label?: string;
+  base_price_label?: string;
+  calc_method?: string;
+  rate?: string;
+  share_rate?: string;
+  calc_period?: string;
+  mg_ag?: string;
+  payment_terms?: string;
+  formula?: string;
+  formula_note?: string;
+  summary?: string;
+  note?: string;
+  currency?: string;
 }
 
 export interface ContractRecord {
@@ -171,6 +194,8 @@ export interface DocumentRecord {
   pdfPath: string;
   driveFolderName: string;
   driveStatus: "pending" | "uploaded";
+  driveFileUrl?: string;
+  driveFolderUrl?: string;
   contractNo?: string;
   createdAt: string;
 }

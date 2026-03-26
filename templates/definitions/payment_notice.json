@@ -111,28 +111,28 @@
       "name": "SENDER_ADDRESS",
       "label": "SENDER_ADDRESS",
       "required": true,
-      "source": "backlog.sender_address",
+      "source": "fixed:company",
       "arrayPrefix": "d"
     },
     {
       "name": "SENDER_DEPT",
       "label": "SENDER_DEPT",
       "required": true,
-      "source": "backlog.sender_dept",
+      "source": "user.department",
       "arrayPrefix": "d"
     },
     {
       "name": "SENDER_NAME",
       "label": "SENDER_NAME",
       "required": true,
-      "source": "backlog.sender_name",
+      "source": "fixed:company",
       "arrayPrefix": "d"
     },
     {
       "name": "SENDER_ZIP",
       "label": "SENDER_ZIP",
       "required": true,
-      "source": "backlog.sender_zip",
+      "source": "fixed:company",
       "arrayPrefix": "d"
     },
     {
@@ -146,7 +146,7 @@
       "name": "notice_date",
       "label": "notice_date",
       "required": true,
-      "source": "backlog.notice_date",
+      "source": "auto",
       "arrayPrefix": "d"
     },
     {
@@ -166,14 +166,14 @@
     {
       "name": "revshare_basis",
       "label": "revshare_basis",
-      "required": true,
+      "required": false,
       "source": "backlog.revshare_basis",
       "arrayPrefix": "d"
     },
     {
       "name": "revshare_note",
       "label": "revshare_note",
-      "required": true,
+      "required": false,
       "source": "backlog.revshare_note",
       "arrayPrefix": "d"
     },
@@ -413,28 +413,28 @@
       "name": "SENDER_ADDRESS",
       "label": "SENDER_ADDRESS",
       "required": true,
-      "source": "backlog.sender_address",
+      "source": "fixed:company",
       "arrayPrefix": "d"
     },
     {
       "name": "SENDER_DEPT",
       "label": "SENDER_DEPT",
       "required": true,
-      "source": "backlog.sender_dept",
+      "source": "user.department",
       "arrayPrefix": "d"
     },
     {
       "name": "SENDER_NAME",
       "label": "SENDER_NAME",
       "required": true,
-      "source": "backlog.sender_name",
+      "source": "fixed:company",
       "arrayPrefix": "d"
     },
     {
       "name": "SENDER_ZIP",
       "label": "SENDER_ZIP",
       "required": true,
-      "source": "backlog.sender_zip",
+      "source": "fixed:company",
       "arrayPrefix": "d"
     },
     {
@@ -448,7 +448,7 @@
       "name": "notice_date",
       "label": "notice_date",
       "required": true,
-      "source": "backlog.notice_date",
+      "source": "auto",
       "arrayPrefix": "d"
     },
     {
@@ -468,14 +468,14 @@
     {
       "name": "revshare_basis",
       "label": "revshare_basis",
-      "required": true,
+      "required": false,
       "source": "backlog.revshare_basis",
       "arrayPrefix": "d"
     },
     {
       "name": "revshare_note",
       "label": "revshare_note",
-      "required": true,
+      "required": false,
       "source": "backlog.revshare_note",
       "arrayPrefix": "d"
     },

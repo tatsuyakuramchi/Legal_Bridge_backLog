@@ -12,7 +12,7 @@
       "name": "LICENSEE_IS_CORPORATION",
       "label": "ライセンシー法人フラグ",
       "required": true,
-      "source": "partner.is_corporation"
+      "source": "fixed:company"
     },
     {
       "name": "LICENSOR_IS_CORPORATION",
@@ -373,7 +373,7 @@
       "name": "LICENSEE_IS_CORPORATION",
       "label": "ライセンシー法人フラグ",
       "required": true,
-      "source": "partner.is_corporation"
+      "source": "fixed:company"
     },
     {
       "name": "LICENSOR_IS_CORPORATION",

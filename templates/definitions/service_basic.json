@@ -41,19 +41,19 @@
       "name": "CONTRACT_DATE_DAY",
       "label": "契約日（日）",
       "required": true,
-      "source": "backlog.contract_date_day"
+      "source": "calc"
     },
     {
       "name": "CONTRACT_DATE_MONTH",
       "label": "契約月",
       "required": true,
-      "source": "backlog.contract_date_month"
+      "source": "calc"
     },
     {
       "name": "CONTRACT_DATE_YEAR",
       "label": "契約年",
       "required": true,
-      "source": "backlog.contract_date_year"
+      "source": "calc"
     },
     {
       "name": "INVOICE_REGISTRATION_NUMBER",
@@ -113,7 +113,7 @@
       "name": "VENDOR_PHONE",
       "label": "VENDOR_PHONE",
       "required": true,
-      "source": "backlog.vendor_phone"
+      "source": "partner.contact_phone"
     },
     {
       "name": "VENDOR_REP",
@@ -164,19 +164,19 @@
       "name": "CONTRACT_DATE_DAY",
       "label": "契約日（日）",
       "required": true,
-      "source": "backlog.contract_date_day"
+      "source": "calc"
     },
     {
       "name": "CONTRACT_DATE_MONTH",
       "label": "契約月",
       "required": true,
-      "source": "backlog.contract_date_month"
+      "source": "calc"
     },
     {
       "name": "CONTRACT_DATE_YEAR",
       "label": "契約年",
       "required": true,
-      "source": "backlog.contract_date_year"
+      "source": "calc"
     },
     {
       "name": "INVOICE_REGISTRATION_NUMBER",
@@ -236,7 +236,7 @@
       "name": "VENDOR_PHONE",
       "label": "VENDOR_PHONE",
       "required": true,
-      "source": "backlog.vendor_phone"
+      "source": "partner.contact_phone"
     },
     {
       "name": "VENDOR_REP",

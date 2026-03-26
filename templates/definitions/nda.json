@@ -17,7 +17,7 @@
       "name": "CONTRACT_DATE_FORMATTED",
       "label": "契約日（整形済み）",
       "required": true,
-      "source": "backlog.contract_date_formatted"
+      "source": "calc"
     },
     {
       "name": "CONTRACT_PERIOD",
@@ -85,7 +85,7 @@
       "name": "CONTRACT_DATE_FORMATTED",
       "label": "契約日（整形済み）",
       "required": true,
-      "source": "backlog.contract_date_formatted"
+      "source": "calc"
     },
     {
       "name": "CONTRACT_PERIOD",

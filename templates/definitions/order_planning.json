@@ -178,21 +178,21 @@
       "name": "ORDER_DATE_DAY",
       "label": "ORDER_DATE_DAY",
       "required": true,
-      "source": "backlog.order_date_day",
+      "source": "calc",
       "arrayPrefix": "d"
     },
     {
       "name": "ORDER_DATE_MONTH",
       "label": "ORDER_DATE_MONTH",
       "required": true,
-      "source": "backlog.order_date_month",
+      "source": "calc",
       "arrayPrefix": "d"
     },
     {
       "name": "ORDER_DATE_YEAR",
       "label": "ORDER_DATE_YEAR",
       "required": true,
-      "source": "backlog.order_date_year",
+      "source": "calc",
       "arrayPrefix": "d"
     },
     {
@@ -255,14 +255,14 @@
       "name": "STAFF_DEPARTMENT",
       "label": "担当部署",
       "required": true,
-      "source": "user.name",
+      "source": "user.department",
       "arrayPrefix": "d"
     },
     {
       "name": "STAFF_EMAIL",
       "label": "担当者メール",
       "required": true,
-      "source": "user.name",
+      "source": "user.google_email",
       "arrayPrefix": "d"
     },
     {
@@ -276,7 +276,7 @@
       "name": "STAFF_PHONE",
       "label": "担当者電話番号",
       "required": false,
-      "source": "user.name",
+      "source": "user.phone",
       "arrayPrefix": "d"
     },
     {
@@ -685,21 +685,21 @@
       "name": "ORDER_DATE_DAY",
       "label": "ORDER_DATE_DAY",
       "required": true,
-      "source": "backlog.order_date_day",
+      "source": "calc",
       "arrayPrefix": "d"
     },
     {
       "name": "ORDER_DATE_MONTH",
       "label": "ORDER_DATE_MONTH",
       "required": true,
-      "source": "backlog.order_date_month",
+      "source": "calc",
       "arrayPrefix": "d"
     },
     {
       "name": "ORDER_DATE_YEAR",
       "label": "ORDER_DATE_YEAR",
       "required": true,
-      "source": "backlog.order_date_year",
+      "source": "calc",
       "arrayPrefix": "d"
     },
     {
@@ -762,14 +762,14 @@
       "name": "STAFF_DEPARTMENT",
       "label": "担当部署",
       "required": true,
-      "source": "user.name",
+      "source": "user.department",
       "arrayPrefix": "d"
     },
     {
       "name": "STAFF_EMAIL",
       "label": "担当者メール",
       "required": true,
-      "source": "user.name",
+      "source": "user.google_email",
       "arrayPrefix": "d"
     },
     {
@@ -783,7 +783,7 @@
       "name": "STAFF_PHONE",
       "label": "担当者電話番号",
       "required": false,
-      "source": "user.name",
+      "source": "user.phone",
       "arrayPrefix": "d"
     },
     {

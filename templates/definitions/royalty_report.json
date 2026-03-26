@@ -70,6 +70,14 @@
       "isArray": true
     },
     {
+      "name": "period_text",
+      "label": "period_text",
+      "required": false,
+      "source": "backlog.period_text",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
       "name": "name",
       "label": "name",
       "required": true,
@@ -98,6 +106,22 @@
       "label": "rate",
       "required": true,
       "source": "backlog.rate",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction",
+      "label": "deduction",
+      "required": false,
+      "source": "backlog.deduction",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction_note",
+      "label": "deduction_note",
+      "required": false,
+      "source": "backlog.deduction_note",
       "arrayPrefix": "items",
       "isArray": true
     }
@@ -164,6 +188,14 @@
       "isArray": true
     },
     {
+      "name": "period_text",
+      "label": "period_text",
+      "required": false,
+      "source": "backlog.period_text",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
       "name": "name",
       "label": "name",
       "required": true,
@@ -192,6 +224,22 @@
       "label": "rate",
       "required": true,
       "source": "backlog.rate",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction",
+      "label": "deduction",
+      "required": false,
+      "source": "backlog.deduction",
+      "arrayPrefix": "items",
+      "isArray": true
+    },
+    {
+      "name": "deduction_note",
+      "label": "deduction_note",
+      "required": false,
+      "source": "backlog.deduction_note",
       "arrayPrefix": "items",
       "isArray": true
     }

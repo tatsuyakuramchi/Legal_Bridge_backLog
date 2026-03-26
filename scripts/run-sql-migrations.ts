@@ -93,7 +93,8 @@ async function applyMigration(pool: Pool, migration: MigrationFile): Promise<voi
     await client.query(`SET LOCAL search_path TO ${searchPath}`);
     await client.query(sql);
     await client.query(
-      `INSERT INTO ${schema}.schema_migrations (version, description) VALUES ($1, $2)`,
+      `INSERT INTO ${schema}.schema_migrations (version, description) VALUES ($1, $2)
+       ON CONFLICT (version) DO NOTHING`,
       [migration.version, migration.description]
     );
     await client.query("COMMIT");

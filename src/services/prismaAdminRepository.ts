@@ -5,6 +5,8 @@ import {
   ContractRecord,
   DeliveryRecord,
   DocumentRecord,
+  IssueRecord,
+  LicenseLedgerTermRecord,
   PartnerRecord,
   PollingLogRecord
 } from "../types.js";
@@ -18,6 +20,184 @@ type PartnerImportResult = {
 
 export class PrismaAdminRepository {
   constructor(private readonly prisma: PrismaClient) {}
+
+  async getLicenseLedgerPayload(issue: IssueRecord): Promise<Record<string, unknown>> {
+    const prisma = this.prisma as PrismaClient & {
+      license_ledger_terms: {
+        findMany(args: Record<string, unknown>): Promise<Array<Record<string, unknown>>>;
+      };
+    };
+    const contractNo = this.readString(issue.contractNo ?? issue.payload.CONTRACT_NO ?? issue.payload.contractNo);
+    const contract = await this.prisma.contracts.findFirst({
+      where: {
+        OR: [
+          ...(contractNo ? [{ contract_no: contractNo }] : []),
+          { backlog_issue_key: issue.issueKey }
+        ]
+      },
+      orderBy: { id: "desc" }
+    });
+    if (!contract) {
+      return {};
+    }
+
+    const rows = await prisma.license_ledger_terms.findMany({
+      where: { contract_id: contract.id },
+      orderBy: { term_order: "asc" }
+    });
+    if (!rows.length) {
+      return {};
+    }
+
+    const payload: Record<string, unknown> = {
+      license_ledger_terms: rows.map((row: Record<string, unknown>) => ({
+        term_order: row.term_order,
+        heading: row.heading,
+        region: row.region,
+        language: row.language,
+        region_language_label: row.region_language_label,
+        base_price_label: row.base_price_label,
+        calc_method: row.calc_method,
+        rate: row.rate ? Number(row.rate) : null,
+        share_rate: row.share_rate ? Number(row.share_rate) : null,
+        calc_period: row.calc_period,
+        mg_ag: row.mg_ag ? Number(row.mg_ag) : null,
+        payment_terms: row.payment_terms,
+        formula: row.formula,
+        formula_note: row.formula_note,
+        summary: row.summary,
+        note: row.note,
+        currency: row.currency
+      }))
+    };
+
+    for (const row of rows) {
+      const prefix = `金銭条件${row.term_order}_`;
+      if (row.heading) {
+        payload[`${prefix}見出し`] = row.heading;
+      }
+      if (row.region) {
+        payload[`${prefix}地域`] = row.region;
+      }
+      if (row.language) {
+        payload[`${prefix}言語`] = row.language;
+      }
+      if (row.region_language_label) {
+        payload[`${prefix}地域言語ラベル`] = row.region_language_label;
+      }
+      if (row.base_price_label) {
+        payload[`${prefix}基準価格ラベル`] = row.base_price_label;
+      }
+      if (row.calc_method) {
+        payload[`${prefix}計算方式`] = row.calc_method;
+      }
+      if (row.rate !== null) {
+        payload[`${prefix}料率`] = Number(row.rate);
+      }
+      if (row.share_rate !== null) {
+        payload[`${prefix}分配率`] = Number(row.share_rate);
+      }
+      if (row.calc_period) {
+        payload[`${prefix}計算期間`] = row.calc_period;
+      }
+      if (row.mg_ag !== null) {
+        payload[`${prefix}MG_AG`] = Number(row.mg_ag);
+      }
+      if (row.payment_terms) {
+        payload[`${prefix}支払条件`] = row.payment_terms;
+      }
+      if (row.formula) {
+        payload[`${prefix}計算式`] = row.formula;
+      }
+      if (row.formula_note) {
+        payload[`${prefix}計算式注記`] = row.formula_note;
+      }
+      if (row.summary) {
+        payload[`${prefix}概要`] = row.summary;
+      }
+      if (row.note) {
+        payload[`${prefix}補足条件`] = row.note;
+      }
+      if (row.currency) {
+        payload[`${prefix}通貨`] = row.currency;
+      }
+    }
+
+    return payload;
+  }
+
+  async listLicenseLedgerTerms(contractNo?: string): Promise<LicenseLedgerTermRecord[]> {
+    const where = contractNo
+      ? { contracts: { contract_no: { equals: contractNo } } }
+      : { contracts: { contract_type: { in: ["template_license_basic", "template_ledger_v5__1_"] } } };
+    const prisma = this.prisma as PrismaClient & {
+      license_ledger_terms: {
+        findMany(args: Record<string, unknown>): Promise<Array<Record<string, unknown>>>;
+      };
+    };
+    const rows = await prisma.license_ledger_terms.findMany({
+      where,
+      orderBy: [{ contracts: { contract_no: "asc" } }, { term_order: "asc" }],
+      include: { contracts: true }
+    });
+    return rows.map((row) => this.mapLicenseLedgerTerm(row));
+  }
+
+  async saveLicenseLedgerTerms(contractNo: string, terms: LicenseLedgerTermRecord[]): Promise<LicenseLedgerTermRecord[]> {
+    this.validateLicenseLedgerTerms(terms);
+
+    const contract = await this.prisma.contracts.findFirst({
+      where: { contract_no: contractNo },
+      orderBy: { id: "desc" }
+    });
+    if (!contract) {
+      throw new Error("Contract not found");
+    }
+
+    const prisma = this.prisma as PrismaClient & {
+      license_ledger_terms: {
+        deleteMany(args: Record<string, unknown>): Promise<unknown>;
+        createMany(args: Record<string, unknown>): Promise<unknown>;
+      };
+    };
+
+    await prisma.license_ledger_terms.deleteMany({
+      where: { contract_id: contract.id }
+    });
+
+    const activeTerms = terms
+      .map((term) => ({
+        contract_id: contract.id,
+        term_order: Number(term.term_order),
+        heading: this.optionalString(term.heading) ?? null,
+        region: this.optionalString(term.region) ?? null,
+        language: this.optionalString(term.language) ?? null,
+        region_language_label: this.optionalString(term.region_language_label) ?? null,
+        base_price_label: this.optionalString(term.base_price_label) ?? null,
+        calc_method: this.optionalString(term.calc_method) ?? null,
+        rate: this.optionalString(term.rate) ?? null,
+        share_rate: this.optionalString(term.share_rate) ?? null,
+        calc_period: this.optionalString(term.calc_period) ?? null,
+        mg_ag: this.optionalString(term.mg_ag) ?? null,
+        payment_terms: this.optionalString(term.payment_terms) ?? null,
+        formula: this.optionalString(term.formula) ?? null,
+        formula_note: this.optionalString(term.formula_note) ?? null,
+        summary: this.optionalString(term.summary) ?? null,
+        note: this.optionalString(term.note) ?? null,
+        currency: this.optionalString(term.currency) ?? null,
+        created_at: new Date(),
+        updated_at: new Date()
+      }))
+      .filter((term) =>
+        Object.entries(term).some(([key, value]) => !["contract_id", "term_order", "created_at", "updated_at"].includes(key) && value)
+      );
+
+    if (activeTerms.length) {
+      await prisma.license_ledger_terms.createMany({ data: activeTerms });
+    }
+
+    return this.listLicenseLedgerTerms(contractNo);
+  }
 
   async getDashboard(): Promise<AdminDashboardSnapshot> {
     const [users, partners, contracts, documentsCount, deliveriesCount, pollingLogs] = await Promise.all([
@@ -127,18 +307,26 @@ export class PrismaAdminRepository {
     if (!current) {
       throw new Error("User not found");
     }
+    const currentRecord = current as Record<string, unknown>;
+    const data = {
+      name: String(input.name ?? current.name).trim(),
+      department: this.coalesceString(input.department, current.department),
+      title: this.coalesceString(input.title, current.title),
+      slack_id: String(input.slack_id ?? current.slack_id).trim(),
+      google_email: this.coalesceString(input.google_email, current.google_email),
+      phone: this.coalesceString(input.phone, currentRecord.phone),
+      is_legal_approver: input.is_legal_approver ?? current.is_legal_approver,
+      is_business_approver: input.is_business_approver ?? current.is_business_approver,
+      is_legal_staff: input.is_legal_staff ?? current.is_legal_staff,
+      is_admin: input.is_admin ?? current.is_admin,
+      is_active: input.is_active ?? current.is_active,
+      notify_via_dm: input.notify_via_dm ?? current.notify_via_dm,
+      notes: input.notes ?? current.notes,
+      updated_at: new Date()
+    } as Record<string, unknown>;
     const row = await this.prisma.users.update({
       where: { id },
-      data: {
-        is_legal_approver: input.is_legal_approver ?? current.is_legal_approver,
-        is_business_approver: input.is_business_approver ?? current.is_business_approver,
-        is_legal_staff: input.is_legal_staff ?? current.is_legal_staff,
-        is_admin: input.is_admin ?? current.is_admin,
-        is_active: input.is_active ?? current.is_active,
-        notify_via_dm: input.notify_via_dm ?? current.notify_via_dm,
-        notes: input.notes ?? current.notes,
-        updated_at: new Date()
-      }
+      data: data as never
     });
     return this.mapUser(row);
   }
@@ -343,6 +531,7 @@ export class PrismaAdminRepository {
       title: String(row.title ?? ""),
       slack_id: String(row.slack_id ?? ""),
       google_email: String(row.google_email ?? ""),
+      phone: String(row.phone ?? ""),
       is_legal_approver: Boolean(row.is_legal_approver),
       is_business_approver: Boolean(row.is_business_approver),
       is_legal_staff: Boolean(row.is_legal_staff),
@@ -433,9 +622,62 @@ export class PrismaAdminRepository {
     };
   }
 
+  private mapLicenseLedgerTerm(row: Record<string, unknown>): LicenseLedgerTermRecord {
+    const contract = (row.contracts as Record<string, unknown> | undefined) ?? {};
+    return {
+      contract_no: String(contract.contract_no ?? ""),
+      issue_key: this.optionalString(contract.backlog_issue_key),
+      term_order: Number(row.term_order ?? 0),
+      heading: this.optionalString(row.heading),
+      region: this.optionalString(row.region),
+      language: this.optionalString(row.language),
+      region_language_label: this.optionalString(row.region_language_label),
+      base_price_label: this.optionalString(row.base_price_label),
+      calc_method: this.optionalString(row.calc_method),
+      rate: this.optionalString(row.rate),
+      share_rate: this.optionalString(row.share_rate),
+      calc_period: this.optionalString(row.calc_period),
+      mg_ag: this.optionalString(row.mg_ag),
+      payment_terms: this.optionalString(row.payment_terms),
+      formula: this.optionalString(row.formula),
+      formula_note: this.optionalString(row.formula_note),
+      summary: this.optionalString(row.summary),
+      note: this.optionalString(row.note),
+      currency: this.optionalString(row.currency)
+    };
+  }
+
   private optionalString(value: unknown): string | undefined {
     const normalized = String(value ?? "").trim();
     return normalized ? normalized : undefined;
+  }
+
+  private validateLicenseLedgerTerms(terms: LicenseLedgerTermRecord[]): void {
+    const term1 = terms.find((term) => Number(term.term_order) === 1);
+    if (!term1) {
+      throw new Error("金銭条件1は必須です。");
+    }
+
+    const requiredFields: Array<[keyof LicenseLedgerTermRecord, string]> = [
+      ["region_language_label", "地域/言語ラベル"],
+      ["calc_method", "計算方式"],
+      ["rate", "料率"],
+      ["calc_period", "計算期間"],
+      ["payment_terms", "支払条件"],
+      ["currency", "通貨"]
+    ];
+
+    const missing = requiredFields
+      .filter(([key]) => !this.optionalString(term1[key]))
+      .map(([, label]) => label);
+
+    if (missing.length) {
+      throw new Error(`金銭条件1の必須項目が不足しています: ${missing.join(" / ")}`);
+    }
+  }
+
+  private readString(value: unknown): string | undefined {
+    return this.optionalString(value);
   }
 
   private coalesceString(value: unknown, fallback: unknown): string | null {

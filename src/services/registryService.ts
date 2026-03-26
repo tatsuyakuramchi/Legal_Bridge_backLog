@@ -80,7 +80,7 @@ export class RegistryService {
       parent_issue_key: parentIssueKey,
       child_issue_keys: childIssueKeys,
       drive_folder_name: document.driveFolderName,
-      drive_file_url: document.pdfPath,
+      drive_file_url: document.driveFileUrl ?? document.pdfPath,
       revision_no: this.resolveRevision(issue),
       created_at: now,
       updated_at: now

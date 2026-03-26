@@ -121,6 +121,7 @@ const variableAliases: Record<string, string[]> = {
   DELIVERY_DATE: ["deliveryDate"],
   NDA_PURPOSE: ["purpose", "ndaPurpose", "description"],
   PAYMENT_CONDITION_SUMMARY: ["paymentTerms", "paymentConditionSummary"],
+  ISSUE_DATE: ["issueDate", "issue_date", "noticeDate", "notice_date"],
   PAYMENT_METHOD: ["paymentMethod"],
   PAYMENT_METHOD_DISPLAY: ["paymentMethod", "payment_method", "payMethod", "pay_method"],
   PAYMENT_TERMS: ["paymentTerms", "paymentConditionSummary"],
@@ -139,7 +140,63 @@ const variableAliases: Record<string, string[]> = {
   ORDER_NO: ["orderNo"],
   ORDER_DATE_YEAR: ["orderDateYear"],
   ORDER_DATE_MONTH: ["orderDateMonth"],
-  ORDER_DATE_DAY: ["orderDateDay"]
+  ORDER_DATE_DAY: ["orderDateDay"],
+  licensor名: ["partnerName", "vendorName", "counterpartyName"],
+  licensor_住所: ["partnerAddress", "vendorAddress", "counterpartyAddress"],
+  licensor_氏名会社名: ["partnerName", "vendorName", "counterpartyName"],
+  licensor_代表者名: ["partnerRepresentative", "vendorRepresentative", "representative"],
+  LICENSOR_IS_CORPORATION: ["partnerIsCorporation", "vendorIsCorporation", "isCorporation", "is_corporation"],
+  licensee名: ["partyAName", "PARTY_A_NAME", "companyName"],
+  licensee_住所: ["partyAAddress", "PARTY_A_ADDRESS", "companyAddress"],
+  licensee_氏名会社名: ["partyAName", "PARTY_A_NAME", "companyName"],
+  licensee_代表者名: ["partyARepresentative", "PARTY_A_REP", "companyRepresentative"],
+  LICENSEE_IS_CORPORATION: ["partyAIsCorporation", "PARTY_A_IS_CORPORATION", "companyIsCorporation"],
+  基本契約名: ["baseContractName", "basicContractName", "masterContractRef", "master_contract_ref"],
+  ライセンス種別名: ["licenseTypeName", "license_type_name", "licenseType"],
+  許諾開始日: ["licenseStartDate", "license_start_date", "contractDate", "effectiveDate"],
+  許諾期間注記: ["licensePeriodNote", "license_period_note", "contractPeriod", "contract_period"],
+  原著作物名: ["originalWork", "original_work"],
+  原著作物補記: ["originalWorkNote", "original_work_note"],
+  対象製品予定名: ["projectTitle", "project_title", "productName", "product_name"],
+  素材名: ["materialName", "material_name"],
+  素材番号: ["materialNo", "material_no"],
+  素材権利者: ["materialRightsHolder", "material_rights_holder", "rightsOwner", "rights_owner"],
+  監修者: ["supervisor", "reviewSupervisor"],
+  特記事項_本文: ["specialTerms", "special_terms", "specialNote", "special_note", "remarks"],
+  金銭条件1_地域言語ラベル: ["paymentCondition1Label", "payment_condition_1_label"],
+  金銭条件1_基準価格ラベル: ["paymentCondition1BaseLabel", "payment_condition_1_base_label"],
+  金銭条件1_計算方式: ["paymentCondition1Method", "payment_condition_1_method", "paymentMethod"],
+  金銭条件1_料率: ["paymentCondition1Rate", "payment_condition_1_rate", "rate"],
+  金銭条件1_計算期間: ["paymentCondition1Period", "payment_condition_1_period", "period"],
+  金銭条件1_MG_AG: ["paymentCondition1Guarantee", "payment_condition_1_guarantee", "minimumGuarantee"],
+  金銭条件1_支払条件: ["paymentCondition1Terms", "payment_condition_1_terms", "paymentTerms"],
+  金銭条件1_計算式: ["paymentCondition1Formula", "payment_condition_1_formula", "calculation"],
+  金銭条件1_補足条件: ["paymentCondition1Note", "payment_condition_1_note", "note"],
+  金銭条件1_通貨: ["paymentCondition1Currency", "payment_condition_1_currency", "currency"],
+  金銭条件2_見出し: ["paymentCondition2Title", "payment_condition_2_title"],
+  金銭条件2_地域: ["paymentCondition2Region", "payment_condition_2_region"],
+  金銭条件2_言語: ["paymentCondition2Language", "payment_condition_2_language"],
+  金銭条件2_計算方式: ["paymentCondition2Method", "payment_condition_2_method"],
+  金銭条件2_分配率: ["paymentCondition2ShareRate", "payment_condition_2_share_rate", "shareRate"],
+  金銭条件2_MG_AG: ["paymentCondition2Guarantee", "payment_condition_2_guarantee"],
+  金銭条件2_支払条件: ["paymentCondition2Terms", "payment_condition_2_terms"],
+  金銭条件2_計算式: ["paymentCondition2Formula", "payment_condition_2_formula"],
+  金銭条件2_計算式注記: ["paymentCondition2FormulaNote", "payment_condition_2_formula_note"],
+  金銭条件2_補足条件: ["paymentCondition2Note", "payment_condition_2_note"],
+  金銭条件2_概要: ["paymentCondition2Summary", "payment_condition_2_summary"],
+  金銭条件2_通貨: ["paymentCondition2Currency", "payment_condition_2_currency"],
+  金銭条件3_見出し: ["paymentCondition3Title", "payment_condition_3_title"],
+  金銭条件3_地域: ["paymentCondition3Region", "payment_condition_3_region"],
+  金銭条件3_言語: ["paymentCondition3Language", "payment_condition_3_language"],
+  金銭条件3_計算方式: ["paymentCondition3Method", "payment_condition_3_method"],
+  金銭条件3_料率: ["paymentCondition3Rate", "payment_condition_3_rate"],
+  金銭条件3_MG_AG: ["paymentCondition3Guarantee", "payment_condition_3_guarantee"],
+  金銭条件3_支払条件: ["paymentCondition3Terms", "payment_condition_3_terms"],
+  金銭条件3_計算式: ["paymentCondition3Formula", "payment_condition_3_formula"],
+  金銭条件3_計算式注記: ["paymentCondition3FormulaNote", "payment_condition_3_formula_note"],
+  金銭条件3_補足条件: ["paymentCondition3Note", "payment_condition_3_note"],
+  金銭条件3_概要: ["paymentCondition3Summary", "payment_condition_3_summary"],
+  金銭条件3_通貨: ["paymentCondition3Currency", "payment_condition_3_currency"]
 };
 
 const issueTypeByTemplateKey: Record<string, string> = {
@@ -174,11 +231,23 @@ export class DocumentService {
   async generate(issue: IssueRecord): Promise<DocumentRecord> {
     await mkdir(this.tmpDir, { recursive: true });
 
+    const payload = this.normalizeObject(issue.payload);
     const id = `doc-${Date.now()}`;
     const fileStem = `${issue.issueKey}-${issue.templateKey}-${Date.now()}`;
     const htmlPath = path.join(this.tmpDir, `${fileStem}.html`);
     const pdfPath = path.join(this.tmpDir, `${fileStem}.pdf`);
-    const contractNo = issue.contractNo ?? this.makeContractNo(issue.templateKey);
+    const contractNo =
+      issue.contractNo ??
+      this.asNonEmptyString(
+        payload.contractNo ??
+          payload.orderNo ??
+          payload.order_no ??
+          payload.noticeId ??
+          payload.notice_id ??
+          payload.CONTRACT_NO ??
+          payload.ORDER_NO
+      ) ??
+      this.makeContractNo(issue.templateKey);
     const fields = Object.fromEntries(
       Object.entries(issue.payload).map(([key, value]) => [
         key,
@@ -378,6 +447,7 @@ export class DocumentService {
         "--headless=new",
         "--disable-gpu",
         "--allow-file-access-from-files",
+        "--no-pdf-header-footer",
         `--print-to-pdf=${absolutePdfPath}`,
         fileUrl
       ]);
@@ -452,6 +522,12 @@ export class DocumentService {
 
   private prepareTemplate(raw: string, templateFile: string): string {
     if (templateFile !== "template_order.html" && templateFile !== "template_order_planning.html") {
+      return raw;
+    }
+
+    // Legacy order templates contained invalid mixed EJS/Handlebars fragments.
+    // New templates are already valid Handlebars and should pass through unchanged.
+    if (!raw.includes("1 && items.some") && !raw.includes("for (var i=0; i<items.length; i++)")) {
       return raw;
     }
 
@@ -564,8 +640,14 @@ export class DocumentService {
     options: ContextOptions
   ): Promise<Record<string, unknown>> {
     const payload = this.normalizeObject(issue.payload);
-    const normalizedItems = this.normalizeItems(payload.items);
+    const hasMultipleItems = Array.isArray(payload.items) && payload.items.length > 1;
+    const normalizedItems = this.normalizeItems(payload.items, hasMultipleItems);
     const grandTotalExTax = normalizedItems.reduce((sum, item) => sum + Number(item.amount ?? 0), 0);
+    const remarksFixed = this.buildFixedRemarks(payload, normalizedItems);
+    const remarksFree =
+      this.asNonEmptyString(payload.remarksFree ?? payload.remarks_free ?? payload.freeRemarks ?? payload.free_remarks) ??
+      this.asNonEmptyString(payload.remarks ?? payload.notes ?? payload.memo) ??
+      "";
     const paymentMethodDisplay =
       this.asNonEmptyString(
         payload.paymentMethod ?? payload.payment_method ?? payload.payMethod ?? payload.pay_method ?? payload.PAYMENT_METHOD
@@ -583,6 +665,23 @@ export class DocumentService {
       this.normalizePaymentType(
         this.asNonEmptyString(payload.paymentType ?? payload.payment_type ?? payload.deliveryType ?? payload.delivery_type)
       );
+    const issueDateDisplay =
+      this.asNonEmptyString(payload.issueDate ?? payload.issue_date ?? payload.noticeDate ?? payload.notice_date) ??
+      this.formatIssueDate(issue.createdAt);
+    const paymentDueDate =
+      this.asNonEmptyString(payload.paymentDueDate ?? payload.payment_due_date ?? payload.paymentDate ?? payload.payment_date) ??
+      "";
+    const withholdingTax = this.toNumber(payload.withholdingTax ?? payload.withholding_tax) ?? 0;
+    const expenseAmount = this.toNumber(payload.expenseAmount ?? payload.expense_amount) ?? 0;
+    const explicitTotalWithTax = this.toNumber(payload.totalWithTax ?? payload.total_with_tax);
+    const explicitPaymentAmount = this.toNumber(payload.paymentAmount ?? payload.payment_amount);
+    const totalNontax = this.toNumber(payload.totalNontax ?? payload.total_nontax ?? payload.nonTaxTotal ?? payload.non_tax_total) ?? 0;
+    const taxRateRaw = this.toNumber(payload.taxRate ?? payload.tax_rate ?? 10) ?? 10;
+    const taxRate = taxRateRaw > 1 ? taxRateRaw / 100 : taxRateRaw;
+    const totalWithTax = explicitTotalWithTax ?? Math.round((grandTotalExTax + expenseAmount) * (1 + taxRate));
+    const paymentAmount = explicitPaymentAmount ?? totalWithTax - withholdingTax;
+    const vendorSuffix =
+      this.asNonEmptyString(payload.vendorSuffix ?? payload.vendor_suffix) ?? (options.vendorType === "INDIV" ? "様" : "御中");
 
     const context: Record<string, unknown> = {
       ...payload,
@@ -598,12 +697,28 @@ export class DocumentService {
       ORDER_NO: contractNo,
       NOTICE_ID: contractNo,
       PARTY_A_NAME: payload.partyAName ?? payload.companyName ?? "\u682a\u5f0f\u4f1a\u793e\u30a2\u30fc\u30af\u30e9\u30a4\u30c8",
-      PARTY_A_ADDRESS: payload.partyAAddress ?? payload.companyAddress ?? "\u6771\u4eac\u90fd\u5343\u4ee3\u7530\u533a\u795e\u7530\u5c0f\u5ddd\u753a1-1-1",
-      PARTY_A_REP: payload.partyARepresentative ?? payload.companyRepresentative ?? "\u4ee3\u8868\u53d6\u7de0\u5f79 \u4f50\u85e4\u4e00\u90ce",
+      PARTY_A_ADDRESS:
+        payload.partyAAddress ??
+        payload.companyAddress ??
+        "\u6771\u4eac\u90fd\u5343\u4ee3\u7530\u533a\u795e\u7530\u5c0f\u5ddd\u753a\uff11\uff0d\uff12\u3000\u98a8\u96f2\u5802\u30d3\u30eb\u3000\uff12\u968e",
+      PARTY_A_REP:
+        payload.partyARepresentative ??
+        payload.companyRepresentative ??
+        "\u4ee3\u8868\u53d6\u7de0\u5f79 \u9752\u67f3\u3000\u660c\u884c",
+      PARTY_A_IS_CORPORATION: payload.partyAIsCorporation ?? payload.companyIsCorporation ?? true,
       STAFF_DEPARTMENT: payload.staffDepartment ?? payload.staff_department ?? "",
       STAFF_NAME: payload.staffName ?? issue.requester,
       STAFF_EMAIL: payload.staffEmail ?? "",
       STAFF_PHONE: payload.staffPhone ?? "",
+      SENDER_NAME: payload.senderName ?? payload.sender_name ?? payload.partyAName ?? payload.companyName ?? "\u682a\u5f0f\u4f1a\u793e\u30a2\u30fc\u30af\u30e9\u30a4\u30c8",
+      SENDER_ZIP: payload.senderZip ?? payload.sender_zip ?? "101-0052",
+      SENDER_ADDRESS:
+        payload.senderAddress ??
+        payload.sender_address ??
+        payload.partyAAddress ??
+        payload.companyAddress ??
+        "\u6771\u4eac\u90fd\u5343\u4ee3\u7530\u533a\u795e\u7530\u5c0f\u5ddd\u753a\uff11\uff0d\uff12\u3000\u98a8\u96f2\u5802\u30d3\u30eb\u3000\uff12\u968e",
+      SENDER_DEPT: payload.senderDept ?? payload.sender_dept ?? payload.staffDepartment ?? payload.staff_department ?? "",
       PAYMENT_METHOD: paymentMethodDisplay ?? "",
       PAYMENT_METHOD_DISPLAY: paymentMethodDisplay ?? "",
       RIGHTS_OWNER: rightsOwnerDisplay ?? "",
@@ -617,6 +732,75 @@ export class DocumentService {
       issue_type: options.issueType,
       HAS_BASE_CONTRACT: options.hasBaseContract,
       has_base_contract: options.hasBaseContract,
+      SHOW_ORDER_SIGN_SECTION: this.resolveBooleanFlag(
+        payload.showOrderSignSection ?? payload.show_order_sign_section ?? payload.SHOW_ORDER_SIGN_SECTION,
+        true
+      ),
+      SHOW_SIGN_SECTION: this.resolveBooleanFlag(
+        payload.showSignSection ?? payload.show_sign_section ?? payload.SHOW_SIGN_SECTION,
+        false
+      ),
+      hasMultipleItems,
+      summaryDeliveryDate: hasMultipleItems
+        ? "業務明細参照"
+        : this.collectFirstValue(normalizedItems, ["delivery_date_display", "deliveryDate", "delivery_date"]) ??
+          this.asNonEmptyString(payload.deliveryDate ?? payload.delivery_date ?? payload.DELIVERY_DATE) ??
+          "",
+      summaryPaymentTerms: hasMultipleItems
+        ? "業務明細参照"
+        : this.collectFirstValue(normalizedItems, ["payment_terms_display", "paymentTerms", "payment_terms", "paymentDate"]) ??
+          this.asNonEmptyString(payload.paymentTerms ?? payload.payment_terms ?? payload.PAYMENT_TERMS) ??
+          "",
+      REMARKS_FIXED: remarksFixed,
+      REMARKS_FREE: remarksFree,
+      REMARKS: this.mergeRemarkBlocks(remarksFixed, remarksFree),
+      ISSUE_DATE: issueDateDisplay,
+      issue_date: issueDateDisplay,
+      notice_date: issueDateDisplay,
+      PAYMENT_DATE: paymentDueDate,
+      payment_date: paymentDueDate,
+      payment_due_date: paymentDueDate,
+      totalWithTax,
+      paymentAmount,
+      expenseAmount,
+      withholdingTax,
+      showWithholdingNote: withholdingTax > 0 && options.vendorType === "INDIV",
+      withholdingRateLabel: this.asNonEmptyString(payload.withholdingRateLabel ?? payload.withholding_rate_label) ?? "10.21%",
+      vendorSuffix,
+      inspections: paymentType === "INSPECTION" ? normalizedItems : null,
+      royalties: paymentType === "ROYALTY" ? normalizedItems : null,
+      revenue_shares: paymentType === "REVENUE_SHARE" ? normalizedItems : null,
+      revshare_basis:
+        this.asNonEmptyString(payload.revshareBasis ?? payload.revshare_basis ?? payload.calculationBasis ?? payload.calculation_basis) ??
+        "",
+      revshare_note:
+        this.asNonEmptyString(payload.revshareNote ?? payload.revshare_note ?? payload.specialNote ?? payload.special_note) ?? "",
+      TOTAL_NONTAX: totalNontax,
+      TOTAL_NET: grandTotalExTax,
+      MINIMUM_GUARANTEE: this.toNumber(payload.minimumGuarantee ?? payload.minimum_guarantee) ?? "",
+      SUBTOTAL_INSPECTION: paymentType === "INSPECTION" ? grandTotalExTax : 0,
+      SUBTOTAL_ROYALTY: paymentType === "ROYALTY" ? grandTotalExTax : 0,
+      SUBTOTAL_REVSHARE: paymentType === "REVENUE_SHARE" ? grandTotalExTax : 0,
+      \u53f0\u5e33ID: contractNo,
+      \u5951\u7d04\u66f8\u756a\u53f7: contractNo,
+      \u767a\u884c\u65e5: issueDateDisplay,
+      \u57fa\u672c\u5951\u7d04\u540d:
+        payload.baseContractName ?? payload.basicContractName ?? payload.masterContractRef ?? payload.master_contract_ref ?? issue.title,
+      \u30e9\u30a4\u30bb\u30f3\u30b9\u7a2e\u5225\u540d: payload.licenseTypeName ?? payload.license_type_name ?? issue.title,
+      \u8a31\u8afe\u958b\u59cb\u65e5:
+        payload.licenseStartDate ?? payload.license_start_date ?? payload.contractDate ?? payload.effectiveDate ?? issueDateDisplay,
+      \u8a31\u8afe\u671f\u9593\u6ce8\u8a18:
+        payload.licensePeriodNote ?? payload.license_period_note ?? payload.contractPeriod ?? payload.contract_period ?? "",
+      \u539f\u8457\u4f5c\u7269\u540d: payload.originalWork ?? payload.original_work ?? "",
+      \u539f\u8457\u4f5c\u7269\u88dc\u8a18: payload.originalWorkNote ?? payload.original_work_note ?? "",
+      \u5bfe\u8c61\u88fd\u54c1\u4e88\u5b9a\u540d: payload.projectTitle ?? payload.project_title ?? payload.productName ?? payload.product_name ?? "",
+      \u7d20\u6750\u540d: payload.materialName ?? payload.material_name ?? "",
+      \u7d20\u6750\u756a\u53f7: payload.materialNo ?? payload.material_no ?? "",
+      \u7d20\u6750\u6a29\u5229\u8005:
+        payload.materialRightsHolder ?? payload.material_rights_holder ?? payload.rightsOwner ?? payload.rights_owner ?? "",
+      \u76e3\u4fee\u8005: payload.supervisor ?? payload.reviewSupervisor ?? "",
+      \u7279\u8a18\u4e8b\u9805_\u672c\u6587:
+        payload.specialTerms ?? payload.special_terms ?? payload.specialNote ?? payload.special_note ?? remarksFree,
       grandTotalExTax,
       totalFee: grandTotalExTax,
       totalExp: 0
@@ -629,8 +813,9 @@ export class DocumentService {
 
     const definition = await this.loadDefinition(options.templateFile, this.fileNameToTemplateKey(options.templateFile));
     if (definition) {
+      const sourceValues: Record<string, unknown> = { ...payload, ...context };
       for (const variable of definition.variables) {
-        const value = this.resolveVariableValue(variable, payload, issue, contractNo);
+        const value = this.resolveVariableValue(variable, sourceValues, issue, contractNo);
         if (value === undefined) {
           continue;
         }
@@ -640,28 +825,67 @@ export class DocumentService {
         }
         context[variable.name] = value;
         (context.d as Record<string, unknown>)[variable.name] = value;
+        sourceValues[variable.name] = value;
       }
     }
 
     return context;
   }
 
-  private normalizeItems(value: unknown): Record<string, unknown>[] {
+  private normalizeItems(value: unknown, includeScheduleDetails = false): Record<string, unknown>[] {
     if (!Array.isArray(value)) {
       return [];
     }
 
     return value.map((item) => {
       const normalized = this.normalizeObject(item);
+      const detailLines = [
+        this.asNonEmptyString(normalized.detailText ?? normalized.spec),
+        this.asNonEmptyString(normalized.deliveryDate ?? normalized.delivery_date)
+          ? `納期: ${this.asNonEmptyString(normalized.deliveryDate ?? normalized.delivery_date)}`
+          : null,
+        includeScheduleDetails &&
+        this.asNonEmptyString(normalized.paymentTerms ?? normalized.payment_terms ?? normalized.paymentDate ?? normalized.payment_date)
+          ? `支払条件: ${
+              this.asNonEmptyString(
+                normalized.paymentTerms ?? normalized.payment_terms ?? normalized.paymentDate ?? normalized.payment_date
+              )
+            }`
+          : null
+      ]
+        .filter((line): line is string => Boolean(line))
+        .join("\n");
+
       return {
         ...normalized,
         ...this.expandUppercaseKeys(normalized),
         item_name: normalized.name ?? normalized.itemName ?? normalized.ITEM_NAME ?? "",
-        detailText: normalized.detailText ?? normalized.spec ?? "",
+        detailText: detailLines,
+        detail: normalized.detail ?? normalized.detailText ?? normalized.spec ?? detailLines,
+        name: normalized.name ?? normalized.itemName ?? normalized.ITEM_NAME ?? "",
+        date:
+          normalized.date ??
+          normalized.issueDate ??
+          normalized.issue_date ??
+          normalized.deliveryDate ??
+          normalized.delivery_date ??
+          "",
         amount:
           normalized.amount ??
           this.computeAmount(normalized.unitPrice ?? normalized.unit_price, normalized.thisTimeQuantity ?? normalized.quantity),
+        unit_price:
+          normalized.unitPrice ??
+          normalized.unit_price ??
+          this.computeUnitPrice(
+            normalized.amount ??
+              this.computeAmount(normalized.unitPrice ?? normalized.unit_price, normalized.thisTimeQuantity ?? normalized.quantity),
+            normalized.qty ?? normalized.thisTimeQuantity ?? normalized.quantity
+          ),
+        baseAmount: normalized.baseAmount ?? normalized.baseamount ?? normalized.base_amount ?? normalized.salesAmount ?? "",
         category: normalized.category ?? normalized.spec ?? "",
+        note: normalized.note ?? "",
+        period: normalized.period ?? normalized.periodText ?? normalized.period_text ?? "",
+        rate: normalized.rate ?? normalized.shareRate ?? normalized.share_rate ?? "",
         pay_method: normalized.payMethod ?? normalized.paymentMethod ?? normalized.payment_method ?? "",
         payment_method_display:
           normalized.paymentMethodDisplay ??
@@ -678,7 +902,24 @@ export class DocumentService {
           normalized.ipOwner ??
           normalized.copyrightOwner ??
           "",
-        qty: normalized.qty ?? normalized.thisTimeQuantity ?? normalized.quantity ?? 1
+        work_name: normalized.workName ?? normalized.work_name ?? normalized.name ?? normalized.itemName ?? "",
+        period_text:
+          normalized.periodText ??
+          normalized.period_text ??
+          normalized.period ??
+          this.buildPeriodText(normalized.periodStart ?? normalized.period_start, normalized.periodEnd ?? normalized.period_end),
+        trigger_type: normalized.triggerType ?? normalized.trigger_type ?? normalized.calculation ?? "",
+        period_start: normalized.periodStart ?? normalized.period_start ?? "",
+        period_end: normalized.periodEnd ?? normalized.period_end ?? "",
+        share_rate: normalized.shareRate ?? normalized.share_rate ?? normalized.rate ?? "",
+        deduction: normalized.deduction ?? "",
+        deduction_note: normalized.deductionNote ?? normalized.deduction_note ?? "",
+        qty: normalized.qty ?? normalized.thisTimeQuantity ?? normalized.quantity ?? 1,
+        delivery_date_display: this.asNonEmptyString(normalized.deliveryDate ?? normalized.delivery_date) ?? "",
+        payment_terms_display:
+          this.asNonEmptyString(
+            normalized.paymentTerms ?? normalized.payment_terms ?? normalized.paymentDate ?? normalized.payment_date
+          ) ?? ""
       };
     });
   }
@@ -754,6 +995,124 @@ export class DocumentService {
     return Array.from(values).join(", ");
   }
 
+  private collectFirstValue(items: Record<string, unknown>[], keys: string[]): string | null {
+    for (const item of items) {
+      for (const key of keys) {
+        const value = this.asNonEmptyString(item[key]);
+        if (value) {
+          return value;
+        }
+      }
+    }
+    return null;
+  }
+
+  private buildFixedRemarks(payload: Record<string, unknown>, items: Record<string, unknown>[]): string {
+    const rightsRemark = this.buildRightsRemark(payload, items);
+    const lines = [
+      this.asNonEmptyString(payload.contractPeriod ?? payload.contract_period)
+        ? `契約期間：${this.asNonEmptyString(payload.contractPeriod ?? payload.contract_period)}`
+        : null,
+      this.asNonEmptyString(payload.workStartDate ?? payload.work_start_date ?? payload.startDate ?? payload.start_date)
+        ? `作業開始日：${
+            this.asNonEmptyString(payload.workStartDate ?? payload.work_start_date ?? payload.startDate ?? payload.start_date)
+          }`
+        : null,
+      this.asNonEmptyString(payload.transferFeePayer ?? payload.transfer_fee_payer ?? payload.TRANSFER_FEE_PAYER)
+        ? `※ お振込手数料は${
+            this.asNonEmptyString(payload.transferFeePayer ?? payload.transfer_fee_payer ?? payload.TRANSFER_FEE_PAYER)
+          }負担とします。`
+        : null,
+      rightsRemark
+        ? `知的財産権: ${rightsRemark}`
+        : null
+    ].filter((line): line is string => Boolean(line));
+
+    return lines.join("\n");
+  }
+
+  private mergeRemarkBlocks(...blocks: string[]): string {
+    const lines: string[] = [];
+    for (const block of blocks) {
+      if (!block) {
+        continue;
+      }
+      for (const line of block.split(/\r?\n/)) {
+        const normalized = line.trim();
+        if (!normalized || lines.includes(normalized)) {
+          continue;
+        }
+        lines.push(normalized);
+      }
+    }
+    return lines.join("\n");
+  }
+
+  private buildRightsRemark(payload: Record<string, unknown>, items: Record<string, unknown>[]): string | null {
+    const rightsValues = new Set<string>();
+    const itemRights = this.collectUniqueValues(items, [
+      "rights_owner_display",
+      "rightsOwner",
+      "rights_owner",
+      "intellectualPropertyOwner",
+      "ipOwner",
+      "copyrightOwner"
+    ]);
+    if (itemRights) {
+      for (const part of itemRights.split(",").map((value) => value.trim()).filter(Boolean)) {
+        rightsValues.add(part);
+      }
+    }
+    const payloadRights = this.asNonEmptyString(
+      payload.rightsOwner ??
+        payload.rights_owner ??
+        payload.intellectualPropertyOwner ??
+        payload.ipOwner ??
+        payload.copyrightOwner
+    );
+    if (payloadRights) {
+      rightsValues.add(payloadRights);
+    }
+
+    if (rightsValues.size === 0) {
+      return null;
+    }
+
+    const descriptions = Array.from(rightsValues).map((value) => {
+      if (value.includes("発注者帰属")) {
+        return "発注者帰属（全権譲渡（著作権法27条・28条含む）、譲渡代金は別途定めがない場合は報酬に含む）";
+      }
+      if (value.includes("受注者帰属")) {
+        return "受注者帰属（別途利用許諾合意あり、当該合意がない場合は、利用許諾代金は報酬に含むものとする。）";
+      }
+      return value;
+    });
+
+    return descriptions.join(" / ");
+  }
+
+  private resolveBooleanFlag(value: unknown, defaultValue: boolean): boolean {
+    if (typeof value === "boolean") {
+      return value;
+    }
+    if (typeof value === "number") {
+      return value !== 0;
+    }
+    if (typeof value === "string") {
+      const normalized = value.trim().toLowerCase();
+      if (!normalized) {
+        return defaultValue;
+      }
+      if (["1", "true", "yes", "on"].includes(normalized)) {
+        return true;
+      }
+      if (["0", "false", "no", "off"].includes(normalized)) {
+        return false;
+      }
+    }
+    return defaultValue;
+  }
+
   private computeAmount(unitPrice: unknown, quantity: unknown): number | string {
     const left = Number(unitPrice ?? 0);
     const right = Number(quantity ?? 0);
@@ -761,6 +1120,33 @@ export class DocumentService {
       return String(unitPrice ?? "");
     }
     return left * right;
+  }
+
+  private computeUnitPrice(amount: unknown, quantity: unknown): number | string {
+    const total = Number(amount ?? 0);
+    const qty = Number(quantity ?? 0);
+    if (Number.isNaN(total) || Number.isNaN(qty) || qty === 0) {
+      return String(amount ?? "");
+    }
+    return total / qty;
+  }
+
+  private buildPeriodText(start: unknown, end: unknown): string {
+    const left = this.asNonEmptyString(start);
+    const right = this.asNonEmptyString(end);
+    if (left && right) {
+      return `${left} ～ ${right}`;
+    }
+    return left ?? right ?? "";
+  }
+
+  private toNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+    const normalized =
+      typeof value === "string" ? Number(value.replace(/[^\d.-]/g, "")) : Number(value);
+    return Number.isFinite(normalized) ? normalized : null;
   }
 
   private applyDateFields(context: Record<string, unknown>, value: unknown): void {
@@ -789,8 +1175,17 @@ export class DocumentService {
       return payload.items;
     }
 
-    if (variable.source === "auto" && ["ORDER_NO", "NOTICE_ID", "CONTRACT_NO"].includes(variable.name)) {
-      return contractNo;
+    if (variable.source === "auto") {
+      if (["ORDER_NO", "NOTICE_ID", "CONTRACT_NO", "契約書番号", "台帳ID"].includes(variable.name)) {
+        return contractNo;
+      }
+      if (["発行日", "ISSUE_DATE", "notice_date"].includes(variable.name)) {
+        return this.formatIssueDate(issue.createdAt);
+      }
+    }
+
+    if (variable.source === "calc") {
+      return this.readPayloadValue(payload, variable.name, variable.name);
     }
 
     if (String(variable.source).startsWith("backlog.")) {
@@ -812,10 +1207,67 @@ export class DocumentService {
     }
 
     if (String(variable.source).startsWith("fixed:company")) {
-      return this.readPayloadValue(payload, variable.name, variable.name.toLowerCase()) ?? "";
+      return this.resolveFixedCompanyValue(variable.name, payload);
     }
 
     return this.readPayloadValue(payload, variable.name, variable.name.toLowerCase());
+  }
+
+  private resolveFixedCompanyValue(variableName: string, payload: Record<string, unknown>): unknown {
+    const explicit = this.readPayloadValue(payload, variableName, variableName.toLowerCase());
+    if (explicit !== undefined && explicit !== null && explicit !== "") {
+      return explicit;
+    }
+
+    const fixedCompanyMap: Record<string, string[]> = {
+      PARTY_A_NAME: ["partyAName", "companyName"],
+      PARTY_A_ADDRESS: ["partyAAddress", "companyAddress"],
+      PARTY_A_REP: ["partyARepresentative", "companyRepresentative"],
+      PARTY_A_IS_CORPORATION: ["partyAIsCorporation", "companyIsCorporation"],
+      SENDER_NAME: ["senderName", "companyName", "partyAName"],
+      SENDER_ZIP: ["senderZip", "companyZip", "partyAZip"],
+      SENDER_ADDRESS: ["senderAddress", "companyAddress", "partyAAddress"],
+      licensee名: ["partyAName", "companyName"],
+      licensee_住所: ["partyAAddress", "companyAddress"],
+      licensee_氏名会社名: ["partyAName", "companyName"],
+      licensee_代表者名: ["partyARepresentative", "companyRepresentative"],
+      LICENSEE_IS_CORPORATION: ["partyAIsCorporation", "companyIsCorporation"]
+    };
+
+    const candidates = fixedCompanyMap[variableName] ?? [];
+    for (const key of candidates) {
+      const value = payload[key];
+      if (value !== undefined && value !== null && value !== "") {
+        return value;
+      }
+    }
+
+    const defaults: Record<string, string> = {
+      PARTY_A_NAME: "株式会社アークライト",
+      PARTY_A_IS_CORPORATION: "true",
+      PARTY_A_ADDRESS: "東京都千代田区神田小川町１－２\n風雲堂ビル　２階",
+      PARTY_A_REP: "代表取締役 青柳　昌行",
+      SENDER_NAME: "株式会社アークライト",
+      SENDER_ZIP: "101-0052",
+      SENDER_ADDRESS: "東京都千代田区神田小川町１－２\n風雲堂ビル　２階",
+      licensee名: "株式会社アークライト",
+      licensee_住所: "東京都千代田区神田小川町１－２\n風雲堂ビル　２階",
+      licensee_氏名会社名: "株式会社アークライト",
+      licensee_代表者名: "代表取締役 青柳　昌行"
+    };
+
+    return defaults[variableName] ?? "";
+  }
+
+  private formatIssueDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return value;
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}/${month}/${day}`;
   }
 
   private readPayloadValue(payload: Record<string, unknown>, variableName: string, sourceKey: string): unknown {

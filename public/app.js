@@ -58,6 +58,9 @@ function healthClass(level) {
 }
 
 function fileHref(filePath) {
+  if (/^https?:\/\//i.test(filePath)) {
+    return filePath;
+  }
   return filePath.replace(/^.*[\\/]/, "/tmp/");
 }
 
@@ -213,7 +216,8 @@ function render() {
       <div class="stack-item">
         <strong>${doc.fileName}</strong>
         <div class="meta">${doc.issueKey} / ${doc.templateKey}</div>
-        <div class="meta"><a href="${fileHref(doc.pdfPath)}" target="_blank" rel="noreferrer">PDFを開く</a></div>
+        <div class="meta"><a href="${fileHref(doc.driveFileUrl || doc.pdfPath)}" target="_blank" rel="noreferrer">${doc.driveFileUrl ? "Driveを開く" : "PDFを開く"}</a></div>
+        ${doc.driveFolderUrl ? `<div class="meta"><a href="${fileHref(doc.driveFolderUrl)}" target="_blank" rel="noreferrer">Driveフォルダを開く</a></div>` : ""}
         <div class="meta"><a href="${fileHref(doc.htmlPath)}" target="_blank" rel="noreferrer">HTMLを開く</a></div>
       </div>`
         )

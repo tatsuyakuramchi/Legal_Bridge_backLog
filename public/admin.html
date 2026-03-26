@@ -20,6 +20,7 @@
           <button class="nav-item is-active" data-view="dashboard">ダッシュボード</button>
           <button class="nav-item" data-view="users">ユーザー管理</button>
           <button class="nav-item" data-view="partners">取引先マスタ</button>
+          <button class="nav-item" data-view="licenseLedger">台帳金銭条件</button>
         </nav>
         <div class="admin-user-card">
           <div class="admin-user-avatar">法</div>
@@ -67,6 +68,7 @@
                   <tr>
                     <th>氏名 / 部署</th>
                     <th>Slack ID</th>
+                    <th>メール / 電話</th>
                     <th>権限</th>
                     <th>通知</th>
                     <th>状態</th>
@@ -149,6 +151,76 @@
                 </div>
               </section>
             </div>
+          </section>
+
+          <section id="view-licenseLedger" class="admin-view">
+            <div class="toolbar">
+              <input id="ledger-contract-search" class="search-input" placeholder="契約番号で検索" />
+              <button id="ledger-contract-load" class="ghost-button">読込</button>
+            </div>
+            <section class="panel-card">
+              <h2>ライセンス台帳 金銭条件</h2>
+              <form id="ledger-terms-form" class="form-grid">
+                <label class="wide">契約番号<input id="ledger-contract-no" name="contract_no" required /></label>
+
+                <div class="wide">
+                  <h3>金銭条件1</h3>
+                  <div class="form-grid">
+                    <label>地域/言語ラベル<input name="term1_region_language_label" required /></label>
+                    <label>基準価格ラベル<input name="term1_base_price_label" /></label>
+                    <label>計算方式<input name="term1_calc_method" required /></label>
+                    <label>料率<input name="term1_rate" required /></label>
+                    <label>計算期間<input name="term1_calc_period" required /></label>
+                    <label>MG/AG<input name="term1_mg_ag" /></label>
+                    <label>支払条件<input name="term1_payment_terms" required /></label>
+                    <label>計算式<input name="term1_formula" /></label>
+                    <label class="wide">補足条件<textarea name="term1_note" rows="3"></textarea></label>
+                    <label>通貨<input name="term1_currency" required /></label>
+                  </div>
+                </div>
+
+                <div class="wide">
+                  <h3>金銭条件2</h3>
+                  <div class="form-grid">
+                    <label>見出し<input name="term2_heading" /></label>
+                    <label>地域<input name="term2_region" /></label>
+                    <label>言語<input name="term2_language" /></label>
+                    <label>計算方式<input name="term2_calc_method" /></label>
+                    <label>分配率<input name="term2_share_rate" /></label>
+                    <label>MG/AG<input name="term2_mg_ag" /></label>
+                    <label>支払条件<input name="term2_payment_terms" /></label>
+                    <label>計算式<input name="term2_formula" /></label>
+                    <label>計算式注記<input name="term2_formula_note" /></label>
+                    <label>概要<input name="term2_summary" /></label>
+                    <label class="wide">補足条件<textarea name="term2_note" rows="3"></textarea></label>
+                    <label>通貨<input name="term2_currency" /></label>
+                  </div>
+                </div>
+
+                <div class="wide">
+                  <h3>金銭条件3</h3>
+                  <div class="form-grid">
+                    <label>見出し<input name="term3_heading" /></label>
+                    <label>地域<input name="term3_region" /></label>
+                    <label>言語<input name="term3_language" /></label>
+                    <label>計算方式<input name="term3_calc_method" /></label>
+                    <label>料率<input name="term3_rate" /></label>
+                    <label>MG/AG<input name="term3_mg_ag" /></label>
+                    <label>支払条件<input name="term3_payment_terms" /></label>
+                    <label>計算式<input name="term3_formula" /></label>
+                    <label>計算式注記<input name="term3_formula_note" /></label>
+                    <label>概要<input name="term3_summary" /></label>
+                    <label class="wide">補足条件<textarea name="term3_note" rows="3"></textarea></label>
+                    <label>通貨<input name="term3_currency" /></label>
+                  </div>
+                </div>
+
+                <div class="form-actions wide">
+                  <button type="submit" class="primary-button">保存</button>
+                </div>
+              </form>
+              <div id="ledger-terms-result" class="stack-list"></div>
+            </section>
           </section>
         </main>
       </div>

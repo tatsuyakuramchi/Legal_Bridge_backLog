@@ -3,6 +3,7 @@ const state = {
   dashboard: null,
   users: [],
   partners: [],
+  ledgerTerms: [],
   filteredUsers: [],
   filteredPartners: [],
   activeUser: null,
@@ -17,7 +18,8 @@ const el = {
   views: {
     dashboard: document.getElementById("view-dashboard"),
     users: document.getElementById("view-users"),
-    partners: document.getElementById("view-partners")
+    partners: document.getElementById("view-partners"),
+    licenseLedger: document.getElementById("view-licenseLedger")
   },
   dashboardStats: document.getElementById("dashboard-stats"),
   dashboardLogs: document.getElementById("dashboard-logs"),
@@ -34,7 +36,12 @@ const el = {
   partnersImportFile: document.getElementById("partners-import-file"),
   partnersImportText: document.getElementById("partners-import-text"),
   partnersImport: document.getElementById("partners-import"),
-  partnersImportResult: document.getElementById("partners-import-result")
+  partnersImportResult: document.getElementById("partners-import-result"),
+  ledgerContractSearch: document.getElementById("ledger-contract-search"),
+  ledgerContractLoad: document.getElementById("ledger-contract-load"),
+  ledgerContractNo: document.getElementById("ledger-contract-no"),
+  ledgerTermsForm: document.getElementById("ledger-terms-form"),
+  ledgerTermsResult: document.getElementById("ledger-terms-result")
 };
 
 async function fetchJson(url, options) {
@@ -66,7 +73,8 @@ function setView(view) {
   const titles = {
     dashboard: ["ダッシュボード", "Admin Console の概況"],
     users: ["ユーザー管理", "Slack同期と権限管理"],
-    partners: ["取引先マスタ", "登録 / 編集 / CSV取込"]
+    partners: ["取引先マスタ", "登録 / 編集 / CSV取込"],
+    licenseLedger: ["台帳金銭条件", "ライセンス台帳の金銭条件管理"]
   };
   el.title.textContent = titles[view][0];
   el.subtitle.textContent = titles[view][1];
@@ -126,7 +134,7 @@ function applyUserFilter() {
   const keyword = el.usersSearch.value.trim().toLowerCase();
   state.filteredUsers = state.users.filter((user) =>
     !keyword ||
-    [user.name, user.department, user.title, user.slack_id, user.google_email]
+    [user.name, user.department, user.title, user.slack_id, user.google_email, user.phone]
       .filter(Boolean)
       .some((value) => String(value).toLowerCase().includes(keyword))
   );
@@ -143,6 +151,10 @@ function renderUsers() {
             <div class="muted">${user.department} / ${user.title}</div>
           </td>
           <td class="mono">${user.slack_id}</td>
+          <td>
+            <div>${user.google_email || "<span class='muted'>-</span>"}</div>
+            <div class="muted">${user.phone || "-"}</div>
+          </td>
           <td>
             ${user.is_legal_approver ? badge("法務責任者", "gold") : ""}
             ${user.is_business_approver ? badge("事業部責任者", "blue") : ""}
@@ -180,8 +192,15 @@ function renderUserDetail() {
       <div class="stack-item"><div class="muted">役職</div><div>${user.title}</div></div>
       <div class="stack-item"><div class="muted">Slack ID</div><div class="mono">${user.slack_id}</div></div>
       <div class="stack-item"><div class="muted">Google Email</div><div>${user.google_email}</div></div>
+      <div class="stack-item"><div class="muted">電話番号</div><div>${user.phone || "-"}</div></div>
     </div>
     <form id="user-detail-form" class="form-grid" style="margin-top:16px;">
+      <label><span>氏名</span><input name="name" value="${user.name}" /></label>
+      <label><span>部署</span><input name="department" value="${user.department}" /></label>
+      <label><span>役職</span><input name="title" value="${user.title}" /></label>
+      <label><span>Slack ID</span><input name="slack_id" value="${user.slack_id}" /></label>
+      <label><span>Google Email</span><input name="google_email" value="${user.google_email}" /></label>
+      <label><span>電話番号</span><input name="phone" value="${user.phone || ""}" /></label>
       <label><span>法務責任者</span><select name="is_legal_approver"><option value="true"${user.is_legal_approver ? " selected" : ""}>ON</option><option value="false"${!user.is_legal_approver ? " selected" : ""}>OFF</option></select></label>
       <label><span>事業部責任者</span><select name="is_business_approver"><option value="true"${user.is_business_approver ? " selected" : ""}>ON</option><option value="false"${!user.is_business_approver ? " selected" : ""}>OFF</option></select></label>
       <label><span>法務担当</span><select name="is_legal_staff"><option value="true"${user.is_legal_staff ? " selected" : ""}>ON</option><option value="false"${!user.is_legal_staff ? " selected" : ""}>OFF</option></select></label>
@@ -281,6 +300,83 @@ function renderImportResult(result) {
     </div>`;
 }
 
+function emptyLedgerTerm(termOrder) {
+  return {
+    contract_no: "",
+    term_order: termOrder,
+    heading: "",
+    region: "",
+    language: "",
+    region_language_label: "",
+    base_price_label: "",
+    calc_method: "",
+    rate: "",
+    share_rate: "",
+    calc_period: "",
+    mg_ag: "",
+    payment_terms: "",
+    formula: "",
+    formula_note: "",
+    summary: "",
+    note: "",
+    currency: ""
+  };
+}
+
+function fillLedgerTermsForm(contractNo, terms) {
+  el.ledgerContractNo.value = contractNo || "";
+  const byOrder = new Map((terms || []).map((term) => [Number(term.term_order), term]));
+  for (const termOrder of [1, 2, 3]) {
+    const term = { ...emptyLedgerTerm(termOrder), ...(byOrder.get(termOrder) || {}) };
+    const mapping = {
+      heading: `term${termOrder}_heading`,
+      region: `term${termOrder}_region`,
+      language: `term${termOrder}_language`,
+      region_language_label: `term${termOrder}_region_language_label`,
+      base_price_label: `term${termOrder}_base_price_label`,
+      calc_method: `term${termOrder}_calc_method`,
+      rate: `term${termOrder}_rate`,
+      share_rate: `term${termOrder}_share_rate`,
+      calc_period: `term${termOrder}_calc_period`,
+      mg_ag: `term${termOrder}_mg_ag`,
+      payment_terms: `term${termOrder}_payment_terms`,
+      formula: `term${termOrder}_formula`,
+      formula_note: `term${termOrder}_formula_note`,
+      summary: `term${termOrder}_summary`,
+      note: `term${termOrder}_note`,
+      currency: `term${termOrder}_currency`
+    };
+    for (const [key, inputName] of Object.entries(mapping)) {
+      el.ledgerTermsForm.elements.namedItem(inputName).value = term[key] ?? "";
+    }
+  }
+}
+
+function renderLedgerTermsResult(terms) {
+  if (!terms || !terms.length) {
+    el.ledgerTermsResult.innerHTML = "<div class='stack-item'><div class='muted'>保存済み金銭条件はありません。</div></div>";
+    return;
+  }
+  el.ledgerTermsResult.innerHTML = terms
+    .map(
+      (term) => `
+        <div class="stack-item">
+          <div><strong>金銭条件${term.term_order}</strong></div>
+          <div class="muted">${term.contract_no}</div>
+          <div>${term.heading || term.region_language_label || term.calc_method || "-"}</div>
+        </div>`
+    )
+    .join("");
+}
+
+async function loadLicenseLedgerTerms(contractNo) {
+  const query = contractNo ? `?contractNo=${encodeURIComponent(contractNo)}` : "";
+  const result = await fetchJson(`/api/admin/license-ledger-terms${query}`);
+  state.ledgerTerms = result.terms ?? [];
+  fillLedgerTermsForm(contractNo, state.ledgerTerms);
+  renderLedgerTermsResult(state.ledgerTerms);
+}
+
 async function loadDashboard() {
   state.dashboard = await fetchJson("/api/admin/dashboard");
   renderDashboard();
@@ -301,6 +397,8 @@ async function loadPartners() {
 async function init() {
   await Promise.all([loadDashboard(), loadUsers(), loadPartners()]);
   setView("dashboard");
+  fillLedgerTermsForm("", []);
+  renderLedgerTermsResult([]);
 }
 
 el.navItems.forEach((button) => {
@@ -363,6 +461,55 @@ el.partnersImport.addEventListener("click", async () => {
   renderPartners();
   await loadDashboard();
   showFlash("CSVインポートを実行しました。");
+});
+
+el.ledgerContractLoad.addEventListener("click", async () => {
+  const contractNo = el.ledgerContractSearch.value.trim() || el.ledgerContractNo.value.trim();
+  if (!contractNo) {
+    showFlash("契約番号を入力してください。", "error");
+    return;
+  }
+  await loadLicenseLedgerTerms(contractNo);
+  showFlash(`${contractNo} の金銭条件を読込しました。`);
+});
+
+el.ledgerTermsForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const contractNo = el.ledgerContractNo.value.trim();
+  if (!contractNo) {
+    showFlash("契約番号を入力してください。", "error");
+    return;
+  }
+
+  const terms = [1, 2, 3].map((termOrder) => ({
+    contract_no: contractNo,
+    term_order: termOrder,
+    heading: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_heading`).value,
+    region: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_region`).value,
+    language: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_language`).value,
+    region_language_label: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_region_language_label`).value,
+    base_price_label: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_base_price_label`).value,
+    calc_method: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_calc_method`).value,
+    rate: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_rate`).value,
+    share_rate: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_share_rate`).value,
+    calc_period: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_calc_period`).value,
+    mg_ag: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_mg_ag`).value,
+    payment_terms: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_payment_terms`).value,
+    formula: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_formula`).value,
+    formula_note: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_formula_note`).value,
+    summary: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_summary`).value,
+    note: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_note`).value,
+    currency: el.ledgerTermsForm.elements.namedItem(`term${termOrder}_currency`).value
+  }));
+
+  const result = await fetchJson(`/api/admin/license-ledger-terms/${encodeURIComponent(contractNo)}`, {
+    method: "PUT",
+    body: JSON.stringify({ terms })
+  });
+  state.ledgerTerms = result.terms ?? [];
+  fillLedgerTermsForm(contractNo, state.ledgerTerms);
+  renderLedgerTermsResult(state.ledgerTerms);
+  showFlash(`${contractNo} の金銭条件を保存しました。`);
 });
 
 init().catch((error) => showFlash(error.message, "error"));
