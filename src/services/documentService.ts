@@ -705,7 +705,33 @@ export class DocumentService {
         payload.partyARepresentative ??
         payload.companyRepresentative ??
         "\u4ee3\u8868\u53d6\u7de0\u5f79 \u9752\u67f3\u3000\u660c\u884c",
+      PARTY_A_REPRESENTATIVE:
+        payload.partyARepresentative ??
+        payload.partyARep ??
+        payload.companyRepresentative ??
+        payload.companyRep ??
+        "\u4ee3\u8868\u53d6\u7de0\u5f79 \u9752\u67f3\u3000\u660c\u884c",
       PARTY_A_IS_CORPORATION: payload.partyAIsCorporation ?? payload.companyIsCorporation ?? true,
+      PARTY_B_NAME:
+        payload.vendorName ?? payload.vendor_name ?? payload.partnerName ?? payload.partner_name ?? "",
+      PARTY_B_ADDRESS:
+        payload.vendorAddress ?? payload.vendor_address ?? payload.partnerAddress ?? payload.partner_address ?? "",
+      PARTY_B_REP:
+        payload.vendorRepresentative ??
+        payload.vendor_representative ??
+        payload.vendorRep ??
+        payload.vendor_rep ??
+        payload.partnerRepresentative ??
+        payload.partner_representative ??
+        "",
+      PARTY_B_REPRESENTATIVE:
+        payload.vendorRepresentative ??
+        payload.vendor_representative ??
+        payload.vendorRep ??
+        payload.vendor_rep ??
+        payload.partnerRepresentative ??
+        payload.partner_representative ??
+        "",
       STAFF_DEPARTMENT: payload.staffDepartment ?? payload.staff_department ?? "",
       STAFF_NAME: payload.staffName ?? issue.requester,
       STAFF_EMAIL: payload.staffEmail ?? "",
@@ -781,6 +807,24 @@ export class DocumentService {
       SUBTOTAL_INSPECTION: paymentType === "INSPECTION" ? grandTotalExTax : 0,
       SUBTOTAL_ROYALTY: paymentType === "ROYALTY" ? grandTotalExTax : 0,
       SUBTOTAL_REVSHARE: paymentType === "REVENUE_SHARE" ? grandTotalExTax : 0,
+      licensor名: payload.vendorName ?? payload.vendor_name ?? payload.partnerName ?? payload.partner_name ?? "",
+      licensor_住所: payload.vendorAddress ?? payload.vendor_address ?? payload.partnerAddress ?? payload.partner_address ?? "",
+      licensor_氏名会社名:
+        payload.vendorName ?? payload.vendor_name ?? payload.partnerName ?? payload.partner_name ?? "",
+      licensor_代表者名:
+        payload.vendorRepresentative ??
+        payload.vendor_representative ??
+        payload.vendorRep ??
+        payload.vendor_rep ??
+        payload.partnerRepresentative ??
+        payload.partner_representative ??
+        "",
+      LICENSOR_IS_CORPORATION:
+        payload.vendorIsCorporation ??
+        payload.vendor_is_corporation ??
+        payload.isCorporation ??
+        payload.is_corporation ??
+        true,
       \u53f0\u5e33ID: contractNo,
       \u5951\u7d04\u66f8\u756a\u53f7: contractNo,
       \u767a\u884c\u65e5: issueDateDisplay,

@@ -129,8 +129,19 @@ async function main(): Promise<void> {
   await mkdir(sampleDir, { recursive: true });
   const documentService = new DocumentService(sampleDir, path.join(rootDir, "templates"));
   const results: Array<Record<string, string>> = [];
+  const requestedTemplateKeys = process.argv.slice(2);
+  const templates =
+    requestedTemplateKeys.length > 0
+      ? templateCatalog.filter((template) => requestedTemplateKeys.includes(template.key))
+      : templateCatalog;
 
-  for (const template of templateCatalog) {
+  if (requestedTemplateKeys.length > 0 && templates.length !== requestedTemplateKeys.length) {
+    const foundKeys = new Set(templates.map((template) => template.key));
+    const missingKeys = requestedTemplateKeys.filter((key) => !foundKeys.has(key));
+    throw new Error(`Unknown template key(s): ${missingKeys.join(", ")}`);
+  }
+
+  for (const template of templates) {
     const issue: IssueRecord = {
       id: `sample-${template.key}`,
       issueKey: `SAMPLE-${template.key.toUpperCase()}`,
@@ -168,7 +179,7 @@ async function main(): Promise<void> {
     "utf8"
   );
 
-  console.log(`Generated ${results.length} sample documents in ${sampleDir}`);
+  console.log(`Generated ${results.length} sample document(s) in ${sampleDir}`);
 }
 
 await main();

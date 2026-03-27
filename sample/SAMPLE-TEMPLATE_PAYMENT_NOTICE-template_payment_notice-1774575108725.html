@@ -53,23 +53,23 @@
 <div class="top">
   <div class="doc-title">お支払いのご案内</div>
   <div class="doc-meta">
-    No: {{notice_id}}<br>
-    発行日: {{notice_date}}
+    No: SAMPLE-2026-0001<br>
+    発行日: 2026/03/27
   </div>
 </div>
 <hr class="rule">
 
 <div class="parties">
   <div class="recipient">
-    <div class="name">{{vendor_name}} {{vendorSuffix}}</div>
-    <div class="reg">登録番号: {{vendor_invoice_num}}</div>
+    <div class="name">合同会社サンプルベンダー 御中</div>
+    <div class="reg">登録番号: T1234567890123</div>
   </div>
   <div class="issuer">
-    <div class="co-name">{{SENDER_NAME}}</div>
-    {{#if INVOICE_REGISTRATION_NUMBER}}登録番号: {{INVOICE_REGISTRATION_NUMBER}}<br>{{/if}}
-    〒 {{SENDER_ZIP}}<br>
-    {{SENDER_ADDRESS}}<br>
-    担当: {{SENDER_DEPT}}　{{STAFF_NAME}}
+    <div class="co-name">株式会社アークライト</div>
+    登録番号: T1234567890123<br>
+    〒 101-0052<br>
+    東京都千代田区神田小川町１－２　風雲堂ビル　２階<br>
+    担当: test-runner　test-runner
   </div>
 </div>
 
@@ -81,32 +81,14 @@
 <div class="amount-box">
   <div class="amount-row">
     <span class="lbl">支払対象額（税込合計）</span>
-    <span class="val">¥ {{formatCurrency totalWithTax}}</span>
+    <span class="val">¥ 528,000</span>
   </div>
-  {{#if expenseAmount}}
-  <div class="amount-row">
-    <span class="lbl">立替経費</span>
-    <span class="val">¥ {{formatCurrency expenseAmount}}</span>
-  </div>
-  {{/if}}
-  {{#if withholdingTax}}
-  <div class="amount-row deduction">
-    <span class="lbl">源泉徴収税額（控除）</span>
-    <span class="val">▲ ¥ {{formatCurrency withholdingTax}}</span>
-  </div>
-  {{/if}}
   <div class="amount-row grand">
     <span class="lbl">差引お振込額</span>
-    <span class="val">¥ {{formatCurrency paymentAmount}}</span>
+    <span class="val">¥ 528,000</span>
   </div>
 </div>
 
-{{#if showWithholdingNote}}
-<div class="notes-box">
-  ※ 個人事業主様へのお支払いのため、源泉徴収税額を控除しております。<br>
-  ※ 源泉徴収税率: {{withholdingRateLabel}}
-</div>
-{{/if}}
 
 <hr class="thin-rule">
 
@@ -119,20 +101,25 @@
     </tr>
   </thead>
   <tbody>
-    {{#each items}}
     <tr>
-      <td>{{order_no}}</td>
-      <td>{{name}}
-        {{#if detail}}<br><span class="muted">（{{detail}}）</span>{{/if}}
+      <td></td>
+      <td>企画制作
+        <br><span class="muted">（構成案作成・会議2回）</span>
       </td>
-      <td class="right">¥ {{formatCurrency amount}}</td>
+      <td class="right">¥ 300,000</td>
     </tr>
-    {{/each}}
+    <tr>
+      <td></td>
+      <td>進行管理
+        <br><span class="muted">（撮影進行・素材管理）</span>
+      </td>
+      <td class="right">¥ 180,000</td>
+    </tr>
   </tbody>
   <tfoot>
     <tr>
       <td colspan="2" class="right">合計（税込）</td>
-      <td class="right">¥ {{formatCurrency totalWithTax}}</td>
+      <td class="right">¥ 528,000</td>
     </tr>
   </tfoot>
 </table>
@@ -140,11 +127,11 @@
 <table class="info-table">
   <tr>
     <td class="lbl">支払予定日</td>
-    <td class="val">{{payment_due_date}}</td>
+    <td class="val"></td>
   </tr>
   <tr>
     <td class="lbl">振込先</td>
-    <td class="val">{{BANK_NAME}}　{{BRANCH_NAME}}　{{ACCOUNT_TYPE}}　{{ACCOUNT_NUMBER}}　{{BANK_ACCOUNT_NAME}}</td>
+    <td class="val">サンプル銀行　本店営業部　普通　1234567　サンプルベンダー</td>
   </tr>
 </table>
 
